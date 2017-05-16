@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.3
+// @version      0.4
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       1110101
 // @match        https://opr.ingress.com/recon
@@ -104,8 +104,8 @@ function init() {
 
             // adding map buttons
             mapButtons.push("<a class='button btn btn-primary' target='_blank' href='https://www.ingress.com/intel?ll=" + data.lat + "," + data.lng +  "&z=17'>Intel</a>");
-            mapButtons.push("<a class='button btn btn-primary' target='_blank' href='https://www.openstreetmap.org/?mlat=" + data.lat + "&mlon=" + data.lng +  "&zoom=16'>OSM</a>");
-            mapButtons.push("<a class='button btn btn-primary' target='_blank' href='https://bing.com/maps/default.aspx?cp=" + data.lat + "~" + data.lng +  "&lvl=16&style=a'>bing</a>");
+            mapButtons.push("<a class='button btn btn-primary' target='_blank' href='https://www.openstreetmap.org/?mlat=" + data.lat + "&mlon=" + data.lng +  "&zoom=17'>OSM</a>");
+            mapButtons.push("<a class='button btn btn-primary' target='_blank' href='https://bing.com/maps/default.aspx?cp=" + data.lat + "~" + data.lng +  "&lvl=18&style=a'>bing</a>");
 
             // more buttons in a dropdown menu
             mapDropdown.push("<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + data.lat + "&Y=" + data.lng +  "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>BayernAtlas</a></li>");
@@ -117,15 +117,21 @@ function init() {
             // kill autoscroll
             ansController.goToLocation = null;
 
+            // skipping "goto next portal" modal  
+            ansController.openSubmissionCompleteModal = function() {
+                window.location = "/recon";
+            };
+
             watchAdded = true;
 
         }
     }
 }
 
-if(document.querySelector('[src*="all-min"]')) {
-    init();
-    addGlobalStyle(`
+setTimeout(function() {
+    if(document.querySelector('[src*="all-min"]')) {
+        init();
+        addGlobalStyle(`
 .dropdown {
 position: relative;
 display: inline-block;
@@ -150,5 +156,9 @@ border-radius: 0px !important;
 .dropdown-menu>li>a:focus, .dropdown-menu>li>a:hover {
 background-color: #008780;
 }
-`);
+.modal-sm {
+width: 350px !important;
 }
+`);
+    }
+}, 500);
