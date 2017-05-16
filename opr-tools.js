@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.1
+// @version      0.2
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       1110101
 // @match        https://opr.ingress.com/recon
