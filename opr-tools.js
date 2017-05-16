@@ -10,6 +10,9 @@
 
 // ==/UserScript==
 
+// source https://gitlab.com/1110101/opr-tools
+// merge-requests welcome
+
 /*
 MIT License
 
