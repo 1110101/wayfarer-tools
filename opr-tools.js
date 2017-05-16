@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.2
+// @version      0.3
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       1110101
 // @match        https://opr.ingress.com/recon
@@ -105,10 +105,11 @@ function init() {
             // adding map buttons
             mapButtons.push("<a class='button btn btn-primary' target='_blank' href='https://www.ingress.com/intel?ll=" + data.lat + "," + data.lng +  "&z=17'>Intel</a>");
             mapButtons.push("<a class='button btn btn-primary' target='_blank' href='https://www.openstreetmap.org/?mlat=" + data.lat + "&mlon=" + data.lng +  "&zoom=16'>OSM</a>");
-            mapButtons.push("<a class='button btn btn-primary' target='_blank' href='https://bing.com/maps/default.aspx?cp=" + data.lat + "~" + data.lng +  "&lvl=20&style=a'>bing</a>");
+            mapButtons.push("<a class='button btn btn-primary' target='_blank' href='https://bing.com/maps/default.aspx?cp=" + data.lat + "~" + data.lng +  "&lvl=16&style=a'>bing</a>");
 
             // more buttons in a dropdown menu
             mapDropdown.push("<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + data.lat + "&Y=" + data.lng +  "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>BayernAtlas</a></li>");
+            mapDropdown.push("<li><a target='_blank' href='http://maps.kompass.de/#lat=" + data.lat + "&lon=" + data.lng + "&z=17'>Kompass.maps</a></li>");
 
             desc.insertAdjacentHTML("beforeend", "<div><div class='btn-group'>" + mapButtons.join('') +
                                     '<div class="button btn btn-primary dropdown"><span class="caret"></span><ul class="dropdown-content dropdown-menu">' + mapDropdown.join('') + "</div></div>");
