@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.5
+// @version      0.6
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       1110101
 // @match        https://opr.ingress.com/recon
@@ -155,13 +155,11 @@ width: 350px !important;
             // kill autoscroll
             ansController.goToLocation = null;
 
-            document.querySelector("#AnswersController .center-cropped-img").insertAdjacentHTML("beforeBegin", '<div style="position:absolute;float:left;">ZOOM</div>');
+            document.querySelector("#AnswersController .ingress-background").insertAdjacentHTML("beforeBegin", '<div style="position:absolute;float:left;"><a href="' + subController.pageData.imageUrl+ '=s0" target="_blank">ZOOM</div>');
 
             exportFunction(function() {
                 window.location.assign("/recon");
             }, ansController, {defineAs: "openSubmissionCompleteModal"});
-
-            console.log(ansController.openSubmissionCompleteModal);
 
             watchAdded = true;
 
