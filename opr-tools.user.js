@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.8
+// @version      0.9
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       1110101
 // @match        https://opr.ingress.com/recon
@@ -145,12 +145,15 @@ width: 350px !important;
             mapButtons.push("<a class='button btn btn-default' target='_blank' href='https://bing.com/maps/default.aspx?cp=" + data.lat + "~" + data.lng +  "&lvl=16&style=a'>bing</a>");
 
             // more buttons in a dropdown menu
+            mapDropdown.push("<li><a target='_blank' href='https://wego.here.com/?map=" + data.lat + "," + data.lng + ",17,satellite'>HERE maps</a></li>");
 
-            mapDropdown.push("<li><a target='_blank' href='http://maps.kompass.de/#lat=" + data.lat + "&lon=" + data.lng + "&z=17'>Kompass.maps</a></li>");
-            mapDropdown.push("<li>----</li>");
-            mapDropdown.push("<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + data.lat + "&Y=" + data.lng +  "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>BayernAtlas</a></li>");
+            mapDropdown.push("<li role='separator' class='divider'></li>");
 
-            mapDropdown.push("<li><a target='_blank' href='http://map.geo.admin.ch/?swisssearch=" + data.lat + "," + data.lng + "'>Swiss Geo Map</a></li>");
+            // national maps
+            mapDropdown.push("<li><a target='_blank' href='http://map.geo.admin.ch/?swisssearch=" + data.lat + "," + data.lng + "'>CH - Swiss Geo Map</a></li>");
+            mapDropdown.push("<li><a target='_blank' href='http://maps.kompass.de/#lat=" + data.lat + "&lon=" + data.lng + "&z=17'>DE - Kompass.maps</a></li>");
+            mapDropdown.push("<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + data.lat + "&Y=" + data.lng +  "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>");
+
 
             desc.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join('') +
                                     '<div class="button btn btn-primary dropdown"><span class="caret"></span><ul class="dropdown-content dropdown-menu">' + mapDropdown.join('') + "</div></div>");
@@ -158,8 +161,9 @@ width: 350px !important;
             // kill autoscroll
             ansController.goToLocation = null;
 
+            // portal image zoom button with "=s0"
             document.querySelector("#AnswersController .ingress-background").insertAdjacentHTML("beforeBegin",
-                                   '<div style="position:absolute;float:left;"><a class="button btn btn-default" style="display:inline-block;" href="' + subController.pageData.imageUrl+ '=s0" target="_blank"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></div>');
+                                                                                                '<div style="position:absolute;float:left;"><a class="button btn btn-default" style="display:inline-block;" href="' + subController.pageData.imageUrl+ '=s0" target="_blank"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></div>');
 
             // skip blabla dialog and go directly to next review
             // need some magic here because firefox.
