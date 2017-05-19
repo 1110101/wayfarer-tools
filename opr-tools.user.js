@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.4
+// @version      0.5
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       1110101
 // @match        https://opr.ingress.com/recon
 // @grant        unsafeWindow
-// @downloadURL  https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
+// @downloadURL  https://1110101.gitlab.io/opr-tools/opr-tools.js
 
 // ==/UserScript==
 
@@ -53,11 +53,17 @@ function init() {
     var tryNumber = 20,
         initWatcher = setInterval(function() {
             if (w.angular || !tryNumber) {
-                clearInterval(initWatcher);
-
                 if (w.angular) {
-                    initAngular();
-                    initScript();
+                    try {
+                        initAngular();
+                        initScript();
+
+                        clearInterval(initWatcher);
+                    }
+                    catch(error) {
+                        // repeat
+                        console.log(error);
+                    }
                 }
             }
             tryNumber--;
@@ -102,36 +108,8 @@ function init() {
             var mapButtons = [];
             var mapDropdown = [];
 
-            // adding map buttons
-            mapButtons.push("<a class='button btn btn-primary' target='_blank' href='https://www.ingress.com/intel?ll=" + data.lat + "," + data.lng +  "&z=17'>Intel</a>");
-            mapButtons.push("<a class='button btn btn-primary' target='_blank' href='https://www.openstreetmap.org/?mlat=" + data.lat + "&mlon=" + data.lng +  "&zoom=17'>OSM</a>");
-            mapButtons.push("<a class='button btn btn-primary' target='_blank' href='https://bing.com/maps/default.aspx?cp=" + data.lat + "~" + data.lng +  "&lvl=18&style=a'>bing</a>");
-
-            // more buttons in a dropdown menu
-            mapDropdown.push("<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + data.lat + "&Y=" + data.lng +  "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>BayernAtlas</a></li>");
-            mapDropdown.push("<li><a target='_blank' href='http://maps.kompass.de/#lat=" + data.lat + "&lon=" + data.lng + "&z=17'>Kompass.maps</a></li>");
-
-            desc.insertAdjacentHTML("beforeend", "<div><div class='btn-group'>" + mapButtons.join('') +
-                                    '<div class="button btn btn-primary dropdown"><span class="caret"></span><ul class="dropdown-content dropdown-menu">' + mapDropdown.join('') + "</div></div>");
-
-            // kill autoscroll
-            ansController.goToLocation = null;
-
-            // skipping "goto next portal" modal  
-            ansController.openSubmissionCompleteModal = function() {
-                window.location = "/recon";
-            };
-
-            watchAdded = true;
-
-        }
-    }
-}
-
-setTimeout(function() {
-    if(document.querySelector('[src*="all-min"]')) {
-        init();
-        addGlobalStyle(`
+            // adding CSS
+            addGlobalStyle(`
 .dropdown {
 position: relative;
 display: inline-block;
@@ -160,5 +138,39 @@ background-color: #008780;
 width: 350px !important;
 }
 `);
+
+            // adding map buttons
+            mapButtons.push("<a class='button btn btn-primary' target='_blank' href='https://www.ingress.com/intel?ll=" + data.lat + "," + data.lng +  "&z=17'>Intel</a>");
+            mapButtons.push("<a class='button btn btn-primary' target='_blank' href='https://www.openstreetmap.org/?mlat=" + data.lat + "&mlon=" + data.lng +  "&zoom=16'>OSM</a>");
+            mapButtons.push("<a class='button btn btn-primary' target='_blank' href='https://bing.com/maps/default.aspx?cp=" + data.lat + "~" + data.lng +  "&lvl=16&style=a'>bing</a>");
+
+            // more buttons in a dropdown menu
+            mapDropdown.push("<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + data.lat + "&Y=" + data.lng +  "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>BayernAtlas</a></li>");
+            mapDropdown.push("<li><a target='_blank' href='http://maps.kompass.de/#lat=" + data.lat + "&lon=" + data.lng + "&z=17'>Kompass.maps</a></li>");
+            mapDropdown.push("<li><a target='_blank' href='http://map.geo.admin.ch/?swisssearch=" + data.lat + "," + data.lng + "'>Swiss Geo Map</a></li>");
+
+            desc.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join('') +
+                                    '<div class="button btn btn-primary dropdown"><span class="caret"></span><ul class="dropdown-content dropdown-menu">' + mapDropdown.join('') + "</div></div>");
+
+            // kill autoscroll
+            ansController.goToLocation = null;
+
+            document.querySelector("#AnswersController .center-cropped-img").insertAdjacentHTML("beforeBegin", '<div style="position:absolute;float:left;">ZOOM</div>');
+
+            exportFunction(function() {
+                window.location.assign("/recon");
+            }, ansController, {defineAs: "openSubmissionCompleteModal"});
+
+            console.log(ansController.openSubmissionCompleteModal);
+
+            watchAdded = true;
+
+        }
+    }
+}
+
+setTimeout(function() {
+    if(document.querySelector('[src*="all-min"]')) {
+        init();
     }
 }, 500);
