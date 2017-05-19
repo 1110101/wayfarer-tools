@@ -6,7 +6,7 @@
 // @author       1110101
 // @match        https://opr.ingress.com/recon
 // @grant        unsafeWindow
-// @downloadURL  https://1110101.gitlab.io/opr-tools/opr-tools.js
+// @downloadURL  https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 
 // ==/UserScript==
 
@@ -61,7 +61,7 @@ function init() {
                         clearInterval(initWatcher);
                     }
                     catch(error) {
-                        // repeat
+                        // todo repeat
                         console.log(error);
                     }
                 }
