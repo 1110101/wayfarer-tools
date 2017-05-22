@@ -1,22 +1,22 @@
 // ==UserScript==
-// @name         OPR tools
+// @name         Modification of OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.9
+// @version      0.9.1
 // @description  Added links to Intel and OSM and disabled autoscroll.
-// @author       1110101
+// @author       tehstone
 // @match        https://opr.ingress.com/recon
 // @grant        unsafeWindow
-// @downloadURL  https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
+// @downloadURL  https://gitlab.com/tehstone/opr-tools/raw/master/opr-tools.user.js
 
 // ==/UserScript==
 
-// source https://gitlab.com/1110101/opr-tools
+// source https://gitlab.com/tehstone/opr-tools
 // merge-requests welcome
 
 /*
 MIT License
 
-Copyright (c) 2017 1110101
+Copyright (c) 2017 tehstone
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -86,6 +86,8 @@ function init() {
     }
     function initScript() {
         var desc = document.getElementById("descriptionDiv");
+        var box = document.getElementById("NewSubmissionController");
+        var stats = document.getElementById("player_stats").children[2];
         var scope = w.$scope(desc);
         var watchAdded = false;
 
@@ -153,10 +155,17 @@ width: 350px !important;
             mapDropdown.push("<li><a target='_blank' href='http://map.geo.admin.ch/?swisssearch=" + data.lat + "," + data.lng + "'>CH - Swiss Geo Map</a></li>");
             mapDropdown.push("<li><a target='_blank' href='http://maps.kompass.de/#lat=" + data.lat + "&lon=" + data.lng + "&z=17'>DE - Kompass.maps</a></li>");
             mapDropdown.push("<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + data.lat + "&Y=" + data.lng +  "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>");
+            
+            var reviewed = parseInt(stats.children[3].children[2].outerText);
+            var accepted = parseInt(stats.children[5].children[2].outerText);
+            var rejected = parseInt(stats.children[7].children[2].outerText);
 
+            var percent = (accepted + rejected) / reviewed;
+            percent = Math.round(percent * 100) / 100;
 
             desc.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join('') +
                                     '<div class="button btn btn-primary dropdown"><span class="caret"></span><ul class="dropdown-content dropdown-menu">' + mapDropdown.join('') + "</div></div>");
+            box.insertAdjacentHTML("beforeEnd", '<div class="text-center"><p class="ingress-mid-blue pull-center">Percent Processed:</p><p class="gold pull-center">' + percent + '</p></div>');
 
             // kill autoscroll
             ansController.goToLocation = null;
@@ -172,9 +181,16 @@ width: 350px !important;
             }, ansController, {defineAs: "openSubmissionCompleteModal"});
 
             watchAdded = true;
-
         }
+
     }
+    
+    var e = w.document.querySelector('#map-filmstrip > ul > li:nth-child(1) > img');
+    var f = w.document.querySelector('#AnswersController > form > div:nth-child(5) > div > p > span.ingress-mid-blue.text-center');
+    setTimeout(function() {
+        e.click();
+        f.click();
+    }, 500);
 }
 
 setTimeout(function() {
