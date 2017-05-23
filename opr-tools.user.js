@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Modification of OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.9.2
+// @version      0.9.3
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       tehstone
 // @match        https://opr.ingress.com/recon
@@ -86,7 +86,9 @@ function init() {
     }
     function initScript() {
         var desc = document.getElementById("descriptionDiv");
-        var box = document.getElementById("NewSubmissionController");
+        //var box = document.getElementById("NewSubmissionController");
+        var box = w.document.querySelector("#AnswersController > form");
+        
         var stats = document.getElementById("player_stats").children[2];
         var scope = w.$scope(desc);
         var watchAdded = false;
@@ -109,6 +111,7 @@ function init() {
 
             var mapButtons = [];
             var mapDropdown = [];
+            var textButtons = [];
 
             // adding CSS
             addGlobalStyle(`
@@ -156,6 +159,13 @@ width: 350px !important;
             mapDropdown.push("<li><a target='_blank' href='http://maps.kompass.de/#lat=" + data.lat + "&lon=" + data.lng + "&z=17'>DE - Kompass.maps</a></li>");
             mapDropdown.push("<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + data.lat + "&Y=" + data.lng +  "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>");
 
+            // adding text buttons
+            textButtons.push('<button id="photo" class="button btn btn-default textButton">Photo</button>');
+            textButtons.push('<button id="private" class="button btn btn-default textButton">Private Property</button>');
+            textButtons.push('<button id="duplicate" class="button btn btn-default textButton">Duplicate</button>');
+            textButtons.push('<button id="school" class="button btn btn-default textButton">School</button>');
+            textButtons.push('<button id="clear" class="button btn btn-default textButton">Clear</button>');
+
             var reviewed = parseInt(stats.children[3].children[2].outerText);
             var accepted = parseInt(stats.children[5].children[2].outerText);
             var rejected = parseInt(stats.children[7].children[2].outerText);
@@ -165,7 +175,39 @@ width: 350px !important;
 
             desc.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join('') +
                                     '<div class="button btn btn-primary dropdown"><span class="caret"></span><ul class="dropdown-content dropdown-menu">' + mapDropdown.join('') + "</div></div>");
+            box.insertAdjacentHTML("beforeEnd", '<div class="center" style="text-align: center">' + textButtons.join('') + '</div>');
             box.insertAdjacentHTML("beforeEnd", '<div class="text-center"><p class="ingress-mid-blue pull-center">Percent Processed:</p><p class="gold pull-center">' + percent + '</p></div>');
+
+            var textBox= document.querySelector("#AnswersController > form > div.text-center > textarea.hidden-xs.ng-pristine.ng-untouched.ng-valid");
+
+            var buttons = document.getElementsByClassName('textButton');
+            for(var b in buttons){
+                console.log(b);
+                if(buttons.hasOwnProperty(b)){
+                    buttons[b].addEventListener("click", function(){
+                        var source = event.target || event.srcElement;
+                        switch(source.id) {
+                            case "photo":
+                                text = "low quality photo";
+                                break;
+                            case "private":
+                                text = "private residential property";
+                                break;
+                            case "duplicate":
+                                text = "duplicate of previously reviewed portal candidate";
+                                break;
+                            case "school":
+                                text = "located on primary or secondary school grounds";
+                                break;
+                            case "clear":
+                                text = '';
+                                break;
+                        }
+                            textBox.innerText = text;
+
+                    }, false);
+                }
+            }
 
             // kill autoscroll
             ansController.goToLocation = null;
@@ -185,7 +227,7 @@ width: 350px !important;
 
     }
 
-        try {
+    try {
         var e = w.document.querySelector('#map-filmstrip > ul > li:nth-child(1) > img');
         setTimeout(function() {
             e.click();
