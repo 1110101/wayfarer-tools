@@ -192,6 +192,9 @@ width: 350px !important;
             }
             subController.map.setZoom(16);
 
+            // Re-enabling scroll zoom
+            subController.map.setOptions({scrollwheel: true});
+
             watchAdded = true;
 
         }
