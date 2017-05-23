@@ -143,10 +143,7 @@ width: 350px !important;
 
             // adding map buttons
             mapButtons.push("<a class='button btn btn-default' target='_blank' href='https://www.ingress.com/intel?ll=" + data.lat + "," + data.lng +  "&z=17'>Intel</a>");
-            mapButtons.push("<a class='button btn btn-default' target='_blank' href='https://www.openstreetmap.org/?mlat=" + data.lat + "&mlon=" + data.lng +  "&zoom=16'>OSM</a>");
             mapButtons.push("<a class='button btn btn-default' target='_blank' href='https://bing.com/maps/default.aspx?cp=" + data.lat + "~" + data.lng +  "&lvl=16&style=a'>bing</a>");
-
-            mapButtons.push("<a class='button btn btn-default' target='_blank' href='https://www.ingress.com/intel?ll=" + data.lat + "," + data.lng +  "&z=17'>Intel</a>");
             mapButtons.push("<a class='button btn btn-default' target='_blank' href='https://www.openstreetmap.org/?mlat=" + data.lat + "&mlon=" + data.lng +  "&zoom=16'>OSM</a>");
             mapButtons.push("<a class='button btn btn-default' target='_blank' href='https://yandex.ru/maps/?ll=" + data.lng + "," + data.lat +  "&z=16'>Yandex</a>");
             mapButtons.push("<a class='button btn btn-default' target='_blank' href='http://wikimapia.org/#lang=ru&lat=" + data.lat + "&lon=" + data.lng + "&z=16'>Wikimapia</a>");
