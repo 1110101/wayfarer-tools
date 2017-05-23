@@ -2,6 +2,7 @@
 Userscript for Ingress Operation Portal Recon - https://opr.ingress.com/recon
 
 ![](./image/opr-tools.png)
+![](./image/opr-tools-2.png)
 
 Features:
 - Additional links to map services like Intel, OpenStreetMap, bing and some german ones
