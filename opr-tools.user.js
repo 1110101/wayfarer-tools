@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.9
+// @version      0.1337.10
 // @description  Added links to Intel and OSM and disabled autoscroll.
-// @author       1110101
+// @author       1110101, Hedger
 // @match        https://opr.ingress.com/recon
 // @grant        unsafeWindow
-// @downloadURL  https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
+// @downloadURL  https://gitlab.com/hedger/opr-tools/raw/master/opr-tools.user.js
 
 // ==/UserScript==
 
@@ -174,6 +174,9 @@ width: 350px !important;
             // exportFunction(function() {
             //     window.location.assign("/recon");
             // }, ansController, {defineAs: "openSubmissionCompleteModal"});
+            ansController.openSubmissionCompleteModal = function() {
+                window.location.assign("/recon");
+            };
 
             // Make photo filmstrip scrollable
             var filmstrip = document.getElementById('map-filmstrip');
@@ -194,6 +197,15 @@ width: 350px !important;
 
             // Re-enabling scroll zoom
             subController.map.setOptions({scrollwheel: true});
+
+            // HACKY way to move portal rating to the right side
+            var scorePanel = w.document.querySelector('div[class~="pull-right"');
+            var nodesToMove = Array.from(w.document.querySelector('div[class="btn-group"').parentElement.children);
+            nodesToMove = nodesToMove.splice(2, 6)
+            nodesToMove.push(w.document.createElement('br'));
+            for (var i  = nodesToMove.length-1; i >= 0; --i) {
+                scorePanel.insertBefore(nodesToMove[i], scorePanel.firstChild);
+            }
 
             watchAdded = true;
 
