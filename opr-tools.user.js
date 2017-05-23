@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Modification of OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.9.1
+// @version      0.9.2
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       tehstone
 // @match        https://opr.ingress.com/recon
@@ -155,7 +155,7 @@ width: 350px !important;
             mapDropdown.push("<li><a target='_blank' href='http://map.geo.admin.ch/?swisssearch=" + data.lat + "," + data.lng + "'>CH - Swiss Geo Map</a></li>");
             mapDropdown.push("<li><a target='_blank' href='http://maps.kompass.de/#lat=" + data.lat + "&lon=" + data.lng + "&z=17'>DE - Kompass.maps</a></li>");
             mapDropdown.push("<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + data.lat + "&Y=" + data.lng +  "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>");
-            
+
             var reviewed = parseInt(stats.children[3].children[2].outerText);
             var accepted = parseInt(stats.children[5].children[2].outerText);
             var rejected = parseInt(stats.children[7].children[2].outerText);
@@ -184,13 +184,20 @@ width: 350px !important;
         }
 
     }
-    
-    var e = w.document.querySelector('#map-filmstrip > ul > li:nth-child(1) > img');
-    var f = w.document.querySelector('#AnswersController > form > div:nth-child(5) > div > p > span.ingress-mid-blue.text-center');
-    setTimeout(function() {
-        e.click();
-        f.click();
-    }, 500);
+
+        try {
+        var e = w.document.querySelector('#map-filmstrip > ul > li:nth-child(1) > img');
+        setTimeout(function() {
+            e.click();
+        }, 500);
+    } catch(err) {}
+
+    try {
+        var f = w.document.querySelector('#AnswersController > form > div:nth-child(5) > div > p > span.ingress-mid-blue.text-center');
+        setTimeout(function() {
+            f.click();
+        }, 500);
+    } catch(err) {}
 }
 
 setTimeout(function() {
