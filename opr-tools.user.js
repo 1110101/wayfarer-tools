@@ -154,7 +154,7 @@ width: 350px !important;
             mapDropdown.push("<li><a target='_blank' href='http://maps.kompass.de/#lat=" + data.lat + "&lon=" + data.lng + "&z=17'>DE - Kompass.maps</a></li>");
             mapDropdown.push("<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + data.lat + "&Y=" + data.lng +  "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>");
             mapDropdown.push("<li><a target='_blank' href='https://www.hitta.se/kartan!~"+ data.lat + "," + data.lng + ",18z/tileLayer!l=1'>SE - Hitta.se</a></li>");
-            mapDropdown.push("<li><a target='_blank' href='https://kartor.eniro.se/?c=59.301847,18.084998&z=17&l=nautical'>SE - Eniro Sjökort</a></li>");
+            mapDropdown.push("<li><a target='_blank' href='https://kartor.eniro.se/?c="+ data.lat + "," + data.lng + "&z=17&l=nautical'>SE - Eniro Sjökort</a></li>");
 
             desc.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join('') +
                                     '<div class="button btn btn-primary dropdown"><span class="caret"></span><ul class="dropdown-content dropdown-menu">' + mapDropdown.join('') + "</div></div>");
