@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.1337.11
+// @version      0.1337.11.1
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       1110101, Hedger
 // @match        https://opr.ingress.com/recon
@@ -171,12 +171,13 @@ width: 350px !important;
 
             // skip blabla dialog and go directly to next review
             // need some magic here because firefox.
-            // exportFunction(function() {
-            //     window.location.assign("/recon");
-            // }, ansController, {defineAs: "openSubmissionCompleteModal"});
-            ansController.openSubmissionCompleteModal = function() {
+            exportFunction(function() {
                 window.location.assign("/recon");
-            };
+            }, ansController, {defineAs: "openSubmissionCompleteModal"});
+            // Legacy mode
+            // ansController.openSubmissionCompleteModal = function() {
+            //     window.location.assign("/recon");
+            // };
 
             // Make photo filmstrip scrollable
             var filmstrip = document.getElementById('map-filmstrip');
