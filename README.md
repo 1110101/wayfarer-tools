@@ -9,6 +9,6 @@ Features:
 - Removed "Your analysis has been recorded." dialog
 - Moved overall portal rating to same group as other ratings
 - Changed portal markers to small circles, inspied by IITC style
-- Made "Nearby portals" list scrollable with mouse wheel
+- Made "Nearby portals" list and map scrollable with mouse wheel
 
 Download: https://gitlab.com/hedger/opr-tools/raw/master/opr-tools.user.js
