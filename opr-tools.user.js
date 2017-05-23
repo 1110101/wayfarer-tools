@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.1337.10
+// @version      0.1337.11
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       1110101, Hedger
 // @match        https://opr.ingress.com/recon
@@ -208,7 +208,7 @@ width: 350px !important;
             }
 
             // Moving nearby portal strip higher
-            var mapsDiv = document.querySelector('form div.row[jstcache]');
+            var mapsDiv = document.querySelector('form div.row:nth-of-type(2)');
             mapsDiv.prepend(filmstrip);
 
             watchAdded = true;
