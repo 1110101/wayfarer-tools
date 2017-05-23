@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Modification of OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.9.4
+// @version      0.9.4.2
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       tehstone
 // @match        https://opr.ingress.com/recon
@@ -165,6 +165,7 @@ width: 350px !important;
             textButtons.push('<button id="duplicate" class="button btn btn-default textButton">Duplicate</button>');
             textButtons.push('<button id="school" class="button btn btn-default textButton">School</button>');
             textButtons.push('<button id="person" class="button btn btn-default textButton">Person</button>');
+            textButtons.push('<button id="perm" class="button btn btn-default textButton">Temporary</button>');
             textButtons.push('<button id="clear" class="button btn btn-default textButton">Clear</button>');
 
             var reviewed = parseInt(stats.children[3].children[2].outerText);
@@ -202,6 +203,9 @@ width: 350px !important;
                                 break;
                             case "person":
                                 text = "picture contains one or more people";
+                                break;
+                            case "perm":
+                                text = "portal candidate is seasonal or temporary";
                                 break;
                             case "clear":
                                 text = '';
