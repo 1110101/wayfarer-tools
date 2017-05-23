@@ -38,6 +38,8 @@ SOFTWARE.
 
 */
 
+var PORTAL_MARKER = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuOWwzfk4AAADlSURBVDhPY/j//z8CTw3U/V8lcvx/MfPX/2Xcd//XyWwDYxAbJAaS63c2Q9aD0NygUPS/hPXt/3bD5f93LI7DwFvnJILlSlg//K+XrUc1AKS5jOvx/wU55Vg1I2OQmlKOpzBDIM4G2UyMZhgGqQW5BOgdBrC/cDkbHwbpAeplAAcONgWEMChMgHoZwCGMTQExGKiXARxN2CSJwUC9VDCAYi9QHIhVQicpi0ZQ2gYlCrITEigpg5IlqUm5VrILkRdghoBMxeUd5MwE1YxqAAiDvAMKE1DAgmIHFMUgDGKDxDCy838GAPWFoAEBs2EvAAAAAElFTkSuQmCC';
+
 function addGlobalStyle(css) {
     var head, style;
     head = document.getElementsByTagName('head')[0];
@@ -167,9 +169,26 @@ width: 350px !important;
 
             // skip blabla dialog and go directly to next review
             // need some magic here because firefox.
-            exportFunction(function() {
-                window.location.assign("/recon");
-            }, ansController, {defineAs: "openSubmissionCompleteModal"});
+            // exportFunction(function() {
+            //     window.location.assign("/recon");
+            // }, ansController, {defineAs: "openSubmissionCompleteModal"});
+
+            // Make photo filmstrip scrollable
+            var filmstrip = document.getElementById('map-filmstrip');
+            function scrollHorizontally(e) {
+                e = window.event || e;
+                var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+                filmstrip.scrollLeft -= (delta*50); // Multiplied by 50
+                e.preventDefault();
+            }
+            filmstrip.addEventListener("mousewheel", scrollHorizontally, false);
+
+            // Replace map markers with a nice circle
+            for (var i = 0; i < subController.markers.length; ++i) {
+                var marker = subController.markers[i];
+                marker.setIcon(PORTAL_MARKER);
+            }
+            subController.map.setZoom(16);
 
             watchAdded = true;
 
