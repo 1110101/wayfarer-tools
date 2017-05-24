@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Modification of OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.9.5.1
+// @version      0.9.6
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       tehstone
 // @match        https://opr.ingress.com/recon
@@ -37,6 +37,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
+var PORTAL_MARKER = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuOWwzfk4AAADlSURBVDhPY/j//z8CTw3U/V8lcvx/MfPX/2Xcd//XyWwDYxAbJAaS63c2Q9aD0NygUPS/hPXt/3bD5f93LI7DwFvnJILlSlg//K+XrUc1AKS5jOvx/wU55Vg1I2OQmlKOpzBDIM4G2UyMZhgGqQW5BOgdBrC/cDkbHwbpAeplAAcONgWEMChMgHoZwCGMTQExGKiXARxN2CSJwUC9VDCAYi9QHIhVQicpi0ZQ2gYlCrITEigpg5IlqUm5VrILkRdghoBMxeUd5MwE1YxqAAiDvAMKE1DAgmIHFMUgDGKDxDCy838GAPWFoAEBs2EvAAAAAElFTkSuQmCC';
 
 function addGlobalStyle(css) {
     var head, style;
@@ -86,7 +88,6 @@ function init() {
     }
     function initScript() {
         var desc = document.getElementById("descriptionDiv");
-        //var box = document.getElementById("NewSubmissionController");
         var box = w.document.querySelector("#AnswersController > form");
         
         var stats = document.getElementById("player_stats").children[2];
@@ -167,7 +168,7 @@ pointer-events: none;
 /* Position tooltip above the element */
 [data-tooltip]:before {
 position: absolute;
-bottom: 150%;
+top: 150%;
 left: 50%;
 margin-bottom: 5px;
 margin-left: -80px;
@@ -188,12 +189,11 @@ line-height: 1.2;
 /* Triangle hack to make tooltip look like a speech bubble */
 [data-tooltip]:after {
 position: absolute;
-bottom: 150%;
-left: 50%;
-margin-left: -5px;
+top: 132%;
+left: relative;
 width: 0;
-border-top: 5px solid #000;
-border-top: 5px solid hsla(0, 0%, 20%, 0.9);
+border-bottom: 5px solid #000;
+border-bottom: 5px solid hsla(0, 0%, 20%, 0.9);
 border-right: 5px solid transparent;
 border-left: 5px solid transparent;
 content: " ";
@@ -302,7 +302,38 @@ opacity: 1;
             exportFunction(function() {
                 window.location.assign("/recon");
             }, ansController, {defineAs: "openSubmissionCompleteModal"});
+            
+            // Make photo filmstrip scrollable
+            var filmstrip = document.getElementById('map-filmstrip');
+            function scrollHorizontally(e) {
+                e = window.event || e;
+                var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+                filmstrip.scrollLeft -= (delta*50); // Multiplied by 50
+                e.preventDefault();
+            }
+            filmstrip.addEventListener("mousewheel", scrollHorizontally, false);
 
+            // Replace map markers with a nice circle
+            for (var i = 0; i < subController.markers.length; ++i) {
+                var marker = subController.markers[i];
+                marker.setIcon(PORTAL_MARKER);
+            }
+            subController.map.setZoom(16);
+
+            // Re-enabling scroll zoom
+            subController.map.setOptions({scrollwheel: true});
+
+            // HACKY way to move portal rating to the right side
+            var scorePanel = w.document.querySelector('div[class~="pull-right"');
+            var nodesToMove = Array.from(w.document.querySelector('div[class="btn-group"').parentElement.children);
+            nodesToMove = nodesToMove.splice(2, 6);
+            nodesToMove.push(w.document.createElement('br'));
+            for (var i  = nodesToMove.length-1; i >= 0; --i) {
+                scorePanel.insertBefore(nodesToMove[i], scorePanel.firstChild);
+            }
+            // Moving nearby portal strip higher
+            var mapsDiv = document.querySelector('form div.row:nth-of-type(2)');
+            //mapsDiv.prepend(filmstrip);
             watchAdded = true;
         }
 
