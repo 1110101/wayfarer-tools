@@ -334,8 +334,8 @@ opacity: 1;
                 scorePanel.insertBefore(nodesToMove[i], scorePanel.firstChild);
             }
             // Moving nearby portal strip higher
-            var mapsDiv = document.querySelector('form div.row:nth-of-type(2)');
-            //mapsDiv.prepend(filmstrip);
+            // var mapsDiv = document.querySelector('form div.row:nth-of-type(2)');
+            // mapsDiv.prepend(filmstrip);
             watchAdded = true;
         }
 
