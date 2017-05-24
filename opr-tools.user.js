@@ -215,10 +215,10 @@ opacity: 1;
             mapButtons.push("<a class='button btn btn-default' target='_blank' href='https://www.ingress.com/intel?ll=" + data.lat + "," + data.lng +  "&z=17'>Intel</a>");
             mapButtons.push("<a class='button btn btn-default' target='_blank' href='https://www.openstreetmap.org/?mlat=" + data.lat + "&mlon=" + data.lng +  "&zoom=16'>OSM</a>");
             mapButtons.push("<a class='button btn btn-default' target='_blank' href='https://bing.com/maps/default.aspx?cp=" + data.lat + "~" + data.lng +  "&lvl=16&style=a'>bing</a>");
-            mapButtons.push("<a class='button btn btn-default' target='_blank' href='https://maps.yandex.ru/?text=" + data.lat + "," + data.lng +  "'>Yandex</a>");
-            mapButtons.push("<a class='button btn btn-default' target='_blank' href='http://wikimapia.org/#lang=ru&lat=" + data.lat + "&lon=" + data.lng + "&z=16'>Wikimapia</a>");
+
             // more buttons in a dropdown menu
             mapDropdown.push("<li><a target='_blank' href='https://wego.here.com/?map=" + data.lat + "," + data.lng + ",17,satellite'>HERE maps</a></li>");
+	        mapDropdown.push("<li><a target='_blank' href='http://wikimapia.org/#lat=" + data.lat + "&lon=" + data.lng + "&z=16'>Wikimapia</a></li>");
 
             mapDropdown.push("<li role='separator' class='divider'></li>");
 
@@ -227,6 +227,7 @@ opacity: 1;
             mapDropdown.push("<li><a target='_blank' href='http://maps.kompass.de/#lat=" + data.lat + "&lon=" + data.lng + "&z=17'>DE - Kompass.maps</a></li>");
             mapDropdown.push("<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + data.lat + "&Y=" + data.lng +  "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>");
 	        mapDropdown.push("<li><a target='_blank' href='https://www.hitta.se/kartan!~"+ data.lat + "," + data.lng + ",18z/tileLayer!l=1'>SE - Hitta.se</a></li>");
+	        mapDropdown.push("<li><a target='_blank' href='https://maps.yandex.ru/?text=" + data.lat + "," + data.lng +  "'>RU - Yandex</a></li>");
 	        mapDropdown.push("<li><a target='_blank' href='https://kartor.eniro.se/?c="+ data.lat + "," + data.lng + "&z=17&l=nautical'>SE - Eniro Sjökort</a></li>");
 
             // adding text buttons
