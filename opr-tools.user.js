@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Modification of OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.9.5
+// @version      0.9.5.1
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       tehstone
 // @match        https://opr.ingress.com/recon
@@ -240,12 +240,12 @@ opacity: 1;
             var rejected = parseInt(stats.children[7].children[2].outerText);
 
             var percent = (accepted + rejected) / reviewed;
-            percent = Math.round(percent * 100) / 100;
+            percent = Math.round(percent * 1000) / 10;
 
             desc.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join('') +
                                     '<div class="button btn btn-primary dropdown"><span class="caret"></span><ul class="dropdown-content dropdown-menu">' + mapDropdown.join('') + "</div></div>");
             box.insertAdjacentHTML("beforeEnd", '<div class="center" style="text-align: center">' + textButtons.join('') + '</div>');
-            box.insertAdjacentHTML("beforeEnd", '<div class="text-center"><p class="ingress-mid-blue pull-center">Percent Processed:</p><p class="gold pull-center">' + percent + '</p></div>');
+            box.insertAdjacentHTML("beforeEnd", '<div class="text-center"><p class="ingress-mid-blue pull-center">Percent Processed:</p><p class="gold pull-center">' + percent + '%</p></div>');
 
             var textBox= document.querySelector("#AnswersController > form > div.text-center > textarea.hidden-xs.ng-pristine.ng-untouched.ng-valid");
 
