@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.9.6
+// @version      0.9.7
 // @description  Added links to Intel and OSM and disabled autoscroll.
-// @author       1110101, tehstone, Hedger
+// @author       1110101, tehstone, Hedger, Deep-thot
 // @match        https://opr.ingress.com/recon
 // @grant        unsafeWindow
 // @downloadURL  https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
@@ -16,7 +16,7 @@
 /*
 MIT License
 
-Copyright (c) 2017 1110101, tehstone, Hedger
+Copyright (c) 2017 1110101, tehstone, Hedger, Deep-thot
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
