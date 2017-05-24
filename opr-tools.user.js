@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Modification of OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.9.4.2
+// @version      0.9.5
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       tehstone
 // @match        https://opr.ingress.com/recon
@@ -142,6 +142,73 @@ background-color: #008780;
 .modal-sm {
 width: 350px !important;
 }
+
+/**
+* Tooltip Styles
+*/
+
+/* Add this attribute to the element that needs a tooltip */
+[data-tooltip] {
+position: relative;
+z-index: 2;
+cursor: pointer;
+}
+
+/* Hide the tooltip content by default */
+[data-tooltip]:before,
+[data-tooltip]:after {
+visibility: hidden;
+-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=0);
+opacity: 0;
+pointer-events: none;
+}
+
+/* Position tooltip above the element */
+[data-tooltip]:before {
+position: absolute;
+bottom: 150%;
+left: 50%;
+margin-bottom: 5px;
+margin-left: -80px;
+padding: 7px;
+width: relative;
+-webkit-border-radius: 3px;
+-moz-border-radius: 3px;
+border-radius: 3px;
+background-color: #000;
+background-color: hsla(0, 0%, 20%, 0.9);
+color: #fff;
+content: attr(data-tooltip);
+text-align: center;
+font-size: 14px;
+line-height: 1.2;
+}
+
+/* Triangle hack to make tooltip look like a speech bubble */
+[data-tooltip]:after {
+position: absolute;
+bottom: 150%;
+left: 50%;
+margin-left: -5px;
+width: 0;
+border-top: 5px solid #000;
+border-top: 5px solid hsla(0, 0%, 20%, 0.9);
+border-right: 5px solid transparent;
+border-left: 5px solid transparent;
+content: " ";
+font-size: 0;
+line-height: 0;
+}
+
+/* Show tooltip content on hover */
+[data-tooltip]:hover:before,
+[data-tooltip]:hover:after {
+visibility: visible;
+-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
+filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=100);
+opacity: 1;
+}
 `);
 
             // adding map buttons
@@ -160,13 +227,13 @@ width: 350px !important;
             mapDropdown.push("<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + data.lat + "&Y=" + data.lng +  "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>");
 
             // adding text buttons
-            textButtons.push('<button id="photo" class="button btn btn-default textButton">Photo</button>');
-            textButtons.push('<button id="private" class="button btn btn-default textButton">Private</button>');
-            textButtons.push('<button id="duplicate" class="button btn btn-default textButton">Duplicate</button>');
-            textButtons.push('<button id="school" class="button btn btn-default textButton">School</button>');
-            textButtons.push('<button id="person" class="button btn btn-default textButton">Person</button>');
-            textButtons.push('<button id="perm" class="button btn btn-default textButton">Temporary</button>');
-            textButtons.push('<button id="clear" class="button btn btn-default textButton">Clear</button>');
+            textButtons.push('<button  id="photo" class="button btn btn-default textButton" data-tooltip="indicates a low quality photo">Photo</button>');
+            textButtons.push('<button id="private" class="button btn btn-default textButton" data-tooltip="located on private residential property">Private</button>');
+            textButtons.push('<button id="duplicate" class="button btn btn-default textButton" data-tooltip="duplicate of one you have previously reviewed">Duplicate</button>');
+            textButtons.push('<button id="school" class="button btn btn-default textButton" data-tooltip=" located on school property">School</button>');
+            textButtons.push('<button id="person" class="button btn btn-default textButton" data-tooltip="photo contains 1 or more people">Person</button>');
+            textButtons.push('<button id="perm" class="button btn btn-default textButton" data-tooltip="seasonal or temporary display or item">Temporary</button>');
+            textButtons.push('<button id="clear" class="button btn btn-default textButton" data-tooltip="clears the comment box">Clear</button>');
 
             var reviewed = parseInt(stats.children[3].children[2].outerText);
             var accepted = parseInt(stats.children[5].children[2].outerText);
@@ -184,7 +251,6 @@ width: 350px !important;
 
             var buttons = document.getElementsByClassName('textButton');
             for(var b in buttons){
-                console.log(b);
                 if(buttons.hasOwnProperty(b)){
                     buttons[b].addEventListener("click", function(){
                         var source = event.target || event.srcElement;
@@ -214,6 +280,13 @@ width: 350px !important;
                             textBox.innerText = text;
 
                     }, false);
+                    buttons[b].onmouseover = function() {
+                        document.getElementById('popup').style.display = 'block';
+                    };
+                    buttons[b].onmouseout = function() {
+                        document.getElementById('popup').style.display = 'none';
+
+                    };
                 }
             }
 
