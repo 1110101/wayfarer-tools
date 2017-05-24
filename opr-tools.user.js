@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.9.7
+// @version      0.9.8
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       1110101, tehstone, Hedger, Deep-thot
 // @match        https://opr.ingress.com/recon
@@ -215,7 +215,8 @@ opacity: 1;
             mapButtons.push("<a class='button btn btn-default' target='_blank' href='https://www.ingress.com/intel?ll=" + data.lat + "," + data.lng +  "&z=17'>Intel</a>");
             mapButtons.push("<a class='button btn btn-default' target='_blank' href='https://www.openstreetmap.org/?mlat=" + data.lat + "&mlon=" + data.lng +  "&zoom=16'>OSM</a>");
             mapButtons.push("<a class='button btn btn-default' target='_blank' href='https://bing.com/maps/default.aspx?cp=" + data.lat + "~" + data.lng +  "&lvl=16&style=a'>bing</a>");
-            
+            mapButtons.push("<a class='button btn btn-default' target='_blank' href='https://maps.yandex.ru/?text=" + data.lat + "," + data.lng +  "'>Yandex</a>");
+            mapButtons.push("<a class='button btn btn-default' target='_blank' href='http://wikimapia.org/#lang=ru&lat=" + data.lat + "&lon=" + data.lng + "&z=16'>Wikimapia</a>");
             // more buttons in a dropdown menu
             mapDropdown.push("<li><a target='_blank' href='https://wego.here.com/?map=" + data.lat + "," + data.lng + ",17,satellite'>HERE maps</a></li>");
 

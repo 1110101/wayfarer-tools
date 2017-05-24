@@ -19,4 +19,4 @@ Features implemented by [hedger](https://gitlab.com/hedger/opr-tools):
 - Made "Nearby portals" list and map scrollable with mouse wheel
 
 
-Download: https://gitlab.com/tehstone/opr-tools/raw/master/opr-tools.user.js
+Download: https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
