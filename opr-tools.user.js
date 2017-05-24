@@ -1,22 +1,22 @@
 // ==UserScript==
-// @name         Modification of OPR tools
+// @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
 // @version      0.9.6
 // @description  Added links to Intel and OSM and disabled autoscroll.
-// @author       tehstone
+// @author       1110101, tehstone, Hedger
 // @match        https://opr.ingress.com/recon
 // @grant        unsafeWindow
-// @downloadURL  https://gitlab.com/tehstone/opr-tools/raw/master/opr-tools.user.js
+// @downloadURL  https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 
 // ==/UserScript==
 
-// source https://gitlab.com/tehstone/opr-tools
+// source https://gitlab.com/1110101/opr-tools
 // merge-requests welcome
 
 /*
 MIT License
 
-Copyright (c) 2017 tehstone
+Copyright (c) 2017 1110101, tehstone, Hedger
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -247,7 +247,7 @@ opacity: 1;
             box.insertAdjacentHTML("beforeEnd", '<div class="center" style="text-align: center">' + textButtons.join('') + '</div>');
             box.insertAdjacentHTML("beforeEnd", '<div class="text-center"><p class="ingress-mid-blue pull-center">Percent Processed:</p><p class="gold pull-center">' + percent + '%</p></div>');
 
-            var textBox= document.querySelector("#AnswersController > form > div.text-center > textarea.hidden-xs.ng-pristine.ng-untouched.ng-valid");
+            var textBox = document.querySelector("#AnswersController > form > div.text-center > textarea.hidden-xs.ng-pristine.ng-untouched.ng-valid");
 
             var buttons = document.getElementsByClassName('textButton');
             for(var b in buttons){
