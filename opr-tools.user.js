@@ -1,4 +1,3 @@
- ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
 // @version      0.1337.11.2
