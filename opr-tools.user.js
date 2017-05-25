@@ -1,7 +1,7 @@
-// ==UserScript==
+ ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.1337.11.1
+// @version      0.1337.11.2
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       1110101, Hedger
 // @match        https://opr.ingress.com/recon
@@ -187,6 +187,7 @@ width: 350px !important;
                 filmstrip.scrollLeft -= (delta*50); // Multiplied by 50
                 e.preventDefault();
             }
+            filmstrip.addEventListener("DOMMouseScroll", scrollHorizontally, false);
             filmstrip.addEventListener("mousewheel", scrollHorizontally, false);
 
             // Replace map markers with a nice circle
@@ -197,11 +198,11 @@ width: 350px !important;
             subController.map.setZoom(16);
 
             // Re-enabling scroll zoom
-            subController.map.setOptions({scrollwheel: true});
+            subController.map.setOptions(cloneInto({scrollwheel: true}, w));
 
             // HACKY way to move portal rating to the right side
-            var scorePanel = w.document.querySelector('div[class~="pull-right"');
-            var nodesToMove = Array.from(w.document.querySelector('div[class="btn-group"').parentElement.children);
+            var scorePanel = w.document.querySelector('div[class~="pull-right"]');
+            var nodesToMove = Array.from(w.document.querySelector('div[class="btn-group"]').parentElement.children);
             nodesToMove = nodesToMove.splice(2, 6)
             nodesToMove.push(w.document.createElement('br'));
             for (var i  = nodesToMove.length-1; i >= 0; --i) {
