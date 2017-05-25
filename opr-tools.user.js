@@ -1,3 +1,4 @@
+// ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
 // @version      0.1337.11.2
@@ -202,7 +203,7 @@ width: 350px !important;
             // HACKY way to move portal rating to the right side
             var scorePanel = w.document.querySelector('div[class~="pull-right"]');
             var nodesToMove = Array.from(w.document.querySelector('div[class="btn-group"]').parentElement.children);
-            nodesToMove = nodesToMove.splice(2, 6)
+            nodesToMove = nodesToMove.splice(2, 6);
             nodesToMove.push(w.document.createElement('br'));
             for (var i  = nodesToMove.length-1; i >= 0; --i) {
                 scorePanel.insertBefore(nodesToMove[i], scorePanel.firstChild);
