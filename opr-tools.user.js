@@ -38,8 +38,7 @@ SOFTWARE.
 
 */
 
-// var PORTAL_MARKER = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuOWwzfk4AAADlSURBVDhPY/j//z8CTw3U/V8lcvx/MfPX/2Xcd//XyWwDYxAbJAaS63c2Q9aD0NygUPS/hPXt/3bD5f93LI7DwFvnJILlSlg//K+XrUc1AKS5jOvx/wU55Vg1I2OQmlKOpzBDIM4G2UyMZhgGqQW5BOgdBrC/cDkbHwbpAeplAAcONgWEMChMgHoZwCGMTQExGKiXARxN2CSJwUC9VDCAYi9QHIhVQicpi0ZQ2gYlCrITEigpg5IlqUm5VrILkRdghoBMxeUd5MwE1YxqAAiDvAMKE1DAgmIHFMUgDGKDxDCy838GAPWFoAEBs2EvAAAAAElFTkSuQmCC';
-
+var PORTAL_MARKER = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuOWwzfk4AAADlSURBVDhPY/j//z8CTw3U/V8lcvx/MfPX/2Xcd//XyWwDYxAbJAaS63c2Q9aD0NygUPS/hPXt/3bD5f93LI7DwFvnJILlSlg//K+XrUc1AKS5jOvx/wU55Vg1I2OQmlKOpzBDIM4G2UyMZhgGqQW5BOgdBrC/cDkbHwbpAeplAAcONgWEMChMgHoZwCGMTQExGKiXARxN2CSJwUC9VDCAYi9QHIhVQicpi0ZQ2gYlCrITEigpg5IlqUm5VrILkRdghoBMxeUd5MwE1YxqAAiDvAMKE1DAgmIHFMUgDGKDxDCy838GAPWFoAEBs2EvAAAAAElFTkSuQmCC';
 function addGlobalStyle(css) {
 	var head, style;
 	head = document.getElementsByTagName('head')[0];
@@ -228,7 +227,7 @@ opacity: 1;
 			mapDropdown.push("<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + data.lat + "&Y=" + data.lng +  "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>");
 			mapDropdown.push("<li><a target='_blank' href='https://www.hitta.se/kartan!~"+ data.lat + "," + data.lng + ",18z/tileLayer!l=1'>SE - Hitta.se</a></li>");
 			mapDropdown.push("<li><a target='_blank' href='https://maps.yandex.ru/?text=" + data.lat + "," + data.lng +  "'>RU - Yandex</a></li>");
-			mapDropdown.push("<li><a target='_blank' href='https://kartor.eniro.se/?c="+ data.lat + "," + data.lng + "&z=17&l=nautical'>SE - Eniro SjÃ¶kort</a></li>");
+			mapDropdown.push("<li><a target='_blank' href='https://kartor.eniro.se/?c="+ data.lat + "," + data.lng + "&z=17&l=nautical'>SE - Eniro Sjökort</a></li>");
 			
 			// adding text buttons
 			textButtons.push('<button  id="photo" class="button btn btn-default textButton" data-tooltip="indicates a low quality photo">Photo</button>');
@@ -315,29 +314,28 @@ opacity: 1;
 				filmstrip.scrollLeft -= (delta*50); // Multiplied by 50
 				e.preventDefault();
 			}
+            filmstrip.addEventListener("DOMMouseScroll", scrollHorizontally, false);
 			filmstrip.addEventListener("mousewheel", scrollHorizontally, false);
 			
 			// Replace map markers with a nice circle
-			//  for (var i = 0; i < subController.markers.length; ++i) {
-			//      var marker = subController.markers[i];
-			//      marker.setIcon(PORTAL_MARKER);
-			//  }
-			// subController.map.setZoom(16);
+            for (var i = 0; i < subController.markers.length; ++i) {
+                var marker = subController.markers[i];
+                marker.setIcon(PORTAL_MARKER);
+            }
+            subController.map.setZoom(16);
 			
 			// Re-enabling scroll zoom
-			//  subController.map.setOptions({scrollwheel: true});
+            subController.map.setOptions(cloneInto({scrollwheel: true}, w));
 			
 			// HACKY way to move portal rating to the right side
-			var scorePanel = w.document.querySelector('div[class~="pull-right"');
-			var nodesToMove = Array.from(w.document.querySelector('div[class="btn-group"').parentElement.children);
-			nodesToMove = nodesToMove.splice(2, 6);
+            var scorePanel = w.document.querySelector('div[class~="pull-right"]');
+            var nodesToMove = Array.from(w.document.querySelector('div[class="btn-group"]').parentElement.children);
+            nodesToMove = nodesToMove.splice(2, 6);
 			nodesToMove.push(w.document.createElement('br'));
 			for (var i  = nodesToMove.length-1; i >= 0; --i) {
 				scorePanel.insertBefore(nodesToMove[i], scorePanel.firstChild);
 			}
-			// Moving nearby portal strip higher
-			// var mapsDiv = document.querySelector('form div.row:nth-of-type(2)');
-			// mapsDiv.prepend(filmstrip);
+
 			watchAdded = true;
 		}
 		
