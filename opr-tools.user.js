@@ -348,6 +348,20 @@ opacity: 1;
 				scorePanel.insertBefore(nodesToMove[j], scorePanel.firstChild);
 			}
 
+			// Bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
+			var imgDups = w.document.querySelectorAll("#map-filmstrip > ul > li > img");
+			for (var imgSep in imgDups) {
+				if (imgDups.hasOwnProperty(imgSep)) {
+					imgDups[imgSep].addEventListener("click", function () {
+						var imgDup = w.document.querySelector('#content > img');
+						imgDup.addEventListener("click", function () {
+								w.open(this.src + '=s0', '_blank');
+							});
+						imgDup.setAttribute("style", "cursor: pointer;");
+					});
+				}
+			}
+
 			// Automatically open the first listed possible duplicate
 			try {
 				var e = w.document.querySelector("#map-filmstrip > ul > li:nth-child(1) > img");
