@@ -244,9 +244,10 @@ opacity: 1;
 				"<button id='photo' class='button btn btn-default textButton' data-tooltip='indicates a low quality photo'>Photo</button>",
 				"<button id='private' class='button btn btn-default textButton' data-tooltip='located on private residential property'>Private</button>",
 				"<button id='duplicate' class='button btn btn-default textButton' data-tooltip='duplicate of one you have previously reviewed'>Duplicate</button>",
-				"<button id='school' class='button btn btn-default textButton' data-tooltip=' located on school property'>School</button>",
+				"<button id='school' class='button btn btn-default textButton' data-tooltip='located on school property'>School</button>",
 				"<button id='person' class='button btn btn-default textButton' data-tooltip='photo contains 1 or more people'>Person</button>",
 				"<button id='perm' class='button btn btn-default textButton' data-tooltip='seasonal or temporary display or item'>Temporary</button>",
+				"<button id='location' class='button btn btn-default textButton' data-tooltip='location wrong'>Temporary</button>",
 				"<button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button>"
 			];
 
@@ -277,6 +278,9 @@ opacity: 1;
 								break;
 							case "perm":
 								text = "portal candidate is seasonal or temporary";
+								break;
+							case "location":
+								text = "Portal candidate's location is not on object";
 								break;
 							case "clear":
 								text = "";
