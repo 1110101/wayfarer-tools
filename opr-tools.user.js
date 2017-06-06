@@ -349,18 +349,20 @@ opacity: 1;
 			}
 
 			// Bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
-			var imgDups = w.document.querySelectorAll("#map-filmstrip > ul > li > img");
-			for (var imgSep in imgDups) {
-				if (imgDups.hasOwnProperty(imgSep)) {
-					imgDups[imgSep].addEventListener("click", function () {
-						var imgDup = w.document.querySelector('#content > img');
-						imgDup.addEventListener("click", function () {
-								w.open(this.src + '=s0', '_blank');
-							});
-						imgDup.setAttribute("style", "cursor: pointer;");
-					});
-				}
-			}
+            var imgDups = w.document.querySelectorAll("#map-filmstrip > ul > li > img");
+            var clickListener = function () {
+                w.open(this.src + '=s0', '_blank');
+            };
+            for (var imgSep in imgDups) {
+                if (imgDups.hasOwnProperty(imgSep)) {
+                    imgDups[imgSep].addEventListener("click", function () {
+                        var imgDup = w.document.querySelector('#content > img');
+                        imgDup.removeEventListener("click", clickListener);
+                        imgDup.addEventListener("click", clickListener);
+                        imgDup.setAttribute("style", "cursor: pointer;");
+                    });
+                }
+            }
 
 			// Automatically open the first listed possible duplicate
 			try {
