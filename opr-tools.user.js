@@ -378,7 +378,7 @@ opacity: 1;
             link.appendChild(a);
 
             var description = w.document.querySelector("#descriptionDiv").innerHTML.split('<br>')[3].trim();
-            if (description !== '&lt;No description&gt;') {
+            if (description !== '&lt;No description&gt;' && description !== '') {
                 a = w.document.createElement('a');
                 linkText = w.document.createTextNode("translate");
                 a.appendChild(linkText);
