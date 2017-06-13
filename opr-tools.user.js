@@ -364,6 +364,33 @@ opacity: 1;
                 }
             }
 
+            // add translate buttons to title and description (if existing)
+            var link = w.document.querySelector("#descriptionDiv a[target='_blank']");
+            var content = link.innerText.trim();
+            var a = w.document.createElement('a');
+            var linkText = w.document.createTextNode("translate");
+            a.appendChild(linkText);
+            a.className = "button btn btn-default";
+            a.title = "translate";
+            a.target = '_blank';
+            a.style.padding = '0px 4px';
+            a.href = "https://translate.google.com/?hl=de#auto/en/" + content;
+            link.appendChild(a);
+
+            var description = w.document.querySelector("#descriptionDiv").innerHTML.split('<br>')[3].trim();
+            if (description !== '&lt;No description&gt;') {
+                a = w.document.createElement('a');
+                linkText = w.document.createTextNode("translate");
+                a.appendChild(linkText);
+                a.className = "button btn btn-default";
+                a.title = "translate";
+                a.target = '_blank';
+                a.style.padding = '0px 4px';
+                a.href = "https://translate.google.com/?hl=de#auto/en/" + description;
+                var br = w.document.querySelectorAll("#descriptionDiv br")[3];
+                br.parentNode.insertBefore(a, br);
+            }
+
 			// Automatically open the first listed possible duplicate
 			try {
 				var e = w.document.querySelector("#map-filmstrip > ul > li:nth-child(1) > img");
