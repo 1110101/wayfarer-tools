@@ -36,9 +36,9 @@ SOFTWARE.
 
 */
 
-var PORTAL_MARKER = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuOWwzfk4AAADlSURBVDhPY/j//z8CTw3U/V8lcvx/MfPX/2Xcd//XyWwDYxAbJAaS63c2Q9aD0NygUPS/hPXt/3bD5f93LI7DwFvnJILlSlg//K+XrUc1AKS5jOvx/wU55Vg1I2OQmlKOpzBDIM4G2UyMZhgGqQW5BOgdBrC/cDkbHwbpAeplAAcONgWEMChMgHoZwCGMTQExGKiXARxN2CSJwUC9VDCAYi9QHIhVQicpi0ZQ2gYlCrITEigpg5IlqUm5VrILkRdghoBMxeUd5MwE1YxqAAiDvAMKE1DAgmIHFMUgDGKDxDCy838GAPWFoAEBs2EvAAAAAElFTkSuQmCC";
+const PORTAL_MARKER = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuOWwzfk4AAADlSURBVDhPY/j//z8CTw3U/V8lcvx/MfPX/2Xcd//XyWwDYxAbJAaS63c2Q9aD0NygUPS/hPXt/3bD5f93LI7DwFvnJILlSlg//K+XrUc1AKS5jOvx/wU55Vg1I2OQmlKOpzBDIM4G2UyMZhgGqQW5BOgdBrC/cDkbHwbpAeplAAcONgWEMChMgHoZwCGMTQExGKiXARxN2CSJwUC9VDCAYi9QHIhVQicpi0ZQ2gYlCrITEigpg5IlqUm5VrILkRdghoBMxeUd5MwE1YxqAAiDvAMKE1DAgmIHFMUgDGKDxDCy838GAPWFoAEBs2EvAAAAAElFTkSuQmCC";
 function addGlobalStyle(css) {
-	var head, style;
+	let head, style;
 	head = document.getElementsByTagName("head")[0];
 	if (!head) { return; }
 	style = document.createElement("style");
@@ -48,39 +48,39 @@ function addGlobalStyle(css) {
 }
 
 function init() {
-	var w = typeof unsafeWindow == "undefined" ? window : unsafeWindow;
-	var tryNumber   = 5,
-	    initWatcher = setInterval(function () {
-		    if (tryNumber === 0) {
-			    clearInterval(initWatcher);
-			    w.document.getElementById("NewSubmissionController").insertAdjacentHTML("afterBegin", `
+	const w = typeof unsafeWindow == "undefined" ? window : unsafeWindow;
+	let tryNumber = 5;
+	const initWatcher = setInterval(function () {
+	if (tryNumber === 0) {
+		clearInterval(initWatcher);
+		w.document.getElementById("NewSubmissionController").insertAdjacentHTML("afterBegin", `
 <div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR tools initialization failed,</strong> check developer console for error details</div>
 `);
-			    return;
-		    }
-		    if (w.angular) {
-			    var err = false;
-			    try {
-				    initAngular();
-				    clearInterval(initWatcher);
-			    }
-			    catch (error) {
-				    err = error;
-				    console.log(error);
-			    }
-			    if (!err) {
-				    try {
-					    initScript();
-				    } catch (error) {
-					    console.log(error);
-				    }
-			    }
-		    }
-		    tryNumber--;
-	    }, 500);
+		return;
+	}
+	if (w.angular) {
+		let err = false;
+		try {
+			initAngular();
+			clearInterval(initWatcher);
+		}
+		catch (error) {
+			err = error;
+			console.log(error);
+		}
+		if (!err) {
+			try {
+				initScript();
+			} catch (error) {
+				console.log(error);
+			}
+		}
+	}
+	tryNumber--;
+}, 500);
 
 	function initAngular() {
-		var el = w.document.querySelector("[ng-app='portalApp']");
+		const el = w.document.querySelector("[ng-app='portalApp']");
 		w.$app = w.angular.element(el);
 		w.$injector = w.$app.injector();
 		w.$rootScope = w.$app.scope();
@@ -91,12 +91,12 @@ function init() {
 	}
 
 	function initScript() {
-		var desc = document.getElementById("descriptionDiv");
-		var box = w.document.querySelector("#AnswersController > form");
-
-		var stats = w.document.getElementById("player_stats").children[2];
-		var scope = w.$scope(desc);
-		var watchAdded = false;
+		const descDiv = document.getElementById("descriptionDiv");
+        const ansController = w.$scope(descDiv).answerCtrl;
+        const subController = w.$scope(descDiv).subCtrl;
+		const scope = w.$scope(descDiv);
+        const pageData = subController.pageData;
+		let watchAdded = false;
 
 		// run on init
 		modifyPage();
@@ -109,10 +109,6 @@ function init() {
 		}
 
 		function modifyPage() {
-
-			var ansController = w.$scope(desc).answerCtrl;
-			var subController = w.$scope(desc).subCtrl;
-			var data = subController.pageData;
 
 			// adding CSS
 			addGlobalStyle(`
@@ -210,35 +206,48 @@ filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=100);
 opacity: 1;
 }
 `);
+
+
 			// adding map buttons
-			var mapButtons = [
-				"<a class='button btn btn-default' target='_blank' href='https://www.ingress.com/intel?ll=" + data.lat + "," + data.lng + "&z=17'>Intel</a>",
-				"<a class='button btn btn-default' target='_blank' href='https://www.openstreetmap.org/?mlat=" + data.lat + "&mlon=" + data.lng + "&zoom=16'>OSM</a>",
-				"<a class='button btn btn-default' target='_blank' href='https://bing.com/maps/default.aspx?cp=" + data.lat + "~" + data.lng + "&lvl=16&style=a'>bing</a>"
+			const mapButtons = [
+				"<a class='button btn btn-default' target='_blank' href='https://www.ingress.com/intel?ll=" + pageData.lat + "," + pageData.lng + "&z=17'>Intel</a>",
+				"<a class='button btn btn-default' target='_blank' href='https://www.openstreetmap.org/?mlat=" + pageData.lat + "&mlon=" + pageData.lng + "&zoom=16'>OSM</a>",
+				"<a class='button btn btn-default' target='_blank' href='https://bing.com/maps/default.aspx?cp=" + pageData.lat + "~" + pageData.lng + "&lvl=16&style=a'>bing</a>"
 			];
 
 			// more map buttons in a dropdown menu
-			var mapDropdown = [
-				"<li><a target='_blank' href='https://wego.here.com/?map=" + data.lat + "," + data.lng + ",17,satellite'>HERE maps</a></li>",
-				"<li><a target='_blank' href='http://wikimapia.org/#lat=" + data.lat + "&lon=" + data.lng + "&z=16'>Wikimapia</a></li>",
+			const mapDropdown = [
+				"<li><a target='_blank' href='https://wego.here.com/?map=" + pageData.lat + "," + pageData.lng + ",17,satellite'>HERE maps</a></li>",
+				"<li><a target='_blank' href='http://wikimapia.org/#lat=" + pageData.lat + "&lon=" + pageData.lng + "&z=16'>Wikimapia</a></li>",
 
 				"<li role='separator' class='divider'></li>",
 
 				// national maps
-				"<li><a target='_blank' href='http://map.geo.admin.ch/?swisssearch=" + data.lat + "," + data.lng + "'>CH - Swiss Geo Map</a></li>",
-				"<li><a target='_blank' href='http://maps.kompass.de/#lat=" + data.lat + "&lon=" + data.lng + "&z=17'>DE - Kompass.maps</a></li>",
-				"<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + data.lat + "&Y=" + data.lng + "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>",
-				"<li><a target='_blank' href='https://www.hitta.se/kartan!~" + data.lat + "," + data.lng + ",18z/tileLayer!l=1'>SE - Hitta.se</a></li>",
-				"<li><a target='_blank' href='https://maps.yandex.ru/?text=" + data.lat + "," + data.lng + "'>RU - Yandex</a></li>",
-				"<li><a target='_blank' href='https://kartor.eniro.se/?c=" + data.lat + "," + data.lng + "&z=17&l=nautical'>SE - Eniro Sjökort</a></li>"
+				"<li><a target='_blank' href='http://map.geo.admin.ch/?swisssearch=" + pageData.lat + "," + pageData.lng + "'>CH - Swiss Geo Map</a></li>",
+				"<li><a target='_blank' href='http://maps.kompass.de/#lat=" + pageData.lat + "&lon=" + pageData.lng + "&z=17'>DE - Kompass.maps</a></li>",
+				"<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + pageData.lat + "&Y=" + pageData.lng + "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>",
+				"<li><a target='_blank' href='https://maps.yandex.ru/?text=" + pageData.lat + "," + pageData.lng + "'>RU - Yandex</a></li>",
+				"<li><a target='_blank' href='https://www.hitta.se/kartan!~" + pageData.lat + "," + pageData.lng + ",18z/tileLayer!l=1'>SE - Hitta.se</a></li>",
+				"<li><a target='_blank' href='https://kartor.eniro.se/?c=" + pageData.lat + "," + pageData.lng + "&z=17&l=nautical'>SE - Eniro Sjökort</a></li>"
 			];
 
-			desc.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join("") +
+			descDiv.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join("") +
 					"<div class='button btn btn-primary dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>" + mapDropdown.join("") + "</div></div>");
 
 
+            // moving submit button to right side of classification-div
+            const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
+            const classificationRow = w.document.querySelector(".classification-row");
+            const newSubmitDiv = w.document.createElement("div");
+            newSubmitDiv.className = "col-xs-12 col-sm-6";
+			submitDiv[0].style.marginTop = 16;
+            newSubmitDiv.appendChild(submitDiv[0]);
+            newSubmitDiv.appendChild(submitDiv[1]);
+            classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
+
+
 			// adding text buttons
-			var textButtons = [
+			const textButtons = [
 				"<button id='photo' class='button btn btn-default textButton' data-tooltip='indicates a low quality photo'>Photo</button>",
 				"<button id='private' class='button btn btn-default textButton' data-tooltip='located on private residential property'>Private</button>",
 				"<button id='duplicate' class='button btn btn-default textButton' data-tooltip='duplicate of one you have previously reviewed'>Duplicate</button>",
@@ -249,15 +258,16 @@ opacity: 1;
 				"<button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button>"
 			];
 
-			box.insertAdjacentHTML("beforeEnd", "<div class='center' style='text-align: center'>" + textButtons.join("") + "</div>");
+            newSubmitDiv.insertAdjacentHTML("beforeEnd", "<div class='center' style='text-align: center'>" + textButtons.join("") + "</div>");
 
-			var textBox = w.document.querySelector("#AnswersController > form > .text-center > textarea");
+            const textBox = w.document.querySelector("#submitDiv + .text-center > textarea");
 
-			var buttons = w.document.getElementsByClassName("textButton");
-			for (var b in buttons) {
+			const buttons = w.document.getElementsByClassName("textButton");
+			for (let b in buttons) {
 				if (buttons.hasOwnProperty(b)) {
 					buttons[b].addEventListener("click", function () {
-						var source = event.target || event.srcElement;
+						const source = event.target || event.srcElement;
+						let text;
 						switch (source.id) {
 							case "photo":
 								text = "low quality photo";
@@ -287,24 +297,21 @@ opacity: 1;
 						textBox.innerText = text;
 
 					}, false);
-					buttons[b].onmouseover = function () {
-						w.document.getElementById("popup").style.display = "block";
-					};
-					buttons[b].onmouseout = function () {
-						w.document.getElementById("popup").style.display = "none";
-
-					};
 				}
 			}
 
-			// adding percent procressed number
-			var reviewed = parseInt(stats.children[3].children[2].outerText);
-			var accepted = parseInt(stats.children[5].children[2].outerText);
-			var rejected = parseInt(stats.children[7].children[2].outerText);
 
-			var percent = (accepted + rejected) / reviewed;
+			// adding percent procressed number
+			const stats = w.document.querySelector("#player_stats").children[2];
+
+			const reviewed = parseInt(stats.children[3].children[2].innerText);
+			const accepted = parseInt(stats.children[5].children[2].innerText);
+			const rejected = parseInt(stats.children[7].children[2].innerText);
+
+			let percent = (accepted + rejected) / reviewed;
 			percent = Math.round(percent * 1000) / 10;
-			box.insertAdjacentHTML("beforeEnd", "<div class='text-center'><p class='ingress-mid-blue pull-center'>Percent Processed:</p><p class='gold pull-center'>" + percent + "%</p></div>");
+            w.document.querySelector("#player_stats:not(.visible-xs) div p:last-child")
+                .insertAdjacentHTML("afterEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px" class="ingress-mid-blue pull-left">Percent Processed</span> <span class="gold pull-right">' + percent + '%</span></p>');
 
 			// kill autoscroll
 			ansController.goToLocation = null;
@@ -319,11 +326,11 @@ opacity: 1;
 			}, ansController, {defineAs: "openSubmissionCompleteModal"});
 
 			// Make photo filmstrip scrollable
-			var filmstrip = w.document.getElementById("map-filmstrip");
+			const filmstrip = w.document.getElementById("map-filmstrip");
 
 			function scrollHorizontally(e) {
 				e = window.event || e;
-				var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+				const delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
 				filmstrip.scrollLeft -= (delta * 50); // Multiplied by 50
 				e.preventDefault();
 			}
@@ -332,8 +339,8 @@ opacity: 1;
 			filmstrip.addEventListener("mousewheel", scrollHorizontally, false);
 
 			// Replace map markers with a nice circle
-			for (var i = 0; i < subController.markers.length; ++i) {
-				var marker = subController.markers[i];
+			for (let i = 0; i < subController.markers.length; ++i) {
+				const marker = subController.markers[i];
 				marker.setIcon(PORTAL_MARKER);
 			}
 			subController.map.setZoom(16);
@@ -342,23 +349,23 @@ opacity: 1;
 			subController.map.setOptions(cloneInto({scrollwheel: true}, w));
 
 			// HACKY way to move portal rating to the right side
-			var scorePanel = w.document.querySelector("div[class~='pull-right']");
-			var nodesToMove = Array.from(w.document.querySelector("div[class='btn-group']").parentElement.children);
+			const scorePanel = w.document.querySelector("div[class~='pull-right']");
+			let nodesToMove = Array.from(w.document.querySelector("div[class='btn-group']").parentElement.children);
 			nodesToMove = nodesToMove.splice(2, 6);
 			nodesToMove.push(w.document.createElement("br"));
-			for (var j = nodesToMove.length - 1; j >= 0; --j) {
+			for (let j = nodesToMove.length - 1; j >= 0; --j) {
 				scorePanel.insertBefore(nodesToMove[j], scorePanel.firstChild);
 			}
 
 			// Bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
-            var imgDups = w.document.querySelectorAll("#map-filmstrip > ul > li > img");
-            var clickListener = function () {
-                w.open(this.src + '=s0', '_blank');
+            const imgDups = w.document.querySelectorAll("#map-filmstrip > ul > li > img");
+            const clickListener = function () {
+	            w.open(this.src + "=s0", '_blank');
             };
-            for (var imgSep in imgDups) {
+            for (let imgSep in imgDups) {
                 if (imgDups.hasOwnProperty(imgSep)) {
                     imgDups[imgSep].addEventListener("click", function () {
-                        var imgDup = w.document.querySelector('#content > img');
+                        const imgDup = w.document.querySelector("#content > img");
                         imgDup.removeEventListener("click", clickListener);
                         imgDup.addEventListener("click", clickListener);
                         imgDup.setAttribute("style", "cursor: pointer;");
@@ -367,10 +374,10 @@ opacity: 1;
             }
 
             // add translate buttons to title and description (if existing)
-            var link = w.document.querySelector("#descriptionDiv a");
-            var content = link.innerText.trim();
-            var a = w.document.createElement('a');
-            var span = w.document.createElement("span");
+            const link = w.document.querySelector("#descriptionDiv a");
+            const content = link.innerText.trim();
+            let a = w.document.createElement("a");
+            let span = w.document.createElement("span");
             span.className = "glyphicon glyphicon-book";
             span.innerHTML = " ";
             a.appendChild(span);
@@ -380,7 +387,7 @@ opacity: 1;
             a.href = "https://translate.google.com/?hl=de#auto/en/" + content;
             link.insertAdjacentElement("afterend",a);
 
-            var description = w.document.querySelector("#descriptionDiv").innerHTML.split('<br>')[3].trim();
+            const description = w.document.querySelector("#descriptionDiv").innerHTML.split("<br>")[3].trim();
             if (description !== '&lt;No description&gt;' && description !== '') {
                 a = w.document.createElement('a');
                 span = w.document.createElement("span");
@@ -391,13 +398,13 @@ opacity: 1;
                 a.target = '_blank';
                 a.style.padding = '0px 4px';
                 a.href = "https://translate.google.com/?hl=de#auto/en/" + description;
-                var br = w.document.querySelectorAll("#descriptionDiv br")[2];
+                const br = w.document.querySelectorAll("#descriptionDiv br")[2];
                 br.insertAdjacentElement("afterend",a);
             }
 
 			// Automatically open the first listed possible duplicate
 			try {
-				var e = w.document.querySelector("#map-filmstrip > ul > li:nth-child(1) > img");
+				const e = w.document.querySelector("#map-filmstrip > ul > li:nth-child(1) > img");
 				setTimeout(function () {
 					e.click();
 				}, 500);
@@ -405,7 +412,7 @@ opacity: 1;
 
 			// expand automatically the "What is it?" filter text box
 			try {
-				var f = w.document.querySelector("#AnswersController > form > div:nth-child(5) > div > p > span.ingress-mid-blue.text-center");
+				const f = w.document.querySelector("#AnswersController > form > div:nth-child(5) > div > p > span.ingress-mid-blue.text-center");
 				setTimeout(function () {
 					f.click();
 				}, 500);
