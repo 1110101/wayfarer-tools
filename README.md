@@ -12,6 +12,7 @@ Features:
 - Automatically opens the "What is it?" filter text box
 - Buttons below the comments box to auto-type common 1-star rejection reasons
 - Percent of total reviewed candidates process by Niantic displayed at the bottom of the page
+- Add translate buttons for title and description
 
 Features implemented by [hedger](https://gitlab.com/hedger/opr-tools):
 - Moved overall portal rating to same group as other ratings

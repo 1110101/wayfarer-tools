@@ -368,6 +368,35 @@ opacity: 1;
                 }
             }
 
+            // add translate buttons to title and description (if existing)
+            var link = w.document.querySelector("#descriptionDiv a");
+            var content = link.innerText.trim();
+            var a = w.document.createElement('a');
+            var span = w.document.createElement("span");
+            span.className = "glyphicon glyphicon-book";
+            span.innerHTML = " ";
+            a.appendChild(span);
+            a.className = "button btn btn-default pull-right";
+            a.target = '_blank';
+            a.style.padding = '0px 4px';
+            a.href = "https://translate.google.com/?hl=de#auto/en/" + content;
+            link.insertAdjacentElement("afterend",a);
+
+            var description = w.document.querySelector("#descriptionDiv").innerHTML.split('<br>')[3].trim();
+            if (description !== '&lt;No description&gt;' && description !== '') {
+                a = w.document.createElement('a');
+                span = w.document.createElement("span");
+                span.className = "glyphicon glyphicon-book";
+                span.innerHTML = " ";
+                a.appendChild(span);
+                a.className = "button btn btn-default pull-right";
+                a.target = '_blank';
+                a.style.padding = '0px 4px';
+                a.href = "https://translate.google.com/?hl=de#auto/en/" + description;
+                var br = w.document.querySelectorAll("#descriptionDiv br")[2];
+                br.insertAdjacentElement("afterend",a);
+            }
+
 			// Automatically open the first listed possible duplicate
 			try {
 				var e = w.document.querySelector("#map-filmstrip > ul > li:nth-child(1) > img");
