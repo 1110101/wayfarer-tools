@@ -247,7 +247,7 @@ opacity: 1;
 				"<button id='school' class='button btn btn-default textButton' data-tooltip='located on school property'>School</button>",
 				"<button id='person' class='button btn btn-default textButton' data-tooltip='photo contains 1 or more people'>Person</button>",
 				"<button id='perm' class='button btn btn-default textButton' data-tooltip='seasonal or temporary display or item'>Temporary</button>",
-				"<button id='location' class='button btn btn-default textButton' data-tooltip='location wrong'>Temporary</button>",
+				"<button id='location' class='button btn btn-default textButton' data-tooltip='location wrong'>Location</button>",
 				"<button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button>"
 			];
 
