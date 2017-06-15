@@ -210,25 +210,25 @@ opacity: 1;
 
 			// adding map buttons
 			const mapButtons = [
-				"<a class='button btn btn-default' target='_blank' href='https://www.ingress.com/intel?ll=" + pageData.lat + "," + pageData.lng + "&z=17'>Intel</a>",
-				"<a class='button btn btn-default' target='_blank' href='https://www.openstreetmap.org/?mlat=" + pageData.lat + "&mlon=" + pageData.lng + "&zoom=16'>OSM</a>",
-				"<a class='button btn btn-default' target='_blank' href='https://bing.com/maps/default.aspx?cp=" + pageData.lat + "~" + pageData.lng + "&lvl=16&style=a'>bing</a>"
+				"<a class='button btn btn-default' target='intel' href='https://www.ingress.com/intel?ll=" + pageData.lat + "," + pageData.lng + "&z=17'>Intel</a>",
+				"<a class='button btn btn-default' target='osm' href='https://www.openstreetmap.org/?mlat=" + pageData.lat + "&mlon=" + pageData.lng + "&zoom=16'>OSM</a>",
+				"<a class='button btn btn-default' target='bing' href='https://bing.com/maps/default.aspx?cp=" + pageData.lat + "~" + pageData.lng + "&lvl=16&style=a'>bing</a>"
 			];
 
 			// more map buttons in a dropdown menu
 			const mapDropdown = [
-				"<li><a target='_blank' href='https://wego.here.com/?map=" + pageData.lat + "," + pageData.lng + ",17,satellite'>HERE maps</a></li>",
-				"<li><a target='_blank' href='http://wikimapia.org/#lat=" + pageData.lat + "&lon=" + pageData.lng + "&z=16'>Wikimapia</a></li>",
+				"<li><a target='heremaps' href='https://wego.here.com/?map=" + pageData.lat + "," + pageData.lng + ",17,satellite'>HERE maps</a></li>",
+				"<li><a target='wikimapia' href='http://wikimapia.org/#lat=" + pageData.lat + "&lon=" + pageData.lng + "&z=16'>Wikimapia</a></li>",
 
 				"<li role='separator' class='divider'></li>",
 
 				// national maps
-				"<li><a target='_blank' href='http://map.geo.admin.ch/?swisssearch=" + pageData.lat + "," + pageData.lng + "'>CH - Swiss Geo Map</a></li>",
-				"<li><a target='_blank' href='http://maps.kompass.de/#lat=" + pageData.lat + "&lon=" + pageData.lng + "&z=17'>DE - Kompass.maps</a></li>",
-				"<li><a target='_blank' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + pageData.lat + "&Y=" + pageData.lng + "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>",
-				"<li><a target='_blank' href='https://maps.yandex.ru/?text=" + pageData.lat + "," + pageData.lng + "'>RU - Yandex</a></li>",
-				"<li><a target='_blank' href='https://www.hitta.se/kartan!~" + pageData.lat + "," + pageData.lng + ",18z/tileLayer!l=1'>SE - Hitta.se</a></li>",
-				"<li><a target='_blank' href='https://kartor.eniro.se/?c=" + pageData.lat + "," + pageData.lng + "&z=17&l=nautical'>SE - Eniro Sjökort</a></li>"
+				"<li><a target='swissgeo' href='http://map.geo.admin.ch/?swisssearch=" + pageData.lat + "," + pageData.lng + "'>CH - Swiss Geo Map</a></li>",
+				"<li><a target='kompass' href='http://maps.kompass.de/#lat=" + pageData.lat + "&lon=" + pageData.lng + "&z=17'>DE - Kompass.maps</a></li>",
+				"<li><a target='bayernatlas' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + pageData.lat + "&Y=" + pageData.lng + "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>",
+				"<li><a target='yandex' href='https://maps.yandex.ru/?text=" + pageData.lat + "," + pageData.lng + "'>RU - Yandex</a></li>",
+				"<li><a target='hitta' href='https://www.hitta.se/kartan!~" + pageData.lat + "," + pageData.lng + ",18z/tileLayer!l=1'>SE - Hitta.se</a></li>",
+				"<li><a target='eniro' href='https://kartor.eniro.se/?c=" + pageData.lat + "," + pageData.lng + "&z=17&l=nautical'>SE - Eniro Sjökort</a></li>"
 			];
 
 			descDiv.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join("") +
@@ -318,7 +318,7 @@ opacity: 1;
 
 			// portal image zoom button with "=s0"
 			w.document.querySelector("#AnswersController .ingress-background").insertAdjacentHTML("beforeBegin",
-					"<div style='position:absolute;float:left;'><a class='button btn btn-default' style='display:inline-block;' href='" + subController.pageData.imageUrl + "=s0' target='_blank'><span class='glyphicon glyphicon-search' aria-hidden='true'></span></div>");
+					"<div style='position:absolute;float:left;'><a class='button btn btn-default' style='display:inline-block;' href='" + subController.pageData.imageUrl + "=s0' target='fullimage'><span class='glyphicon glyphicon-search' aria-hidden='true'></span></div>");
 
 			// skip "Your analysis has been recorded." dialog and go directly to next review
 			exportFunction(function () {
@@ -360,7 +360,7 @@ opacity: 1;
 			// Bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
             const imgDups = w.document.querySelectorAll("#map-filmstrip > ul > li > img");
             const clickListener = function () {
-	            w.open(this.src + "=s0", '_blank');
+	            w.open(this.src + "=s0", 'fulldupimage');
             };
             for (let imgSep in imgDups) {
                 if (imgDups.hasOwnProperty(imgSep)) {
@@ -382,7 +382,7 @@ opacity: 1;
             span.innerHTML = " ";
             a.appendChild(span);
             a.className = "button btn btn-default pull-right";
-            a.target = '_blank';
+            a.target = 'translate';
             a.style.padding = '0px 4px';
             a.href = "https://translate.google.com/?hl=de#auto/en/" + content;
             link.insertAdjacentElement("afterend",a);
@@ -395,7 +395,7 @@ opacity: 1;
                 span.innerHTML = " ";
                 a.appendChild(span);
                 a.className = "button btn btn-default pull-right";
-                a.target = '_blank';
+                a.target = 'translate';
                 a.style.padding = '0px 4px';
                 a.href = "https://translate.google.com/?hl=de#auto/en/" + description;
                 const br = w.document.querySelectorAll("#descriptionDiv br")[2];
