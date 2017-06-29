@@ -257,6 +257,10 @@ opacity: 1;
                 "<button id='person' class='button btn btn-default textButton' data-tooltip='photo contains 1 or more people'>Person</button>",
                 "<button id='perm' class='button btn btn-default textButton' data-tooltip='seasonal or temporary display or item'>Temporary</button>",
                 "<button id='location' class='button btn btn-default textButton' data-tooltip='location wrong'>Location</button>",
+                "<button id='firedept' class='button btn btn-default textButton' data-tooltip='fire department'>Fire Department</button>",
+                "<button id='policedept' class='button btn btn-default textButton' data-tooltip='police department'>Police Department</button>",
+                "<button id='hospital' class='button btn btn-default textButton' data-tooltip='hospital'>Hospital</button>",
+                "<button id='natural' class='button btn btn-default textButton' data-tooltip='natural feature'>natural feature</button>",
                 "<button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button>"
             ];
 
