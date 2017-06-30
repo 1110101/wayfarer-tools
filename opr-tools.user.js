@@ -390,7 +390,7 @@ opacity: 1;
             a.className = "button btn btn-default pull-right";
             a.target = 'translate';
             a.style.padding = '0px 4px';
-            a.href = "https://translate.google.com/?hl=de#auto/en/" + content;
+            a.href = "https://translate.google.com/#auto/en/" + content;
             link.insertAdjacentElement("afterend",a);
 
             const description = w.document.querySelector("#descriptionDiv").innerHTML.split("<br>")[3].trim();
@@ -403,7 +403,7 @@ opacity: 1;
                 a.className = "button btn btn-default pull-right";
                 a.target = 'translate';
                 a.style.padding = '0px 4px';
-                a.href = "https://translate.google.com/?hl=de#auto/en/" + description;
+                a.href = "https://translate.google.com/#auto/en/" + description;
                 const br = w.document.querySelectorAll("#descriptionDiv br")[2];
                 br.insertAdjacentElement("afterend",a);
             }
