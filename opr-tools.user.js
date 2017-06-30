@@ -296,6 +296,18 @@ opacity: 1;
                             case "location":
                                 text = "Portal candidate's location is not on object";
                                 break;
+                            case "firedept":
+                                text = "fire department";
+                                break;
+                            case "policedept":
+                                text = "police department";
+                                break;
+                            case "hospital":
+                                text = "hospital";
+                                break;
+                            case "natural":
+                                text = "natural feature";
+                                break;
                             case "clear":
                                 text = "";
                                 break;
