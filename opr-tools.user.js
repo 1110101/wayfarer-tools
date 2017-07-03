@@ -230,7 +230,9 @@ opacity: 1;
                 "<li><a target='yandex' href='https://maps.yandex.ru/?text=" + pageData.lat + "," + pageData.lng + "'>RU - Yandex</a></li>",
                 "<li><a target='hitta' href='https://www.hitta.se/kartan!~" + pageData.lat + "," + pageData.lng + ",18z/tileLayer!l=1'>SE - Hitta.se</a></li>",
                 "<li><a target='eniro' href='https://kartor.eniro.se/?c=" + pageData.lat + "," + pageData.lng + "&z=17&l=nautical'>SE - Eniro Sjökort</a></li>",
-                "<li><a target='eniro' href='http://opr.pegel.dk/?17/" + pageData.lat + "/" + pageData.lng + "'>DK - SDFE Orthophotos</a></li>"
+                "<li><a target='eniro' href='http://opr.pegel.dk/?17/" + pageData.lat + "/" + pageData.lng + "'>DK - SDFE Orthophotos</a></li>",
+                "<li><a target='mapycz' href='https://mapy.cz/zakladni?x=" + pageData.lng + "&y=" + pageData.lat + "&z=17&base=ophoto&source=coor&id=" + pageData.lng + "%2C" + pageData.lat + "&q=" + pageData.lng + "%20" + pageData.lat + "'>CZ-mapy.cz (ortofoto)</a></li>",
+				"<li><a target='mapycz' href='https://mapy.cz/zakladni?x=" + pageData.lng + "&y=" + pageData.lat + "&z=17&base=ophoto&m3d=1&height=180&yaw=-279.39&pitch=-40.7&source=coor&id=" + pageData.lng + "%2C" + pageData.lat + "&q=" + pageData.lng + "%20" + pageData.lat + "'>CZ-mapy.cz (orto+3D)</a></li>"
             ];
 
             descDiv.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join("") +
@@ -388,7 +390,7 @@ opacity: 1;
             a.className = "button btn btn-default pull-right";
             a.target = 'translate';
             a.style.padding = '0px 4px';
-            a.href = "https://translate.google.com/?hl=de#auto/en/" + content;
+            a.href = "https://translate.google.com/#auto/en/" + content;
             link.insertAdjacentElement("afterend",a);
 
             const description = w.document.querySelector("#descriptionDiv").innerHTML.split("<br>")[3].trim();
@@ -401,7 +403,7 @@ opacity: 1;
                 a.className = "button btn btn-default pull-right";
                 a.target = 'translate';
                 a.style.padding = '0px 4px';
-                a.href = "https://translate.google.com/?hl=de#auto/en/" + description;
+                a.href = "https://translate.google.com/#auto/en/" + description;
                 const br = w.document.querySelectorAll("#descriptionDiv br")[2];
                 br.insertAdjacentElement("afterend",a);
             }
