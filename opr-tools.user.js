@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.9.16
+// @version      0.9.17
 // @description  Added links to Intel and OSM and disabled autoscroll.
-// @author       1110101, tehstone, Hedger, Deep-thot, senfomat, pd1254, pieter.schutz, fotofreund0815, peter.gelsbo
+// @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
 // @match        https://opr.ingress.com/recon
 // @grant        unsafeWindow
 // @downloadURL  https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
