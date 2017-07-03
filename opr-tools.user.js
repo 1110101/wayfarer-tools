@@ -326,10 +326,11 @@ opacity: 1;
             w.document.querySelector("#AnswersController .ingress-background").insertAdjacentHTML("beforeBegin",
                                                                                                   "<div style='position:absolute;float:left;'><a class='button btn btn-default' style='display:inline-block;' href='" + subController.pageData.imageUrl + "=s0' target='fullimage'><span class='glyphicon glyphicon-search' aria-hidden='true'></span></div>");
 
+            // REMOVED
             // skip "Your analysis has been recorded." dialog and go directly to next review
-            exportFunction(function () {
-                window.location.assign("/recon");
-            }, ansController, {defineAs: "openSubmissionCompleteModal"});
+            //exportFunction(function () {
+            //    window.location.assign("/recon");
+            //}, ansController, {defineAs: "openSubmissionCompleteModal"});
 
             // Make photo filmstrip scrollable
             const filmstrip = w.document.getElementById("map-filmstrip");
