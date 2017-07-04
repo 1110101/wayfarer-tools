@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.9.17
+// @version      0.9.18
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
 // @match        https://opr.ingress.com/recon
@@ -232,7 +232,7 @@ opacity: 1;
                 "<li><a target='eniro' href='https://kartor.eniro.se/?c=" + pageData.lat + "," + pageData.lng + "&z=17&l=nautical'>SE - Eniro Sjökort</a></li>",
                 "<li><a target='eniro' href='http://opr.pegel.dk/?17/" + pageData.lat + "/" + pageData.lng + "'>DK - SDFE Orthophotos</a></li>",
                 "<li><a target='mapycz' href='https://mapy.cz/zakladni?x=" + pageData.lng + "&y=" + pageData.lat + "&z=17&base=ophoto&source=coor&id=" + pageData.lng + "%2C" + pageData.lat + "&q=" + pageData.lng + "%20" + pageData.lat + "'>CZ-mapy.cz (ortofoto)</a></li>",
-				"<li><a target='mapycz' href='https://mapy.cz/zakladni?x=" + pageData.lng + "&y=" + pageData.lat + "&z=17&base=ophoto&m3d=1&height=180&yaw=-279.39&pitch=-40.7&source=coor&id=" + pageData.lng + "%2C" + pageData.lat + "&q=" + pageData.lng + "%20" + pageData.lat + "'>CZ-mapy.cz (orto+3D)</a></li>"
+				"<li><a target='mapycz' href='https://mapy.cz/zakladni?x=" + pageData.lng + "&y=" + pageData.lat + "&z=17&base=ophoto&m3d=1&height=180&yaw=-279.39&pitch=-40.7&source=coor&id=" + pageData.lng + "%2C" + pageData.lat + "&q=" + pageData.lng + "%20" + pageData.lat + "'>CZ-mapy.cz (orto+3D)</a></li>",
                 "<li><a target='eniro' href='http://opr.pegel.dk/?17/" + pageData.lat + "/" + pageData.lng + "'>DK - SDFE Orthophotos</a></li>",
                 "<li><a target='kakao' href='http://map.daum.net/link/map/" + pageData.lat + "," + pageData.lng + "'>KR - Kakao map</a></li>"
             ];
