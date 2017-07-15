@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OPR tools
 // @namespace    https://opr.ingress.com/recon
-// @version      0.10.1
+// @version      0.10.2
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
 // @match        https://opr.ingress.com/recon
@@ -233,6 +233,8 @@ opacity: 1;
                 "<li><a target='bayernatlas' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + pageData.lat + "&Y=" + pageData.lng + "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>",
                 "<li><a target='eniro' href='http://opr.pegel.dk/?17/" + pageData.lat + "/" + pageData.lng + "'>DK - SDFE Orthophotos</a></li>",
                 "<li><a target='kakao' href='http://map.daum.net/link/map/" + pageData.lat + "," + pageData.lng + "'>KR - Kakao map</a></li>",
+	            "<li><a target='naver' href='http://map.naver.com/?menu=location&lat=" + pageData.lat + "&lng=" + pageData.lng + "&dLevel=14&title=CandidatePortalLocation"+"'>KR - Naver map</a></li>",
+
                 "<li><a target='yandex' href='https://maps.yandex.ru/?text=" + pageData.lat + "," + pageData.lng + "'>RU - Yandex</a></li>",
                 "<li><a target='hitta' href='https://www.hitta.se/kartan!~" + pageData.lat + "," + pageData.lng + ",18z/tileLayer!l=1'>SE - Hitta.se</a></li>",
                 "<li><a target='eniro' href='https://kartor.eniro.se/?c=" + pageData.lat + "," + pageData.lng + "&z=17&l=nautical'>SE - Eniro Sjökort</a></li>"
