@@ -1,12 +1,15 @@
 // ==UserScript==
 // @name         OPR tools
-// @namespace    https://opr.ingress.com/recon
 // @version      0.10.2
 // @description  Added links to Intel and OSM and disabled autoscroll.
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
 // @match        https://opr.ingress.com/recon
 // @grant        unsafeWindow
+// @homepageURL  https://gitlab.com/1110101/opr-tools
 // @downloadURL  https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
+// @updateURL    https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
+// @supportURL   null
+
 
 // ==/UserScript==
 
