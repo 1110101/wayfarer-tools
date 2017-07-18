@@ -482,6 +482,7 @@ opacity: 1;
 				16: Shift
 				27: Escape
 				32: Space
+				68: D
 				107: NUMPAD +
 				109: NUMPAD -
 				111: NUMPAD /
@@ -512,11 +513,17 @@ opacity: 1;
 					currentSelectable = 0;
 					event.preventDefault();
 
-				} // submit duplicate
-				else if((event.keyCode === 13 ||event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
-					w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]').click();
-					currentSelectable = 0;
-					event.preventDefault();
+                } // click first/selected duplicate (key D)
+                else if((event.keyCode === 68) && w.document.querySelector('#content > button')) {
+                    w.document.querySelector('#content > button').click();
+                    currentSelectable = 0;
+                    event.preventDefault();
+
+                } // submit duplicate
+                else if((event.keyCode === 13 ||event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
+                    w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]').click();
+                    currentSelectable = 0;
+                    event.preventDefault();
 
 				} // submit normal rating
 				else if((event.keyCode === 13 ||event.keyCode === 32) && currentSelectable === maxItems) {
