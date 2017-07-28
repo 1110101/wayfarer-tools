@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.10.3
-// @description  Added links to Intel and OSM and disabled autoscroll.
+// @version      0.10.4
+// @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
 // @match        https://opr.ingress.com/recon
@@ -41,22 +41,22 @@ SOFTWARE.
 
 const PORTAL_MARKER = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuOWwzfk4AAADlSURBVDhPY/j//z8CTw3U/V8lcvx/MfPX/2Xcd//XyWwDYxAbJAaS63c2Q9aD0NygUPS/hPXt/3bD5f93LI7DwFvnJILlSlg//K+XrUc1AKS5jOvx/wU55Vg1I2OQmlKOpzBDIM4G2UyMZhgGqQW5BOgdBrC/cDkbHwbpAeplAAcONgWEMChMgHoZwCGMTQExGKiXARxN2CSJwUC9VDCAYi9QHIhVQicpi0ZQ2gYlCrITEigpg5IlqUm5VrILkRdghoBMxeUd5MwE1YxqAAiDvAMKE1DAgmIHFMUgDGKDxDCy838GAPWFoAEBs2EvAAAAAElFTkSuQmCC";
 function addGlobalStyle(css) {
-    let head, style;
-    head = document.getElementsByTagName("head")[0];
-    if (!head) return;
-    style = document.createElement("style");
-    style.type = "text/css";
-    style.innerHTML = css;
-    head.appendChild(style);
+	let head, style;
+	head = document.getElementsByTagName("head")[0];
+	if (!head) return;
+	style = document.createElement("style");
+	style.type = "text/css";
+	style.innerHTML = css;
+	head.appendChild(style);
 }
 
 function init() {
-    const w = typeof unsafeWindow == "undefined" ? window : unsafeWindow;
-    let tryNumber = 8;
-    const initWatcher = setInterval(function () {
-        if (tryNumber === 0) {
-            clearInterval(initWatcher);
-            w.document.getElementById("NewSubmissionController").insertAdjacentHTML("afterBegin", `
+	const w = typeof unsafeWindow == "undefined" ? window : unsafeWindow;
+	let tryNumber = 8;
+	const initWatcher = setInterval(function () {
+		if (tryNumber === 0) {
+			clearInterval(initWatcher);
+			w.document.getElementById("NewSubmissionController").insertAdjacentHTML("afterBegin", `
 <div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR tools initialization failed,</strong> check developer console for error details</div>
 `);
             return;
@@ -65,6 +65,7 @@ function init() {
             let err = false;
             try {
                 initAngular();
+
             }
             catch (error) {
                 err = error;
@@ -77,24 +78,24 @@ function init() {
                 } catch (error) {
                     console.log(error);
                     if(error !== 42) {
-                        clearInterval(initWatcher);
-                    }
+						clearInterval(initWatcher);
+					}
                 }
             }
         }
         tryNumber--;
     }, 1000);
 
-    function initAngular() {
-        const el = w.document.querySelector("[ng-app='portalApp']");
-        w.$app = w.angular.element(el);
-        w.$injector = w.$app.injector();
-        w.$rootScope = w.$app.scope();
+	function initAngular() {
+		const el = w.document.querySelector("[ng-app='portalApp']");
+		w.$app = w.angular.element(el);
+		w.$injector = w.$app.injector();
+		w.$rootScope = w.$app.scope();
 
-        w.$scope = function (element) {
-            return w.angular.element(element).scope();
-        };
-    }
+		w.$scope = function (element) {
+			return w.angular.element(element).scope();
+		};
+	}
 
     function initScript() {
         const descDiv = document.getElementById("descriptionDiv");
@@ -102,18 +103,19 @@ function init() {
         const subController = w.$scope(descDiv).subCtrl;
         const scope = w.$scope(descDiv);
         const pageData = subController.pageData;
-
         if(typeof pageData == "undefined") {
-            throw 42;
-        }
+			throw 42;
+		}
 
-        // run on init
-        modifyPage();
+		// run on init
+		modifyPage();
+
+
 
         function modifyPage() {
 
-            // adding CSS
-            addGlobalStyle(`
+			// adding CSS
+			addGlobalStyle(`
 .dropdown {
 position: relative;
 display: inline-block;
@@ -210,20 +212,20 @@ opacity: 1;
 `);
 
 
-            // adding map buttons
-            const mapButtons = [
-                "<a class='button btn btn-default' target='intel' href='https://www.ingress.com/intel?ll=" + pageData.lat + "," + pageData.lng + "&z=17'>Intel</a>",
-                "<a class='button btn btn-default' target='osm' href='https://www.openstreetmap.org/?mlat=" + pageData.lat + "&mlon=" + pageData.lng + "&zoom=16'>OSM</a>",
-                "<a class='button btn btn-default' target='bing' href='https://bing.com/maps/default.aspx?cp=" + pageData.lat + "~" + pageData.lng + "&lvl=16&style=a'>bing</a>"
-            ];
+			// adding map buttons
+			const mapButtons = [
+				"<a class='button btn btn-default' target='intel' href='https://www.ingress.com/intel?ll=" + pageData.lat + "," + pageData.lng + "&z=17'>Intel</a>",
+				"<a class='button btn btn-default' target='osm' href='https://www.openstreetmap.org/?mlat=" + pageData.lat + "&mlon=" + pageData.lng + "&zoom=16'>OSM</a>",
+				"<a class='button btn btn-default' target='bing' href='https://bing.com/maps/default.aspx?cp=" + pageData.lat + "~" + pageData.lng + "&lvl=16&style=a'>bing</a>"
+			];
 
-            // more map buttons in a dropdown menu
-            const mapDropdown = [
-                "<li><a target='heremaps' href='https://wego.here.com/?map=" + pageData.lat + "," + pageData.lng + ",17,satellite'>HERE maps</a></li>",
-                "<li><a target='wikimapia' href='http://wikimapia.org/#lat=" + pageData.lat + "&lon=" + pageData.lng + "&z=16'>Wikimapia</a></li>",
-                "<li><a targeT='zoomearth' href='https://zoom.earth/#" + pageData.lat + "," + pageData.lng + ",18z,sat'>Zoom Earth</a></li>",
+			// more map buttons in a dropdown menu
+			const mapDropdown = [
+				"<li><a target='heremaps' href='https://wego.here.com/?map=" + pageData.lat + "," + pageData.lng + ",17,satellite'>HERE maps</a></li>",
+				"<li><a target='wikimapia' href='http://wikimapia.org/#lat=" + pageData.lat + "&lon=" + pageData.lng + "&z=16'>Wikimapia</a></li>",
+				"<li><a targeT='zoomearth' href='https://zoom.earth/#" + pageData.lat + "," + pageData.lng + ",18z,sat'>Zoom Earth</a></li>",
 
-                "<li role='separator' class='divider'></li>",
+				"<li role='separator' class='divider'></li>",
 
                 // national maps
                 "<li><a target='swissgeo' href='http://map.geo.admin.ch/?swisssearch=" + pageData.lat + "," + pageData.lng + "'>CH - Swiss Geo Map</a></li>",
@@ -235,26 +237,26 @@ opacity: 1;
                 "<li><a target='bayernatlas' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + pageData.lat + "&Y=" + pageData.lng + "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>",
                 "<li><a target='eniro' href='http://opr.pegel.dk/?17/" + pageData.lat + "/" + pageData.lng + "'>DK - SDFE Orthophotos</a></li>",
                 "<li><a target='kakao' href='http://map.daum.net/link/map/" + pageData.lat + "," + pageData.lng + "'>KR - Kakao map</a></li>",
-                "<li><a target='naver' href='http://map.naver.com/?menu=location&lat=" + pageData.lat + "&lng=" + pageData.lng + "&dLevel=14&title=CandidatePortalLocation"+"'>KR - Naver map</a></li>",
+	            "<li><a target='naver' href='http://map.naver.com/?menu=location&lat=" + pageData.lat + "&lng=" + pageData.lng + "&dLevel=14&title=CandidatePortalLocation"+"'>KR - Naver map</a></li>",
 
-                "<li><a target='yandex' href='https://maps.yandex.ru/?text=" + pageData.lat + "," + pageData.lng + "'>RU - Yandex</a></li>",
-                "<li><a target='hitta' href='https://www.hitta.se/kartan!~" + pageData.lat + "," + pageData.lng + ",18z/tileLayer!l=1'>SE - Hitta.se</a></li>",
-                "<li><a target='eniro' href='https://kartor.eniro.se/?c=" + pageData.lat + "," + pageData.lng + "&z=17&l=nautical'>SE - Eniro Sjökort</a></li>"
-            ];
+				"<li><a target='yandex' href='https://maps.yandex.ru/?text=" + pageData.lat + "," + pageData.lng + "'>RU - Yandex</a></li>",
+				"<li><a target='hitta' href='https://www.hitta.se/kartan!~" + pageData.lat + "," + pageData.lng + ",18z/tileLayer!l=1'>SE - Hitta.se</a></li>",
+				"<li><a target='eniro' href='https://kartor.eniro.se/?c=" + pageData.lat + "," + pageData.lng + "&z=17&l=nautical'>SE - Eniro Sjökort</a></li>"
+			];
 
-            descDiv.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join("") +
-                                       "<div class='button btn btn-primary dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>" + mapDropdown.join("") + "</div></div>");
+			descDiv.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join("") +
+					"<div class='button btn btn-primary dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>" + mapDropdown.join("") + "</div></div>");
 
 
-            // moving submit button to right side of classification-div
-            const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
-            const classificationRow = w.document.querySelector(".classification-row");
-            const newSubmitDiv = w.document.createElement("div");
-            newSubmitDiv.className = "col-xs-12 col-sm-6";
-            submitDiv[0].style.marginTop = 16;
-            newSubmitDiv.appendChild(submitDiv[0]);
-            newSubmitDiv.appendChild(submitDiv[1]);
-            classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
+			// moving submit button to right side of classification-div
+			const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
+			const classificationRow = w.document.querySelector(".classification-row");
+			const newSubmitDiv = w.document.createElement("div");
+			newSubmitDiv.className = "col-xs-12 col-sm-6";
+			submitDiv[0].style.marginTop = 16;
+			newSubmitDiv.appendChild(submitDiv[0]);
+			newSubmitDiv.appendChild(submitDiv[1]);
+			classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
 
             // add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
             let submitButton = submitDiv[0].querySelector("button");
@@ -274,211 +276,212 @@ opacity: 1;
             }], w, {cloneFunctions: true}));
 
 
-            // adding text buttons
-            const textButtons = [
-                "<button id='photo' class='button btn btn-default textButton' data-tooltip='indicates a low quality photo'>Photo</button>",
-                "<button id='private' class='button btn btn-default textButton' data-tooltip='located on private residential property'>Private</button>",
-                "<button id='duplicate' class='button btn btn-default textButton' data-tooltip='duplicate of one you have previously reviewed'>Duplicate</button>",
-                "<button id='school' class='button btn btn-default textButton' data-tooltip='located on school property'>School</button>",
-                "<button id='person' class='button btn btn-default textButton' data-tooltip='photo contains 1 or more people'>Person</button>",
-                "<button id='perm' class='button btn btn-default textButton' data-tooltip='seasonal or temporary display or item'>Temporary</button>",
-                "<button id='location' class='button btn btn-default textButton' data-tooltip='location wrong'>Location</button>",
-                "<button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button>"
-            ];
+			// adding text buttons
+			const textButtons = [
+				"<button id='photo' class='button btn btn-default textButton' data-tooltip='indicates a low quality photo'>Photo</button>",
+				"<button id='private' class='button btn btn-default textButton' data-tooltip='located on private residential property'>Private</button>",
+				"<button id='duplicate' class='button btn btn-default textButton' data-tooltip='duplicate of one you have previously reviewed'>Duplicate</button>",
+				"<button id='school' class='button btn btn-default textButton' data-tooltip='located on school property'>School</button>",
+				"<button id='person' class='button btn btn-default textButton' data-tooltip='photo contains 1 or more people'>Person</button>",
+				"<button id='perm' class='button btn btn-default textButton' data-tooltip='seasonal or temporary display or item'>Temporary</button>",
+				"<button id='location' class='button btn btn-default textButton' data-tooltip='location wrong'>Location</button>",
+				"<button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button>"
+			];
 
-            newSubmitDiv.insertAdjacentHTML("beforeEnd", "<div class='center' style='text-align: center'>" + textButtons.join("") + "</div>");
+			newSubmitDiv.insertAdjacentHTML("beforeEnd", "<div class='center' style='text-align: center'>" + textButtons.join("") + "</div>");
 
-            const textBox = w.document.querySelector("#submitDiv + .text-center > textarea");
+			const textBox = w.document.querySelector("#submitDiv + .text-center > textarea");
 
-            const buttons = w.document.getElementsByClassName("textButton");
-            for (let b in buttons) {
-                if (buttons.hasOwnProperty(b)) {
-                    buttons[b].addEventListener("click", exportFunction(function (event) {
-                        const source = event.target || event.srcElement;
-                        let text;
-                        switch (source.id) {
-                            case "photo":
-                                text = "Low quality photo";
-                                break;
-                            case "private":
-                                text = "Private residential property";
-                                break;
-                            case "duplicate":
-                                text = "Duplicate of previously reviewed portal candidate";
-                                break;
-                            case "school":
-                                text = "Located on primary or secondary school grounds";
-                                break;
-                            case "person":
-                                text = "Picture contains one or more people";
-                                break;
-                            case "perm":
-                                text = "Portal candidate is seasonal or temporary";
-                                break;
-                            case "location":
-                                text = "Portal candidate's location is not on object";
-                                break;
-                            case "clear":
-                                text = "";
-                                break;
-                        }
-                        textBox.innerText = text;
+			const buttons = w.document.getElementsByClassName("textButton");
+			for (let b in buttons) {
+				if (buttons.hasOwnProperty(b)) {
+					buttons[b].addEventListener("click", exportFunction(function (event) {
+						const source = event.target || event.srcElement;
+						let text;
+						switch (source.id) {
+							case "photo":
+								text = "Low quality photo";
+								break;
+							case "private":
+								text = "Private residential property";
+								break;
+							case "duplicate":
+								text = "Duplicate of previously reviewed portal candidate";
+								break;
+							case "school":
+								text = "Located on primary or secondary school grounds";
+								break;
+							case "person":
+								text = "Picture contains one or more people";
+								break;
+							case "perm":
+								text = "Portal candidate is seasonal or temporary";
+								break;
+							case "location":
+								text = "Portal candidate's location is not on object";
+								break;
+							case "clear":
+								text = "";
+								break;
+						}
+                        textBox.value = text;
 
-                    },w ), false);
-                }
-            }
+                        textBox.dispatchEvent(new Event('change'));
 
-
-            // adding percent procressed number
-            const stats = w.document.querySelector("#player_stats").children[2];
-
-            const reviewed = parseInt(stats.children[3].children[2].innerText);
-            const accepted = parseInt(stats.children[5].children[2].innerText);
-            const rejected = parseInt(stats.children[7].children[2].innerText);
-
-            let percent = (accepted + rejected) / reviewed;
-            percent = Math.round(percent * 1000) / 10;
-            w.document.querySelector("#player_stats:not(.visible-xs) div p:last-child")
-                .insertAdjacentHTML("afterEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span>' +
-                                    '<span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Percent Processed</span> <span class="gold pull-right">' + percent + '%</span></p>');
-
-            w.document.querySelector("#player_stats:not(.visible-xs) div p:last-child").insertAdjacentHTML("afterEnd", '<br><p><input style="width: 99%;" type="text" ' +
-                                                                                                           'value="'+reviewed+' / '+ (accepted + rejected ) + ' (' +accepted+  '/'+rejected+') / '+percent+'%"/></p>');
-
-            // kill autoscroll
-            ansController.goToLocation = null;
-
-            // portal image zoom button with "=s0"
-            w.document.querySelector("#AnswersController .ingress-background").insertAdjacentHTML("beforeBegin",
-                                                                                                  "<div style='position:absolute;float:left;'><a class='button btn btn-default' style='display:inline-block;' href='" + subController.pageData.imageUrl + "=s0' target='fullimage'><span class='glyphicon glyphicon-search' aria-hidden='true'></span></div>");
-
-            // Make photo filmstrip scrollable
-            const filmstrip = w.document.getElementById("map-filmstrip");
-
-            function scrollHorizontally(e) {
-                e = window.event || e;
-                const delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
-                filmstrip.scrollLeft -= (delta * 50); // Multiplied by 50
-                e.preventDefault();
-            }
-
-            filmstrip.addEventListener("DOMMouseScroll", exportFunction(scrollHorizontally, w), false);
-            filmstrip.addEventListener("mousewheel", exportFunction(scrollHorizontally, w), false);
-
-            // Replace map markers with a nice circle
-            for (let i = 0; i < subController.markers.length; ++i) {
-                const marker = subController.markers[i];
-                marker.setIcon(PORTAL_MARKER);
-            }
-            subController.map.setZoom(16);
-
-            // Re-enabling scroll zoom
-            subController.map.setOptions(cloneInto({scrollwheel: true}, w));
-
-            // HACKY way to move portal rating to the right side
-            const scorePanel = w.document.querySelector("div[class~='pull-right']");
-            let nodesToMove = Array.from(w.document.querySelector("div[class='btn-group']").parentElement.children);
-            nodesToMove = nodesToMove.splice(2, 6);
-            nodesToMove.push(w.document.createElement("br"));
-            for (let j = nodesToMove.length - 1; j >= 0; --j) {
-                scorePanel.insertBefore(nodesToMove[j], scorePanel.firstChild);
-            }
-
-            // Bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
-            const imgDups = w.document.querySelectorAll("#map-filmstrip > ul > li > img");
-            const clickListener = function () {
-                w.open(this.src + "=s0", 'fulldupimage');
-            };
-            for (let imgSep in imgDups) {
-                if (imgDups.hasOwnProperty(imgSep)) {
-                    imgDups[imgSep].addEventListener("click", function () {
-                        const imgDup = w.document.querySelector("#content > img");
-                        imgDup.removeEventListener("click", clickListener);
-                        imgDup.addEventListener("click", clickListener);
-                        imgDup.setAttribute("style", "cursor: pointer;");
-                    });
-                }
-            }
-
-            // add translate buttons to title and description (if existing)
-            const link = w.document.querySelector("#descriptionDiv a");
-            const content = link.innerText.trim();
-            let a = w.document.createElement("a");
-            let span = w.document.createElement("span");
-            span.className = "glyphicon glyphicon-book";
-            span.innerHTML = " ";
-            a.appendChild(span);
-            a.className = "button btn btn-default pull-right";
-            a.target = 'translate';
-            a.style.padding = '0px 4px';
-            a.href = "https://translate.google.com/#auto/en/" + content;
-            link.insertAdjacentElement("afterend",a);
-
-            const description = w.document.querySelector("#descriptionDiv").innerHTML.split("<br>")[3].trim();
-            if (description !== '&lt;No description&gt;' && description !== '') {
-                a = w.document.createElement('a');
-                span = w.document.createElement("span");
-                span.className = "glyphicon glyphicon-book";
-                span.innerHTML = " ";
-                a.appendChild(span);
-                a.className = "button btn btn-default pull-right";
-                a.target = 'translate';
-                a.style.padding = '0px 4px';
-                a.href = "https://translate.google.com/#auto/en/" + description;
-                const br = w.document.querySelectorAll("#descriptionDiv br")[2];
-                br.insertAdjacentElement("afterend",a);
-            }
-
-            // Automatically open the first listed possible duplicate
-            try {
-                const e = w.document.querySelector("#map-filmstrip > ul > li:nth-child(1) > img");
-                setTimeout(function () {
-                    e.click();
-                }, 500);
-            } catch (err) {}
-
-            // expand automatically the "What is it?" filter text box
-            try {
-                const f = w.document.querySelector("#AnswersController > form > div:nth-child(5) > div > p > span.ingress-mid-blue.text-center");
-                setTimeout(function () {
-                    f.click();
-                }, 500);
-            } catch (err) {}
+					},w ), false);
+				}
+			}
 
 
-            // keyboard navigation
-            // keys 1-5 to vote
-            // space/enter to confirm dialogs
-            // esc or numpad "/" to reset selector
-            // Numpad + - to navigate
+			// adding percent procressed number
+			const stats = w.document.querySelector("#player_stats").children[2];
 
-            let currentSelectable = 0;
-            let maxItems = 7;
+			const reviewed = parseInt(stats.children[3].children[2].innerText);
+			const accepted = parseInt(stats.children[5].children[2].innerText);
+			const rejected = parseInt(stats.children[7].children[2].innerText);
+
+			let percent = (accepted + rejected) / reviewed;
+			percent = Math.round(percent * 1000) / 10;
+			w.document.querySelector("#player_stats:not(.visible-xs) div p:last-child")
+			.insertAdjacentHTML("afterEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span>' +
+					'<span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Percent Processed</span> <span class="gold pull-right">' + percent + '%</span></p>');
+
+			w.document.querySelector("#player_stats:not(.visible-xs) div p:last-child").insertAdjacentHTML("afterEnd", '<br><p><input style="width: 99%;" type="text" ' +
+					'value="'+reviewed+' / '+ (accepted + rejected ) + ' (' +accepted+  '/'+rejected+') / '+percent+'%"/></p>');
+
+			// kill autoscroll
+			ansController.goToLocation = null;
+
+			// portal image zoom button with "=s0"
+			w.document.querySelector("#AnswersController .ingress-background").insertAdjacentHTML("beforeBegin",
+					"<div style='position:absolute;float:left;'><a class='button btn btn-default' style='display:inline-block;' href='" + subController.pageData.imageUrl + "=s0' target='fullimage'><span class='glyphicon glyphicon-search' aria-hidden='true'></span></div>");
+
+			// Make photo filmstrip scrollable
+			const filmstrip = w.document.getElementById("map-filmstrip");
+
+			function scrollHorizontally(e) {
+				e = window.event || e;
+				const delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+				filmstrip.scrollLeft -= (delta * 50); // Multiplied by 50
+				e.preventDefault();
+			}
+
+			filmstrip.addEventListener("DOMMouseScroll", exportFunction(scrollHorizontally, w), false);
+			filmstrip.addEventListener("mousewheel", exportFunction(scrollHorizontally, w), false);
+
+			// Replace map markers with a nice circle
+			for (let i = 0; i < subController.markers.length; ++i) {
+				const marker = subController.markers[i];
+				marker.setIcon(PORTAL_MARKER);
+			}
+			subController.map.setZoom(16);
+
+			// Re-enabling scroll zoom
+			subController.map.setOptions(cloneInto({scrollwheel: true}, w));
+
+			// HACKY way to move portal rating to the right side
+			const scorePanel = w.document.querySelector("div[class~='pull-right']");
+			let nodesToMove = Array.from(w.document.querySelector("div[class='btn-group']").parentElement.children);
+			nodesToMove = nodesToMove.splice(2, 6);
+			nodesToMove.push(w.document.createElement("br"));
+			for (let j = nodesToMove.length - 1; j >= 0; --j) {
+				scorePanel.insertBefore(nodesToMove[j], scorePanel.firstChild);
+			}
+
+			// Bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
+			const imgDups = w.document.querySelectorAll("#map-filmstrip > ul > li > img");
+			const clickListener = function () {
+				w.open(this.src + "=s0", 'fulldupimage');
+			};
+			for (let imgSep in imgDups) {
+				if (imgDups.hasOwnProperty(imgSep)) {
+					imgDups[imgSep].addEventListener("click", function () {
+						const imgDup = w.document.querySelector("#content > img");
+						imgDup.removeEventListener("click", clickListener);
+						imgDup.addEventListener("click", clickListener);
+						imgDup.setAttribute("style", "cursor: pointer;");
+					});
+				}
+			}
+
+			// add translate buttons to title and description (if existing)
+			const link = w.document.querySelector("#descriptionDiv a");
+			const content = link.innerText.trim();
+			let a = w.document.createElement("a");
+			let span = w.document.createElement("span");
+			span.className = "glyphicon glyphicon-book";
+			span.innerHTML = " ";
+			a.appendChild(span);
+			a.className = "button btn btn-default pull-right";
+			a.target = 'translate';
+			a.style.padding = '0px 4px';
+			a.href = "https://translate.google.com/#auto/en/" + content;
+			link.insertAdjacentElement("afterend",a);
+
+			const description = w.document.querySelector("#descriptionDiv").innerHTML.split("<br>")[3].trim();
+			if (description !== '&lt;No description&gt;' && description !== '') {
+				a = w.document.createElement('a');
+				span = w.document.createElement("span");
+				span.className = "glyphicon glyphicon-book";
+				span.innerHTML = " ";
+				a.appendChild(span);
+				a.className = "button btn btn-default pull-right";
+				a.target = 'translate';
+				a.style.padding = '0px 4px';
+				a.href = "https://translate.google.com/#auto/en/" + description;
+				const br = w.document.querySelectorAll("#descriptionDiv br")[2];
+				br.insertAdjacentElement("afterend",a);
+			}
+
+			// Automatically open the first listed possible duplicate
+			try {
+				const e = w.document.querySelector("#map-filmstrip > ul > li:nth-child(1) > img");
+				setTimeout(function () {
+					e.click();
+				}, 500);
+			} catch (err) {}
+
+			// expand automatically the "What is it?" filter text box
+			try {
+				const f = w.document.querySelector("#AnswersController > form > div:nth-child(5) > div > p > span.ingress-mid-blue.text-center");
+				setTimeout(function () {
+					f.click();
+				}, 500);
+			} catch (err) {}
+
+
+			// keyboard navigation
+			// keys 1-5 to vote
+			// space/enter to confirm dialogs
+			// esc or numpad "/" to reset selector
+			// Numpad + - to navigate
+
+			let currentSelectable = 0;
+			let maxItems = 7;
 
             function highlight() {
                 w.document.querySelectorAll('.btn-group').forEach(exportFunction((element) => { element.style.border = 'none'; }, w));
                 if(currentSelectable <= maxItems-2) {
-                    w.document.querySelectorAll('.btn-group')[currentSelectable+1].style.border = cloneInto('1px dashed #ebbc4a', w);
-                    submitAndNext.blur();
-                    submitButton.blur();
-                } else if (currentSelectable == 6) {
-                    submitAndNext.focus();
-                }
-                else if (currentSelectable == 7) {
-                    submitButton.focus();
-                }
+                    w.document.querySelectorAll('.btn-group')[currentSelectable+1].style.border = cloneInto('1px dashed #ebbc4a', w);submitAndNext.blur();
+					submitButton.blur();
+				} else if (currentSelectable == 6) {
+					submitAndNext.focus();
+				}
+				else if (currentSelectable == 7) {
+					submitButton.focus();
+				}
 
             }
 
-            addEventListener('keydown', (event) => {
+			addEventListener('keydown', (event) => {
 
-                /*
+				/*
 				keycodes:
 
 				8: Backspace
 				9: TAB
 				13: Enter
-                16: Shift
+				16: Shift
 				27: Escape
 				32: Space
 				107: NUMPAD +
@@ -490,82 +493,86 @@ opacity: 1;
 
 				 */
 
-                if(event.keyCode >= 49 && event.keyCode <= 53)
-                    numkey = event.keyCode - 48;
-                else if(event.keyCode >= 97 && event.keyCode <= 101)
-                    numkey = event.keyCode - 96;
-                else
-                    numkey = null;
+				if(event.keyCode >= 49 && event.keyCode <= 53)
+					numkey = event.keyCode - 48;
+				else if(event.keyCode >= 97 && event.keyCode <= 101)
+					numkey = event.keyCode - 96;
+				else
+					numkey = null;
 
-                if(w.document.querySelector("input[type=text]:focus") || w.document.querySelector("textarea:focus")) {
-                    return;
-                }
-                // "analyze next" button
-                else if((event.keyCode === 13 ||event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
-                    w.document.location.href='/recon';
-                    event.preventDefault();
-                } // submit low quality rating
-                else if((event.keyCode === 13 ||event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
-                    w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]').click();
-                    currentSelectable = 0;
-                    event.preventDefault();
+				if(w.document.querySelector("input[type=text]:focus") || w.document.querySelector("textarea:focus")) {
+					return;
+				}
+				// "analyze next" button
+				else if((event.keyCode === 13 ||event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+					w.document.location.href='/recon';
+					event.preventDefault();
+				} // submit low quality rating
+				else if((event.keyCode === 13 ||event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+					w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]').click();
+					currentSelectable = 0;
+					event.preventDefault();
 
-                } // submit duplicate
-                else if((event.keyCode === 13 ||event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
-                    w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]').click();
-                    currentSelectable = 0;
-                    event.preventDefault();
+				} // submit duplicate
+				else if((event.keyCode === 13 ||event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
+					w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]').click();
+					currentSelectable = 0;
+					event.preventDefault();
 
-                } // submit normal rating
-                else if((event.keyCode === 13 ||event.keyCode === 32) && currentSelectable === maxItems) {
-                    w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click();
-                    event.preventDefault();
+				} // submit normal rating
+				else if((event.keyCode === 13 ||event.keyCode === 32) && currentSelectable === maxItems) {
+					w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click();
+					event.preventDefault();
 
-                } // close duplicate dialog
-                else if((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]')) {
-                    w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]').click();
-                    currentSelectable = 0;
-                    event.preventDefault();
+				} // close duplicate dialog
+				else if((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]')) {
+					w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]').click();
+					currentSelectable = 0;
+					event.preventDefault();
 
-                } // close low quality ration dialog
-                else if((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]')) {
-                    w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]').click();
-                    currentSelectable = 0;
-                    event.preventDefault();
-                }
-                // return to first selection (should this be a portal)
-                else if(event.keyCode === 27 || event.keyCode === 111) {
-                    currentSelectable = 0;
-                }
-                // select next rating
-                else if((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
-                    currentSelectable++;
-                    event.preventDefault();
-                }
-                // select previous rating
-                else if((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
-                    currentSelectable--;
-                    event.preventDefault();
+				} // close low quality ration dialog
+				else if((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]')) {
+					w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]').click();
+					currentSelectable = 0;
+					event.preventDefault();
+				}
+				// return to first selection (should this be a portal)
+				else if(event.keyCode === 27 || event.keyCode === 111) {
+					currentSelectable = 0;
+				}
+				// select next rating
+				else if((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+					currentSelectable++;
+					event.preventDefault();
+				}
+				// select previous rating
+				else if((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+					currentSelectable--;
+					event.preventDefault();
 
-                }
-                else if(numkey === null || currentSelectable >= maxItems) {
-                    return;
-                }
-                // rating 1-5
-                else {
-                    w.document.querySelectorAll('.btn-group')[currentSelectable+1].querySelectorAll('button.button-star')[numkey-1].click();
-                    currentSelectable++;
-                }
-                highlight();
-            });
+				}
+				else if(numkey === null || currentSelectable >= maxItems) {
+					return;
+				}
+				// rating 1-5
+				else {
+					w.document.querySelectorAll('.btn-group')[currentSelectable+1].querySelectorAll('button.button-star')[numkey-1].click();
+					currentSelectable++;
+				}
+				highlight();
+			});
 
             highlight();
+
+
         }
 
-    }
+	}
 
 }
 
 setTimeout(function () {
-    init();
+
+        init();
+
 }, 500);
