@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.10.2
+// @version      0.10.3
 // @description  Added links to Intel and OSM and disabled autoscroll.
+// @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
 // @match        https://opr.ingress.com/recon
 // @grant        unsafeWindow
-// @homepageURL  https://gitlab.com/1110101/opr-tools
 // @downloadURL  https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 // @updateURL    https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 // @supportURL   null
@@ -43,7 +43,7 @@ const PORTAL_MARKER = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAY
 function addGlobalStyle(css) {
     let head, style;
     head = document.getElementsByTagName("head")[0];
-    if (!head) { return; }
+    if (!head) return;
     style = document.createElement("style");
     style.type = "text/css";
     style.innerHTML = css;
@@ -52,7 +52,7 @@ function addGlobalStyle(css) {
 
 function init() {
     const w = typeof unsafeWindow == "undefined" ? window : unsafeWindow;
-    let tryNumber = 5;
+    let tryNumber = 8;
     const initWatcher = setInterval(function () {
         if (tryNumber === 0) {
             clearInterval(initWatcher);
@@ -65,7 +65,6 @@ function init() {
             let err = false;
             try {
                 initAngular();
-                clearInterval(initWatcher);
             }
             catch (error) {
                 err = error;
@@ -74,13 +73,17 @@ function init() {
             if (!err) {
                 try {
                     initScript();
+                    clearInterval(initWatcher);
                 } catch (error) {
                     console.log(error);
+                    if(error !== 42) {
+                        clearInterval(initWatcher);
+                    }
                 }
             }
         }
         tryNumber--;
-    }, 500);
+    }, 1000);
 
     function initAngular() {
         const el = w.document.querySelector("[ng-app='portalApp']");
@@ -99,17 +102,13 @@ function init() {
         const subController = w.$scope(descDiv).subCtrl;
         const scope = w.$scope(descDiv);
         const pageData = subController.pageData;
-        let watchAdded = false;
+
+        if(typeof pageData == "undefined") {
+            throw 42;
+        }
 
         // run on init
         modifyPage();
-
-        if (!watchAdded) {
-            // re-run on data change
-            scope.$watch("subCtrl.pageData", function () {
-                modifyPage();
-            });
-        }
 
         function modifyPage() {
 
@@ -236,7 +235,7 @@ opacity: 1;
                 "<li><a target='bayernatlas' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + pageData.lat + "&Y=" + pageData.lng + "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>",
                 "<li><a target='eniro' href='http://opr.pegel.dk/?17/" + pageData.lat + "/" + pageData.lng + "'>DK - SDFE Orthophotos</a></li>",
                 "<li><a target='kakao' href='http://map.daum.net/link/map/" + pageData.lat + "," + pageData.lng + "'>KR - Kakao map</a></li>",
-	            "<li><a target='naver' href='http://map.naver.com/?menu=location&lat=" + pageData.lat + "&lng=" + pageData.lng + "&dLevel=14&title=CandidatePortalLocation"+"'>KR - Naver map</a></li>",
+                "<li><a target='naver' href='http://map.naver.com/?menu=location&lat=" + pageData.lat + "&lng=" + pageData.lng + "&dLevel=14&title=CandidatePortalLocation"+"'>KR - Naver map</a></li>",
 
                 "<li><a target='yandex' href='https://maps.yandex.ru/?text=" + pageData.lat + "," + pageData.lng + "'>RU - Yandex</a></li>",
                 "<li><a target='hitta' href='https://www.hitta.se/kartan!~" + pageData.lat + "," + pageData.lng + ",18z/tileLayer!l=1'>SE - Hitta.se</a></li>",
@@ -256,6 +255,23 @@ opacity: 1;
             newSubmitDiv.appendChild(submitDiv[0]);
             newSubmitDiv.appendChild(submitDiv[1]);
             classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
+
+            // add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
+            let submitButton = submitDiv[0].querySelector("button");
+            submitButton.classList.add("btn", "btn-warning");
+            var submitAndNext = submitButton.cloneNode(false);
+            submitAndNext.innerHTML = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>';
+            submitAndNext.title = "Submit and go to next review";
+            submitAndNext.addEventListener('click', () => {
+                exportFunction(function () {
+                    window.location.assign("/recon");
+                }, ansController, {defineAs: "openSubmissionCompleteModal"});
+            });
+            // we have to inject the button to angular
+            w.$injector.invoke(cloneInto(['$compile', ($compile) => {
+                var compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv[0]));
+                submitDiv[0].querySelector("button").insertAdjacentElement("beforeBegin", compiledSubmit[0]);
+            }], w, {cloneFunctions: true}));
 
 
             // adding text buttons
@@ -277,7 +293,7 @@ opacity: 1;
             const buttons = w.document.getElementsByClassName("textButton");
             for (let b in buttons) {
                 if (buttons.hasOwnProperty(b)) {
-                    buttons[b].addEventListener("click", function () {
+                    buttons[b].addEventListener("click", exportFunction(function (event) {
                         const source = event.target || event.srcElement;
                         let text;
                         switch (source.id) {
@@ -308,7 +324,7 @@ opacity: 1;
                         }
                         textBox.innerText = text;
 
-                    }, false);
+                    },w ), false);
                 }
             }
 
@@ -336,12 +352,6 @@ opacity: 1;
             w.document.querySelector("#AnswersController .ingress-background").insertAdjacentHTML("beforeBegin",
                                                                                                   "<div style='position:absolute;float:left;'><a class='button btn btn-default' style='display:inline-block;' href='" + subController.pageData.imageUrl + "=s0' target='fullimage'><span class='glyphicon glyphicon-search' aria-hidden='true'></span></div>");
 
-            // REMOVED
-            // skip "Your analysis has been recorded." dialog and go directly to next review
-            //exportFunction(function () {
-            //    window.location.assign("/recon");
-            //}, ansController, {defineAs: "openSubmissionCompleteModal"});
-
             // Make photo filmstrip scrollable
             const filmstrip = w.document.getElementById("map-filmstrip");
 
@@ -352,8 +362,8 @@ opacity: 1;
                 e.preventDefault();
             }
 
-            filmstrip.addEventListener("DOMMouseScroll", scrollHorizontally, false);
-            filmstrip.addEventListener("mousewheel", scrollHorizontally, false);
+            filmstrip.addEventListener("DOMMouseScroll", exportFunction(scrollHorizontally, w), false);
+            filmstrip.addEventListener("mousewheel", exportFunction(scrollHorizontally, w), false);
 
             // Replace map markers with a nice circle
             for (let i = 0; i < subController.markers.length; ++i) {
@@ -443,13 +453,21 @@ opacity: 1;
             // Numpad + - to navigate
 
             let currentSelectable = 0;
-            let maxItems = 6;
+            let maxItems = 7;
 
             function highlight() {
                 w.document.querySelectorAll('.btn-group').forEach(exportFunction((element) => { element.style.border = 'none'; }, w));
-                if(currentSelectable < maxItems) {
+                if(currentSelectable <= maxItems-2) {
                     w.document.querySelectorAll('.btn-group')[currentSelectable+1].style.border = cloneInto('1px dashed #ebbc4a', w);
+                    submitAndNext.blur();
+                    submitButton.blur();
+                } else if (currentSelectable == 6) {
+                    submitAndNext.focus();
                 }
+                else if (currentSelectable == 7) {
+                    submitButton.focus();
+                }
+
             }
 
             addEventListener('keydown', (event) => {
@@ -542,8 +560,6 @@ opacity: 1;
             });
 
             highlight();
-
-            watchAdded = true;
         }
 
     }
@@ -551,7 +567,5 @@ opacity: 1;
 }
 
 setTimeout(function () {
-    if (document.querySelector("[src*='all-min']")) {
-        init();
-    }
+    init();
 }, 500);
