@@ -320,7 +320,7 @@ opacity: 1;
 								text = "";
 								break;
 						}
-						
+
                         textBox.value = text;
                         textBox.dispatchEvent(new Event('change'));
 
@@ -431,9 +431,11 @@ opacity: 1;
 			// Automatically open the first listed possible duplicate
 			try {
 				const e = w.document.querySelector("#map-filmstrip > ul > li:nth-child(1) > img");
-				setTimeout(function () {
-					e.click();
-				}, 500);
+                if (e != null) {
+                    setTimeout(function () {
+                        e.click();
+                    }, 500);
+                }
 			} catch (err) {}
 
 			// expand automatically the "What is it?" filter text box
