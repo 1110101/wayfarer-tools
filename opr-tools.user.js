@@ -57,7 +57,7 @@ function init() {
 		if (tryNumber === 0) {
 			clearInterval(initWatcher);
 			w.document.getElementById("NewSubmissionController").insertAdjacentHTML("afterBegin", `
-<div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR tools initialization failed,</strong> check developer console for error details</div>
+<div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR tools initialization failed, refresh page</strong> or check developer console for error details</div>
 `);
             return;
         }
@@ -65,7 +65,6 @@ function init() {
             let err = false;
             try {
                 initAngular();
-
             }
             catch (error) {
                 err = error;
@@ -103,8 +102,8 @@ function init() {
         const subController = w.$scope(descDiv).subCtrl;
         const scope = w.$scope(descDiv);
         const pageData = subController.pageData;
-        if(typeof pageData == "undefined") {
-			throw 42;
+        if(typeof pageData === "undefined") {
+			throw 42; // @todo better error code
 		}
 
 		// run on init
@@ -258,7 +257,7 @@ opacity: 1;
             // add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
             let submitButton = submitDiv[0].querySelector("button");
             submitButton.classList.add("btn", "btn-warning");
-            var submitAndNext = submitButton.cloneNode(false);
+	        let submitAndNext = submitButton.cloneNode(false);
             submitAndNext.innerHTML = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>';
             submitAndNext.title = "Submit and go to next review";
             submitAndNext.addEventListener('click', () => {
@@ -268,7 +267,7 @@ opacity: 1;
             });
             // we have to inject the button to angular
             w.$injector.invoke(cloneInto(['$compile', ($compile) => {
-                var compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv[0]));
+	            let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv[0]));
                 submitDiv[0].querySelector("button").insertAdjacentElement("beforeBegin", compiledSubmit[0]);
             }], w, {cloneFunctions: true}));
 
@@ -497,6 +496,7 @@ opacity: 1;
 				else
 					numkey = null;
 
+				// do not do anything if a text area or a input with type text has focus
 				if(w.document.querySelector("input[type=text]:focus") || w.document.querySelector("textarea:focus")) {
 					return;
 				}
