@@ -110,8 +110,6 @@ function init() {
 		// run on init
 		modifyPage();
 
-
-
         function modifyPage() {
 
 			// adding CSS
@@ -210,7 +208,6 @@ filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=100);
 opacity: 1;
 }
 `);
-
 
 			// adding map buttons
 			const mapButtons = [
@@ -324,14 +321,13 @@ opacity: 1;
 								text = "";
 								break;
 						}
+						
                         textBox.value = text;
-
                         textBox.dispatchEvent(new Event('change'));
 
-					},w ), false);
+					},w), false);
 				}
 			}
-
 
 			// adding percent procressed number
 			const stats = w.document.querySelector("#player_stats").children[2];
@@ -462,7 +458,8 @@ opacity: 1;
             function highlight() {
                 w.document.querySelectorAll('.btn-group').forEach(exportFunction((element) => { element.style.border = 'none'; }, w));
                 if(currentSelectable <= maxItems-2) {
-                    w.document.querySelectorAll('.btn-group')[currentSelectable+1].style.border = cloneInto('1px dashed #ebbc4a', w);submitAndNext.blur();
+                    w.document.querySelectorAll('.btn-group')[currentSelectable+1].style.border = cloneInto('1px dashed #ebbc4a', w);
+                    submitAndNext.blur();
 					submitButton.blur();
 				} else if (currentSelectable == 6) {
 					submitAndNext.focus();
@@ -564,7 +561,6 @@ opacity: 1;
 
             highlight();
 
-
         }
 
 	}
@@ -572,7 +568,5 @@ opacity: 1;
 }
 
 setTimeout(function () {
-
-        init();
-
+    init();
 }, 500);
