@@ -328,21 +328,47 @@ opacity: 1;
 				}
 			}
 
-			// adding percent procressed number
+			// stats enhancements: adding processed by nia, percent processed, progress to next recon badge numbers
+	        const lastPlayerStatLine = w.document.querySelector("#player_stats:not(.visible-xs) div");
 			const stats = w.document.querySelector("#player_stats").children[2];
 
 			const reviewed = parseInt(stats.children[3].children[2].innerText);
 			const accepted = parseInt(stats.children[5].children[2].innerText);
 			const rejected = parseInt(stats.children[7].children[2].innerText);
 
-			let percent = (accepted + rejected) / reviewed;
-			percent = Math.round(percent * 1000) / 10;
-			w.document.querySelector("#player_stats:not(.visible-xs) div p:last-child")
-			.insertAdjacentHTML("afterEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span>' +
-					'<span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Percent Processed</span> <span class="gold pull-right">' + percent + '%</span></p>');
+			const processed = accepted + rejected;
+	        const percent = Math.round(processed / reviewed * 1000) / 10;
 
-			w.document.querySelector("#player_stats:not(.visible-xs) div p:last-child").insertAdjacentHTML("afterEnd", '<br><p><input style="width: 99%;" type="text" ' +
-					'value="'+reviewed+' / '+ (accepted + rejected ) + ' (' +accepted+  '/'+rejected+') / '+percent+'%"/></p>');
+	        const reconBadge = { 100: "Bronze", 750: "Silver", 2500: "Gold", 5000: "Platin", 10000: "Black"};
+	        let nextBadgeName, nextBadgeCount;
+
+	        for(const key in reconBadge) {
+		        if(processed <= key) {
+			        nextBadgeCount = key;
+			        nextBadgeName = reconBadge[key];
+			        break;
+		        }
+	        }
+	        const nextBadgeProcess = processed / nextBadgeCount * 100;
+
+	        lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span>' +
+			        '<span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed by NIA</span> <span class="gold pull-right">' + processed + ' (' + percent + '%) </span></p>');
+
+	        lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
+			        `<br><div>Next recon badge tier: <b>`+nextBadgeName + ' (' + nextBadgeCount +')'+`</b><span class="pull-right"></span>
+			        <div class="progress">
+				        <div class="progress-bar progress-bar-warning" 
+				        role="progressbar" 
+				        aria-valuenow="`+ nextBadgeProcess +`" 
+				        aria-valuemin="0" 
+				        aria-valuemax="100" 
+				        style="width: `+  Math.round(nextBadgeProcess) +`%;"
+				        title="`+ (nextBadgeCount - processed) +` to go">
+				            `+ Math.round(nextBadgeProcess) +`%
+			        </div></div></div>`);
+
+	        lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<p><input onFocus="this.select();" style="width: 99%;" type="text" ' +
+	        		'value="'+reviewed+' / '+ (accepted + rejected ) + ' (' +accepted+  '/'+rejected+') / '+Math.round(percent)+'%"/></p>');
 
 			// kill autoscroll
 			ansController.goToLocation = null;
@@ -374,7 +400,7 @@ opacity: 1;
 			// Re-enabling scroll zoom
 			subController.map.setOptions(cloneInto({scrollwheel: true}, w));
 
-			// HACKY way to move portal rating to the right side
+			// move portal rating to the right side
 			const scorePanel = w.document.querySelector("div[class~='pull-right']");
 			let nodesToMove = Array.from(w.document.querySelector("div[class='btn-group']").parentElement.children);
 			nodesToMove = nodesToMove.splice(2, 6);
