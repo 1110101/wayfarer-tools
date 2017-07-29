@@ -260,11 +260,11 @@ opacity: 1;
 	        let submitAndNext = submitButton.cloneNode(false);
             submitAndNext.innerHTML = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>';
             submitAndNext.title = "Submit and go to next review";
-            submitAndNext.addEventListener('click', () => {
-                exportFunction(function () {
-                    window.location.assign("/recon");
-                }, ansController, {defineAs: "openSubmissionCompleteModal"});
-            });
+	        submitAndNext.addEventListener('click', exportFunction(() => {
+		        exportFunction(function () {
+			        window.location.assign("/recon");
+		        }, ansController, {defineAs: "openSubmissionCompleteModal"});
+	        }, w));
             // we have to inject the button to angular
             w.$injector.invoke(cloneInto(['$compile', ($compile) => {
 	            let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv[0]));
