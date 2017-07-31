@@ -15,4 +15,17 @@ Userscript for [Ingress Operation Portal Recon](https://opr.ingress.com/recon)
 - Moved overall portal rating to same group as other ratings
 - Changed portal markers to small circles, inspied by IITC style
 - Made "Nearby portals" list and map scrollable with mouse wheel
-- **Keyboard navigation (Keys 1-5, Space to confirm, Esc, Shift, Tab for navigation + Keys on NUMPAD)**
+- **Keyboard navigation (See below)**
+
+## Keyboard Navigation
+
+You can use keyboard to fully control the page as follow:
+
+|           Key(s)           |                 Function                 |
+| :------------------------: | :--------------------------------------: |
+|    Keys 1-5, Numpad 1-5    | Valuate current selected field (the red highlighted one) |
+|             D              | Mark current candidate as a duplicate of the opened portal in "duplicates" |
+|        Space, Enter        |     Confirm dialog / Send valuation      |
+|       Tab, Numpad +        |                Next field                |
+| Shift, Backspace, Numpad - |              Previous field              |
+|       Esc, Numpad /        |               First field                |
