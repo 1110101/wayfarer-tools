@@ -482,10 +482,14 @@ opacity: 1;
 			let currentSelectable = 0;
 			let maxItems = 7;
 
+
+			// a list of all 6 star button rows, and the two submit buttons
+			let starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button')
+
             function highlight() {
-                w.document.querySelectorAll('.btn-group').forEach(exportFunction((element) => { element.style.border = 'none'; }, w));
+                starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none'; }, w));
                 if(currentSelectable <= maxItems-2) {
-                    w.document.querySelectorAll('.btn-group')[currentSelectable+1].style.border = cloneInto('1px dashed #ebbc4a', w);
+                    starsAndSubmitButtons[currentSelectable].style.border = cloneInto('1px dashed #ebbc4a', w);
                     submitAndNext.blur();
 					submitButton.blur();
 				} else if (currentSelectable == 6) {
@@ -588,7 +592,7 @@ opacity: 1;
 				}
 				// rating 1-5
 				else {
-					w.document.querySelectorAll('.btn-group')[currentSelectable+1].querySelectorAll('button.button-star')[numkey-1].click();
+					starsAndSubmitButtons[currentSelectable].querySelectorAll('button.button-star')[numkey-1].click();
 					currentSelectable++;
 				}
 				highlight();
