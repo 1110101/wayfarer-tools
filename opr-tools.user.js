@@ -697,6 +697,7 @@ function init() {
 		refreshIntervalID = setInterval(() => {
 			el.innerText = Math.floor(--refreshTimer/60).toString().padStart(2, "0") + ":" + (refreshTimer - Math.floor(refreshTimer/60) * 60).toString().padStart(2, "0");
 			if(refreshTimer === 0) {
+				clearInterval(refreshIntervalID);
 				w.sessionStorage.setItem("oprt_from_refresh", true);
 				w.document.location.reload();
 			}
