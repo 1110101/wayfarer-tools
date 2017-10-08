@@ -40,7 +40,7 @@ SOFTWARE.
 */
 
 const PORTAL_MARKER = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuOWwzfk4AAADlSURBVDhPY/j//z8CTw3U/V8lcvx/MfPX/2Xcd//XyWwDYxAbJAaS63c2Q9aD0NygUPS/hPXt/3bD5f93LI7DwFvnJILlSlg//K+XrUc1AKS5jOvx/wU55Vg1I2OQmlKOpzBDIM4G2UyMZhgGqQW5BOgdBrC/cDkbHwbpAeplAAcONgWEMChMgHoZwCGMTQExGKiXARxN2CSJwUC9VDCAYi9QHIhVQicpi0ZQ2gYlCrITEigpg5IlqUm5VrILkRdghoBMxeUd5MwE1YxqAAiDvAMKE1DAgmIHFMUgDGKDxDCy838GAPWFoAEBs2EvAAAAAElFTkSuQmCC";
-const CSS = `
+const GLOBAL_CSS = `
 .dropdown {
 position: relative;
 display: inline-block;
@@ -136,6 +136,9 @@ opacity: 1;
 }
 `;
 
+let refreshIntervalID;
+let refreshTimer;
+
 function addGlobalStyle(css) {
 	let head, style;
 	head = document.getElementsByTagName("head")[0];
@@ -175,6 +178,9 @@ function init() {
 					clearInterval(initWatcher);
 				} catch (error) {
 					console.log(error);
+					if(error >= 41) {
+						addRefreshContainer();
+					}
 					if(error !== 42) {
 						clearInterval(initWatcher);
 					}
@@ -196,19 +202,19 @@ function init() {
 	}
 
 	function initScript() {
-		const descDiv = document.getElementById("descriptionDiv");
+		const descDiv = w.document.getElementById("descriptionDiv");
 		const ansController = w.$scope(descDiv).answerCtrl;
 		const subController = w.$scope(descDiv).subCtrl;
 		const scope = w.$scope(descDiv);
 		const newPortalData = subController.pageData;
 
 		// adding CSS
-		addGlobalStyle(CSS);
+		addGlobalStyle(GLOBAL_CSS);
 
 		modifyHeader();
 
 		if(subController.errorMessage !== "" ) {
-			// no portal analysis available
+			// no portal analysis data available
 			throw 41; // @todo better error code
 		}
 
@@ -218,6 +224,8 @@ function init() {
 		}
 
 		modifyPage(descDiv, ansController, subController, scope, newPortalData);
+
+		checkIfAutorefresh();
 
 	}
 
@@ -457,21 +465,21 @@ function init() {
 		let currentSelectable = 0;
 		let maxItems = 7;
 
-            // a list of all 6 star button rows, and the two submit buttons
-               let starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button')
+		// a list of all 6 star button rows, and the two submit buttons
+		let starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button')
 
 		function highlight() {
 			starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none'; }, w));
-                if(currentSelectable <= maxItems-2) {
-                    starsAndSubmitButtons[currentSelectable].style.border = cloneInto('1px dashed #ebbc4a', w);
-                    submitAndNext.blur();
-					submitButton.blur();
-				} else if (currentSelectable == 6) {
-					submitAndNext.focus();
-				}
-				else if (currentSelectable == 7) {
-					submitButton.focus();
-				}
+			if(currentSelectable <= maxItems-2) {
+				starsAndSubmitButtons[currentSelectable].style.border = cloneInto('1px dashed #ebbc4a', w);
+				submitAndNext.blur();
+				submitButton.blur();
+			} else if (currentSelectable == 6) {
+				submitAndNext.focus();
+			}
+			else if (currentSelectable == 7) {
+				submitButton.focus();
+			}
 
 		}
 
@@ -560,17 +568,17 @@ function init() {
 				currentSelectable--;
 				event.preventDefault();
 
-				}
-				else if(numkey === null || currentSelectable >= maxItems) {
-					return;
-				}
-				// rating 1-5
-				else {
-					starsAndSubmitButtons[currentSelectable].querySelectorAll('button.button-star')[numkey-1].click();
-					currentSelectable++;
-				}
-				highlight();
-			});
+			}
+			else if(numkey === null || currentSelectable >= maxItems) {
+				return;
+			}
+			// rating 1-5
+			else {
+				starsAndSubmitButtons[currentSelectable].querySelectorAll('button.button-star')[numkey-1].click();
+				currentSelectable++;
+			}
+			highlight();
+		});
 
 		highlight();
 
@@ -608,11 +616,11 @@ function init() {
 		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
 				`<br><div>Next recon badge tier: <b>`+nextBadgeName + ' (' + nextBadgeCount +')'+`</b><span class="pull-right"></span>
 			        <div class="progress">
-				        <div class="progress-bar progress-bar-warning" 
-				        role="progressbar" 
-				        aria-valuenow="`+ nextBadgeProcess +`" 
-				        aria-valuemin="0" 
-				        aria-valuemax="100" 
+				        <div class="progress-bar progress-bar-warning"
+				        role="progressbar"
+				        aria-valuenow="`+ nextBadgeProcess +`"
+				        aria-valuemin="0"
+				        aria-valuemax="100"
 				        style="width: `+  Math.round(nextBadgeProcess) +`%;"
 				        title="`+ (nextBadgeCount - processed) +` to go">
 				            `+ Math.round(nextBadgeProcess) +`%
@@ -624,6 +632,107 @@ function init() {
 		modifyHeader = function() {}; // just run once
 	}
 
+	function addRefreshContainer() {
+
+		let checkboxRefresh = w.document.createElement("input");
+		// let checkboxRefreshSound = w.document.createElement("input");
+
+		checkboxRefresh.id = "oprt_refresh";
+		checkboxRefresh.type = "checkbox";
+		checkboxRefresh.checked = (w.localStorage.getItem("oprt_refresh") == 'true');
+
+		// checkboxRefreshSound.id = "oprt_refresh_sound";
+		// checkboxRefreshSound.type = "checkbox";
+		// checkboxRefreshSound.checked = (w.localStorage.getItem("oprt_refresh_sound") == 'true');
+
+		let refreshPanel = w.document.createElement("div");
+		refreshPanel.className = "panel panel-primary";
+
+		refreshPanel.addEventListener("change", (event) => {
+			w.localStorage.setItem(event.target.id, event.target.checked); // i'm lazy
+			if(event.target.checked) {
+				startRefresh();
+			} else {
+				stopRefresh();
+			}
+		});
+
+		refreshPanel.innerHTML = `
+			<div class='panel-heading'>Auto Refresh <span class='label label-success pull-right'>OPR-Tools</span></div>
+			<div id='checkDiv' class='panel-body bg-primary' style='background:black;'>
+				<h1 id='countdown' class='text-center fixed-font' style='font-family:monospace;'></h1>
+			</div>`;
+
+		// refreshPanel.querySelector("#checkDiv").insertAdjacentElement("afterbegin", appendCheckbox(checkboxRefreshSound, "Play Sound"));
+		refreshPanel.querySelector("#checkDiv").insertAdjacentElement("afterbegin", appendCheckbox(checkboxRefresh, "Refresh page every 2 minutes"));
+
+		let colDiv = w.document.createElement("div");
+		colDiv.className = "col-md-5";
+		colDiv.appendChild(refreshPanel);
+
+		let rowDiv = w.document.createElement("div");
+		rowDiv.className = "row";
+		rowDiv.appendChild(colDiv);
+
+		w.document.getElementById("NewSubmissionController").insertAdjacentElement("beforeend", rowDiv);
+
+		checkboxRefresh.checked === true ? startRefresh() : stopRefresh();
+
+		function appendCheckbox(checkbox, text) {
+			let label = w.document.createElement("label");
+			let div = w.document.createElement("div");
+			div.className = "checkbox";
+			label.appendChild(checkbox);
+			label.appendChild(w.document.createTextNode(text));
+			div.appendChild(label);
+			return div;
+		}
+
+		addRefreshContainer = function () {} // run only once
+	}
+
+	function startRefresh() {
+		let el = w.document.getElementById("countdown");
+		if(!Number.isFinite(refreshTimer)) refreshTimer = 120;
+		refreshIntervalID = setInterval(() => {
+			el.innerText = Math.floor(--refreshTimer/60).toString().padStart(2, "0") + ":" + (refreshTimer - Math.floor(refreshTimer/60) * 60).toString().padStart(2, "0");
+			if(refreshTimer === 0) {
+				w.sessionStorage.setItem("oprt_from_refresh", true);
+				w.document.location.reload();
+			}
+		}, 1000);
+	}
+
+	function stopRefresh() {
+		clearInterval(refreshIntervalID);
+	}
+
+	function checkIfAutorefresh() {
+		if(w.sessionStorage.getItem("oprt_from_refresh")) {
+			// reset flag
+			w.sessionStorage.removeItem("oprt_from_refresh");
+
+			if(w.document.hidden) { // if tab in background: flash favicon
+				let flag = true;
+
+				let flashId = setInterval(() => {
+					flag = !flag;
+					changeFavicon(flag ? PORTAL_MARKER : "/imgpub/favicon.ico");
+				}, 1000);
+
+				// stop flashing if tab in foreground
+				addEventListener("visibilitychange", () => {
+					changeFavicon("/imgpub/favicon.ico");
+					clearInterval(flashId);
+				});
+			}
+		}
+	}
+
+	function changeFavicon(src) {
+		let link = w.document.querySelector("link[rel='shortcut icon']");
+		link.href = src;
+	}
 }
 
 setTimeout(() => {
