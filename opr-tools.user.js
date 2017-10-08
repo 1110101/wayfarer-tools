@@ -664,7 +664,7 @@ function init() {
 			</div>`;
 
 		// refreshPanel.querySelector("#checkDiv").insertAdjacentElement("afterbegin", appendCheckbox(checkboxRefreshSound, "Play Sound"));
-		refreshPanel.querySelector("#checkDiv").insertAdjacentElement("afterbegin", appendCheckbox(checkboxRefresh, "Refresh page every 2 minutes"));
+		refreshPanel.querySelector("#checkDiv").insertAdjacentElement("afterbegin", appendCheckbox(checkboxRefresh, "Refresh page every 5 minutes"));
 
 		let colDiv = w.document.createElement("div");
 		colDiv.className = "col-md-5";
@@ -693,7 +693,7 @@ function init() {
 
 	function startRefresh() {
 		let el = w.document.getElementById("countdown");
-		if(!Number.isFinite(refreshTimer)) refreshTimer = 120;
+		if(!Number.isFinite(refreshTimer)) refreshTimer = 5*60;
 		refreshIntervalID = setInterval(() => {
 			el.innerText = Math.floor(--refreshTimer/60).toString().padStart(2, "0") + ":" + (refreshTimer - Math.floor(refreshTimer/60) * 60).toString().padStart(2, "0");
 			if(refreshTimer === 0) {
