@@ -13,8 +13,9 @@ Userscript for [Ingress Operation Portal Recon](https://opr.ingress.com/recon)
 - Percent of total reviewed candidates processed
 - Translate text buttons for title and description
 - Moved overall portal rating to same group as other ratings
-- Changed portal markers to small circles, inspied by IITC style
+- Changed portal markers to small circles, inspired by IITC style
 - Made "Nearby portals" list and map scrollable with mouse wheel
+- Refresh page if no portal analysis available
 - **Keyboard navigation (See below)**
 
 ## Keyboard Navigation
