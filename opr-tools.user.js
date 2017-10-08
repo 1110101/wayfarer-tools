@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.11.2
+// @version      0.11.3
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -136,8 +136,7 @@ opacity: 1;
 }
 `;
 
-let refreshIntervalID;
-let refreshTimer;
+let refreshIntervalID, refreshTimer, refreshDate;
 
 function addGlobalStyle(css) {
 	let head, style;
@@ -153,7 +152,7 @@ function addGlobalStyle(css) {
 
 function init() {
 	const w = typeof unsafeWindow == "undefined" ? window : unsafeWindow;
-	let tryNumber = 8;
+	let tryNumber = 10;
 	const initWatcher = setInterval(function () {
 		if (tryNumber === 0) {
 			clearInterval(initWatcher);
@@ -660,12 +659,10 @@ function init() {
 
 		refreshPanel.innerHTML = `
 			<div class='panel-heading'>Auto Refresh <span class='label label-success pull-right'>OPR-Tools</span></div>
-			<div id='checkDiv' class='panel-body bg-primary' style='background:black;'>
-				<h1 id='countdown' class='text-center fixed-font' style='font-family:monospace;'></h1>
-			</div>`;
+			<div id='checkDiv' class='panel-body bg-primary' style='background:black;'></div>`;
 
 		// refreshPanel.querySelector("#checkDiv").insertAdjacentElement("afterbegin", appendCheckbox(checkboxRefreshSound, "Play Sound"));
-		refreshPanel.querySelector("#checkDiv").insertAdjacentElement("afterbegin", appendCheckbox(checkboxRefresh, "Refresh page every 5 minutes"));
+		refreshPanel.querySelector("#checkDiv").insertAdjacentElement("afterbegin", appendCheckbox(checkboxRefresh, "Refresh page every 5-10 minutes"));
 
 		let colDiv = w.document.createElement("div");
 		colDiv.className = "col-md-5";
@@ -693,16 +690,24 @@ function init() {
 	}
 
 	function startRefresh() {
-		let el = w.document.getElementById("countdown");
-		if(!Number.isFinite(refreshTimer)) refreshTimer = 5*60;
+		let time = getRandomIntInclusive(5, 10) * 60000;
+
 		refreshIntervalID = setInterval(() => {
-			el.innerText = Math.floor(--refreshTimer/60).toString().padStart(2, "0") + ":" + (refreshTimer - Math.floor(refreshTimer/60) * 60).toString().padStart(2, "0");
-			if(refreshTimer === 0) {
-				clearInterval(refreshIntervalID);
-				w.sessionStorage.setItem("oprt_from_refresh", true);
-				w.document.location.reload();
-			}
-		}, 1000);
+			reloadOPR();
+		}, time);
+
+		function reloadOPR() {
+			clearInterval(refreshIntervalID);
+			w.sessionStorage.setItem("oprt_from_refresh", true);
+			w.document.location.reload();
+		}
+
+		// source https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+		function getRandomIntInclusive(min, max) {
+			min = Math.ceil(min);
+			max = Math.floor(max);
+			return Math.floor(Math.random() * (max - min + 1)) + min;
+		}
 	}
 
 	function stopRefresh() {
@@ -724,8 +729,10 @@ function init() {
 
 				// stop flashing if tab in foreground
 				addEventListener("visibilitychange", () => {
-					changeFavicon("/imgpub/favicon.ico");
-					clearInterval(flashId);
+					if (!w.document.hidden) {
+						changeFavicon("/imgpub/favicon.ico");
+						clearInterval(flashId);
+					}
 				});
 			}
 		}
