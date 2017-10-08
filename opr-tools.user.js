@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.11.1
+// @version      0.11.2
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -161,6 +161,7 @@ function init() {
 			.insertAdjacentHTML("afterBegin", `
 <div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR tools initialization failed, refresh page</strong> or check developer console for error details</div>
 `);
+			addRefreshContainer();
 			return;
 		}
 		if (w.angular) {
@@ -178,7 +179,7 @@ function init() {
 					clearInterval(initWatcher);
 				} catch (error) {
 					console.log(error);
-					if(error >= 41) {
+					if(error === 41) {
 						addRefreshContainer();
 					}
 					if(error !== 42) {
