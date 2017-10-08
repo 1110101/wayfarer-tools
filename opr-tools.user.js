@@ -457,22 +457,21 @@ function init() {
 		let currentSelectable = 0;
 		let maxItems = 7;
 
-
-		// a list of all 6 star button rows, and the two submit buttons
-		let starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button')
+            // a list of all 6 star button rows, and the two submit buttons
+               let starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button')
 
 		function highlight() {
 			starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none'; }, w));
-			if(currentSelectable <= maxItems-2) {
-				starsAndSubmitButtons[currentSelectable].style.border = cloneInto('1px dashed #ebbc4a', w);
-				submitAndNext.blur();
-				submitButton.blur();
-			} else if (currentSelectable == 6) {
-				submitAndNext.focus();
-			}
-			else if (currentSelectable == 7) {
-				submitButton.focus();
-			}
+                if(currentSelectable <= maxItems-2) {
+                    starsAndSubmitButtons[currentSelectable].style.border = cloneInto('1px dashed #ebbc4a', w);
+                    submitAndNext.blur();
+					submitButton.blur();
+				} else if (currentSelectable == 6) {
+					submitAndNext.focus();
+				}
+				else if (currentSelectable == 7) {
+					submitButton.focus();
+				}
 
 		}
 
@@ -561,17 +560,17 @@ function init() {
 				currentSelectable--;
 				event.preventDefault();
 
-			}
-			else if(numkey === null || currentSelectable >= maxItems) {
-				return;
-			}
-			// rating 1-5
-			else {
-				starsAndSubmitButtons[currentSelectable].querySelectorAll('button.button-star')[numkey-1].click();
-				currentSelectable++;
-			}
-			highlight();
-		});
+				}
+				else if(numkey === null || currentSelectable >= maxItems) {
+					return;
+				}
+				// rating 1-5
+				else {
+					starsAndSubmitButtons[currentSelectable].querySelectorAll('button.button-star')[numkey-1].click();
+					currentSelectable++;
+				}
+				highlight();
+			});
 
 		highlight();
 
