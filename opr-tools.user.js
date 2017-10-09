@@ -658,7 +658,7 @@ function init() {
 		});
 
 		refreshPanel.innerHTML = `
-			<div class='panel-heading'>Auto Refresh <span class='label label-success pull-right'>OPR-Tools</span></div>
+			<div class='panel-heading'><span class='glyphicon glyphicon-refresh'></span> Refresh <span class='label label-success pull-right'>OPR-Tools</span></div>
 			<div id='checkDiv' class='panel-body bg-primary' style='background:black;'></div>`;
 
 		// refreshPanel.querySelector("#checkDiv").insertAdjacentElement("afterbegin", appendCheckbox(checkboxRefreshSound, "Play Sound"));
