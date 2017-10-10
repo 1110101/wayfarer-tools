@@ -345,7 +345,7 @@ function init() {
 		// Automatically open the first listed possible duplicate
 		try {
 			const e = w.document.querySelector("#map-filmstrip > ul > li:nth-child(1) > img");
-			if (e != null) {
+			if (e !== null) {
 				setTimeout(function () {
 					e.click();
 				}, 500);
@@ -371,7 +371,7 @@ function init() {
 		let maxItems = 7;
 
 		// a list of all 6 star button rows, and the two submit buttons
-		let starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button')
+		let starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button');
 
 		function highlight() {
 			starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none'; }, w));
