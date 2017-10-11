@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.12.2
+// @version      0.12.3
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -51,7 +51,7 @@ if (typeof exportFunction !== 'function') {
 	};
 }
 if (typeof cloneInto !== 'function') {
-	const cloneInto = obj => obj;
+	cloneInto = obj => obj;
 }
 
 function addGlobalStyle(css) {
