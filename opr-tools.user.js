@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.12.1
+// @version      0.12.2
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -39,9 +39,20 @@ SOFTWARE.
 
 */
 
+let refreshIntervalID;
 
-
-let refreshIntervalID, refreshTimer, refreshDate;
+// polyfill for ViolentMonkey
+if (typeof exportFunction !== 'function') {
+	exportFunction = (func, scope, options) => {
+		if (options && options.defineAs) {
+			scope[options.defineAs] = func;
+		}
+		return func;
+	};
+}
+if (typeof cloneInto !== 'function') {
+	const cloneInto = obj => obj;
+}
 
 function addGlobalStyle(css) {
 	let head, style;
@@ -255,9 +266,6 @@ function init() {
 				},w), false);
 			}
 		}
-
-		// kill autoscroll
-		ansController.goToLocation = null;
 
 		// portal image zoom button with "=s0"
 		w.document.querySelector("#AnswersController .ingress-background").insertAdjacentHTML("beforeBegin",
@@ -671,6 +679,9 @@ function init() {
 setTimeout(() => {
 	init();
 }, 500);
+
+
+//region const
 
 const GLOBAL_CSS = `
 .dropdown {
@@ -1824,3 +1835,4 @@ cmpOhteWb0GerliV95pFO7r/eksZO5TZMUNy/yYb1jsG6B5GVgwNu+bEEyD2p7KV/I9KSvVtjOIJ
 QwFpfvsHImY87nM5QYDp3EIAUBp+mon7ttgAPjXc/Gx8cABfqClODTc/Gy8cwBdqiiAgIGBmgZgE
 AZgAAAAAAAAAQLlP3m4FuPEX/PJU307uLFBu9T3V5/VwZNaRVxW4lheOAABIK28KlgTgA+DNkzew
 HAE=`;
+//endregion
