@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.12.3
+// @version      0.12.4
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -524,7 +524,7 @@ function init() {
 		const nextBadgeProcess = processed / nextBadgeCount * 100;
 
 		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span>' +
-				'<span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed by NIA</span> <span class="gold pull-right">' + processed + ' (' + percent + '%) </span></p>');
+				'<span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses</span> <span class="gold pull-right">' + processed + ' (' + percent + '%) </span></p>');
 
 		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
 				`<br><div>Next recon badge tier: <b>`+nextBadgeName + ' (' + nextBadgeCount +')'+`</b><span class="pull-right"></span>
