@@ -1,5 +1,8 @@
 # OPR Tools
 Userscript for [Ingress Operation Portal Recon](https://opr.ingress.com/recon)
+
+> Userscript manager such as [Tampermonkey](https://tampermonkey.net/) required!
+
 > **Download:** https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 
 ![](./image/opr-tools.png)
