@@ -322,6 +322,8 @@ function init() {
 		}
 
 		// add translate buttons to title and description (if existing)
+		let lang = "en";
+		try { lang = navigator.languages[0].split('-')[0]; } catch (e) {}
 		const link = w.document.querySelector("#descriptionDiv a");
 		const content = link.innerText.trim();
 		let a = w.document.createElement("a");
@@ -332,7 +334,7 @@ function init() {
 		a.className = "button btn btn-default pull-right";
 		a.target = 'translate';
 		a.style.padding = '0px 4px';
-		a.href = "https://translate.google.com/#auto/en/" + content;
+		a.href = "https://translate.google.com/#auto/" + lang + "/" + content;
 		link.insertAdjacentElement("afterend",a);
 
 		const description = w.document.querySelector("#descriptionDiv").innerHTML.split("<br>")[3].trim();
@@ -345,7 +347,7 @@ function init() {
 			a.className = "button btn btn-default pull-right";
 			a.target = 'translate';
 			a.style.padding = '0px 4px';
-			a.href = "https://translate.google.com/#auto/en/" + description;
+			a.href = "https://translate.google.com/#auto/" + lang + "/" + description;
 			const br = w.document.querySelectorAll("#descriptionDiv br")[2];
 			br.insertAdjacentElement("afterend",a);
 		}
