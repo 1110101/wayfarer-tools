@@ -291,8 +291,11 @@ function init() {
 		}
 		subController.map.setZoom(16);
 
-		// Re-enabling scroll zoom
-		subController.map.setOptions(cloneInto({scrollwheel: true}, w));
+		// Re-enabling scroll zoom and allow zoom with out holding ctrl
+		const mapOptions = {scrollwheel: true, gestureHandling: 'greedy'};
+		subController.map.setOptions(cloneInto(mapOptions, w));
+		subController.map2.setOptions(cloneInto(mapOptions, w));
+
 
 		// move portal rating to the right side
 		const scorePanel = w.document.querySelector("div[class~='pull-right']");
