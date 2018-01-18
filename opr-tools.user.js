@@ -532,16 +532,16 @@ function init() {
 		}
 		const nextBadgeProcess = processed / nextBadgeCount * 100;
 
-        lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
+	        lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
         		<br/><p><span class="ingress-mid-blue pull-left">scanner offset (use negative values,<br/>if scanner is ahead of OPR): </span>
         		<input style="margin: 5px 0px 0px 10px;" id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="`+oprt_scanner_offset+`">
-        <br/></p>`);
+        		<br/></p>`);
 
-        w.document.getElementById('scannerOffset').addEventListener('change', (event) => {
-            w.localStorage.setItem('oprt_scanner_offset',event.target.value);
-        });
+       		w.document.getElementById('scannerOffset').addEventListener('change', (event) => {
+	            w.localStorage.setItem('oprt_scanner_offset',event.target.value);
+	        });
 
-        lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span>' +
+	        lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span>' +
 				'<span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses</span> <span class="gold pull-right">' + processed + ' (' + percent + '%) </span></p>');
 
 		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
