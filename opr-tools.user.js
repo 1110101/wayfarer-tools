@@ -533,9 +533,9 @@ function init() {
 		const nextBadgeProcess = processed / nextBadgeCount * 100;
 
         lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
-        		<br/><p><span class="ingress-mid-blue pull-left">scanner offset (negative, if scanner is ahead of OPR): </span>
-        		<input style="margin: 0px 0px 5px 10px;" id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="`+oprt_scanner_offset+`">
-        		</p>`);
+        		<br/><p><span class="ingress-mid-blue pull-left">scanner offset (use negative values,<br/>if scanner is ahead of OPR): </span>
+        		<input style="margin: 5px 0px 0px 10px;" id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="`+oprt_scanner_offset+`">
+        <br/></p>`);
 
         w.document.getElementById('scannerOffset').addEventListener('change', (event) => {
             w.localStorage.setItem('oprt_scanner_offset',event.target.value);
