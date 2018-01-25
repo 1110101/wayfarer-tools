@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OPR stats
-// @version      0.1.0
-// @description  save OPS statistics in browser storage
+// @version      0.1.1
+// @description  save OPR statistics in local browser storage
 // @author       https://gitlab.com/fotofreund0815
 // @match        https://opr.ingress.com/
 // @grant        none
