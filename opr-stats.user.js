@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         OPR stats
-// @version      0.1.1
+// @version      0.1.2
 // @description  save OPR statistics in local browser storage
 // @author       https://gitlab.com/fotofreund0815
 // @match        https://opr.ingress.com/
 // @grant        none
-// @downloadURL  https://gitlab.com/fotofreund0815/opr-tools/raw/master/opr-stats.user.js
-// @updateURL    https://gitlab.com/fotofreund0815/opr-tools/raw/master/opr-stats.user.js
+// @downloadURL  https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-stats.user.js
+// @updateURL    https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-stats.user.js
 // ==/UserScript==
 
 (function () {
