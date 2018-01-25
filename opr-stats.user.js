@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR stats
-// @version      0.1.3
+// @version      0.1.4
 // @description  save OPR statistics in local browser storage
 // @author       https://gitlab.com/fotofreund0815
 // @match        https://opr.ingress.com/
@@ -21,7 +21,7 @@
 	document.getElementById('oprt-stats').addEventListener('click', function(){
 		body.innerHTML = null;
         for (var i = 0; i < oprtstats.length;i++) {
-            body.insertAdjacentHTML("beforeEnd", YMDfromTime(oprtstats[i]['datum']) + ';' + oprtstats[i]['reviewed'] + ';' + oprtstats[i]['accepted'] + ';' + oprtstats[i]['rejected'] + '<br/>');
+            body.insertAdjacentHTML("beforeEnd", YMDfromTime(oprtstats[i].datum) + ';' + oprtstats[i].reviewed + ';' + oprtstats[i].accepted + ';' + oprtstats[i].rejected + '<br/>');
         }
 	});
 
@@ -62,8 +62,8 @@
 
     for (var i = 0; i < oprtstats.length;i++) {
        ymd = YMDfromTime(oprtstats[i].datum);
-       let prozent = 100*(oprtstats[i]['accepted']+oprtstats[i]['rejected'])/ oprtstats[i]['reviewed'];
-       section.insertAdjacentHTML("beforeEnd", ymd +':  ' + oprtstats[i]['reviewed'] + ' / ' + oprtstats[i]['accepted'] + ' / ' + oprtstats[i]['rejected'] + ' - ' + prozent + '% <br>');
+       let prozent = 100*(oprtstats[i].accepted + oprtstats[i].rejected)/ oprtstats[i].reviewed;
+       section.insertAdjacentHTML("beforeEnd", ymd +':  ' + oprtstats[i].reviewed + ' / ' + oprtstats[i].accepted + ' / ' + oprtstats[i].rejected + ' - ' + prozent.toFixed(2) + '% <br>');
     }
 
 
