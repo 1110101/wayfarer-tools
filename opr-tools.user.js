@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.12.6
+// @version      0.12.6.1
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
 // @match        https://opr.ingress.com/recon
 // @grant        unsafeWindow
 // @grant        GM_notification
-// @downloadURL  https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
-// @updateURL    https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
+// @downloadURL  https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-tools.user.js
+// @updateURL    https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-tools.user.js
 // @supportURL   https://gitlab.com/1110101/opr-tools/issues
 
 // ==/UserScript==
