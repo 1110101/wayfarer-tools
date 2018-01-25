@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.12.6.1
+// @version      0.12.6.5
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -271,9 +271,9 @@ function init() {
 			}
 		}
 
-		// portal image zoom button with "=s0"   // removed, added by niantic
-		//w.document.querySelector("#AnswersController .ingress-background").insertAdjacentHTML("beforeBegin",
-		//		"<div style='position:absolute;float:left;'><a class='button btn btn-default' style='display:inline-block;' href='" + subController.pageData.imageUrl + "=s0' target='fullimage'><span class='glyphicon glyphicon-search' aria-hidden='true'></span></div>");
+		// portal image zoom button with "=s0"
+		w.document.querySelector("#AnswersController .ingress-background").insertAdjacentHTML("beforeBegin",
+				"<div style='position:absolute;float:left;'><a class='button btn btn-default' style='display:inline-block;' href='" + subController.pageData.imageUrl + "=s0' target='fullimage'><span class='glyphicon glyphicon-search' aria-hidden='true'></span></div>");
 
 		// Make photo filmstrip scrollable
 		const filmstrip = w.document.getElementById("map-filmstrip");
