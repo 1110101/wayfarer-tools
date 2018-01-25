@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR stats
-// @version      0.1.2
+// @version      0.1.3
 // @description  save OPR statistics in local browser storage
 // @author       https://gitlab.com/fotofreund0815
 // @match        https://opr.ingress.com/
@@ -61,8 +61,9 @@
 	}
 
     for (var i = 0; i < oprtstats.length;i++) {
-        ymd = YMDfromTime(oprtstats[i].datum);
-       section.insertAdjacentHTML("beforeEnd", oprtstats[i]['datum'] + ': ' + ymd +'  ' + oprtstats[i]['reviewed'] + ' total | ' + oprtstats[i]['accepted'] + ' accepted | ' + oprtstats[i]['rejected'] + ' rejected <br>');
+       ymd = YMDfromTime(oprtstats[i].datum);
+       let prozent = 100*(oprtstats[i]['accepted']+oprtstats[i]['rejected'])/ oprtstats[i]['reviewed'];
+       section.insertAdjacentHTML("beforeEnd", ymd +':  ' + oprtstats[i]['reviewed'] + ' / ' + oprtstats[i]['accepted'] + ' / ' + oprtstats[i]['rejected'] + ' - ' + prozent + '% <br>');
     }
 
 
