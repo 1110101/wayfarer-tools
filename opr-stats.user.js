@@ -63,7 +63,7 @@
     for (var i = 0; i < oprtstats.length;i++) {
        ymd = YMDfromTime(oprtstats[i].datum);
        let prozent = 100*(oprtstats[i]['accepted']+oprtstats[i]['rejected'])/ oprtstats[i]['reviewed'];
-       section.insertAdjacentHTML("beforeEnd", ymd +':  ' + oprtstats[i]['reviewed'] + ' / ' + oprtstats[i]['accepted'] + ' / ' + oprtstats[i]['rejected'] + ' - ' + prozent + '% <br>');
+       section.insertAdjacentHTML("beforeEnd", ymd +':  ' + oprtstats[i]['reviewed'] + ' / ' + oprtstats[i]['accepted'] + ' / ' + oprtstats[i]['rejected'] + ' - ' + prozent.toFixed(2) + '% <br>');
     }
 
 
