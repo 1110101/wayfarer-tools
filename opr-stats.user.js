@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR stats
-// @version      0.1.3
+// @version      0.1.4
 // @description  save OPR statistics in local browser storage
 // @author       https://gitlab.com/fotofreund0815
 // @match        https://opr.ingress.com/
