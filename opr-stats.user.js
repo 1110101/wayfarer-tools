@@ -59,8 +59,8 @@ function oprstats() {
 		console.log('stats already saved today');
 	}
 
-	let start = Math.max(0, oprtstats.length - 10);
-	for (var i = start; i < oprtstats.length;i++) {
+	let end = Math.max(0, oprtstats.length - 11);
+	for (var i = oprtstats.length - 1; i > end; i--) {
        ymd = YMDfromTime(oprtstats[i].datum);
        let prozent = 100*(oprtstats[i].accepted + oprtstats[i].rejected)/ oprtstats[i].reviewed;
        section.insertAdjacentHTML("beforeEnd", ymd +':  ' + oprtstats[i].reviewed + ' / ' + oprtstats[i].accepted + ' / ' + oprtstats[i].rejected + ' - ' + prozent.toFixed(2) + '% <br>');
