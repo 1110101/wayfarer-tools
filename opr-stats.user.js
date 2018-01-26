@@ -1,19 +1,20 @@
 // ==UserScript==
-// @name         OPR stats
-// @version      0.1.5
-// @description  save OPR statistics in local browser storage
-// @author       https://gitlab.com/fotofreund0815
-// @match        https://opr.ingress.com/
-// @grant        none
-// @downloadURL  https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-stats.user.js
-// @updateURL    https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-stats.user.js
+// @name		OPR stats
+// @version		0.1.5
+// @description	save OPR statistics in local browser storage
+// @author		https://gitlab.com/fotofreund0815
+// @match		https://opr.ingress.com/
+// @match		https://opr.ingress.com/?login=true
+// @grant		none
+// @downloadURL	https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-stats.user.js
+// @updateURL	https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-stats.user.js
 // ==/UserScript==
 
-(function () {
+function oprstats() {
 	let body = document.getElementsByTagName('body')[0];
 	let section = document.getElementsByTagName('section')[0];
 
-    // get Values from localStorage
+	// get Values from localStorage
 	let oprtstats = JSON.parse(localStorage.getItem('oprtstats')) || [];
 
 	section.insertAdjacentHTML("beforeEnd", '<div><button class="button" id="oprt-stats">show my stats</button></div>');
@@ -36,8 +37,6 @@
 	}
 
 	let stunde = jetzt.getHours();
-
-	console.log(jetzt.getTime() + ' # ' + heute.getTime() + ' # ' + last);
 
 	if ((heute > last) && (stunde > 2)) {
 
@@ -80,4 +79,15 @@
         return ymd;
     }
 
+}
+
+(function () {
+	// login prüfen
+	const stats = document.querySelector("#player_stats");
+	if ( stats !== null) {
+		// los geht's
+		oprstats();
+	} else {
+		console.log('not logged in');
+	}
 })();
