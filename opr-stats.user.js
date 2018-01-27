@@ -1,19 +1,20 @@
 // ==UserScript==
-// @name         OPR stats
-// @version      0.1.5
-// @description  save OPR statistics in local browser storage
-// @author       https://gitlab.com/fotofreund0815
-// @match        https://opr.ingress.com/
-// @grant        none
-// @downloadURL  https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-stats.user.js
-// @updateURL    https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-stats.user.js
+// @name		OPR stats
+// @version		0.2.1
+// @description	save OPR statistics in local browser storage
+// @author		https://gitlab.com/fotofreund0815
+// @match		https://opr.ingress.com/
+// @match		https://opr.ingress.com/?login=true
+// @grant		none
+// @downloadURL	https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-stats.user.js
+// @updateURL	https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-stats.user.js
 // ==/UserScript==
 
-(function () {
+function oprstats() {
 	let body = document.getElementsByTagName('body')[0];
 	let section = document.getElementsByTagName('section')[0];
 
-    // get Values from localStorage
+	// get Values from localStorage
 	let oprtstats = JSON.parse(localStorage.getItem('oprtstats')) || [];
 
 	section.insertAdjacentHTML("beforeEnd", '<div><button class="button" id="oprt-stats">show my stats</button></div>');
@@ -37,8 +38,6 @@
 
 	let stunde = jetzt.getHours();
 
-	console.log(jetzt.getTime() + ' # ' + heute.getTime() + ' # ' + last);
-
 	if ((heute > last) && (stunde > 2)) {
 
 		console.log('saving stats');
@@ -60,11 +59,16 @@
 		console.log('stats already saved today');
 	}
 
-	let start = Math.max(0, oprtstats.length - 10);
-	for (var i = start; i < oprtstats.length;i++) {
+	let end = Math.max(0, oprtstats.length - 10);
+	for (var i = oprtstats.length - 1; i >= end; i--) {
        ymd = YMDfromTime(oprtstats[i].datum);
        let prozent = 100*(oprtstats[i].accepted + oprtstats[i].rejected)/ oprtstats[i].reviewed;
-       section.insertAdjacentHTML("beforeEnd", ymd +':  ' + oprtstats[i].reviewed + ' / ' + oprtstats[i].accepted + ' / ' + oprtstats[i].rejected + ' - ' + prozent.toFixed(2) + '% <br>');
+       if (i > 0) {
+    	   gestern = oprtstats[i].reviewed - oprtstats[i-1].reviewed;
+       } else {
+    	   gestern = 'N/A';
+       }
+       section.insertAdjacentHTML("beforeEnd", ymd +':  ' + oprtstats[i].reviewed + ' / ' + oprtstats[i].accepted + ' / ' + oprtstats[i].rejected + ' - ' + prozent.toFixed(2) + '% agree / ' + gestern + ' portals yesterday<br>');
     }
 
 
@@ -80,4 +84,15 @@
         return ymd;
     }
 
+}
+
+(function () {
+	// login prüfen
+	const stats = document.querySelector("#player_stats");
+	if ( stats !== null) {
+		// los geht's
+		oprstats();
+	} else {
+		console.log('not logged in');
+	}
 })();
