@@ -66,7 +66,7 @@ function oprstats() {
        if (i > 0) {
     	   gestern = oprtstats[i].reviewed - oprtstats[i-1].reviewed;
        } else {
-    	   gestern = 'N/A';
+    	   gestern = ' - ';
        }
        section.insertAdjacentHTML("beforeEnd", ymd +':  ' + oprtstats[i].reviewed + ' / ' + oprtstats[i].accepted + ' / ' + oprtstats[i].rejected + ' - ' + prozent.toFixed(2) + '% agree / ' + gestern + ' portals yesterday<br>');
     }
