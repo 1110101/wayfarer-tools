@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name		OPR stats
-// @version		0.2.1
+// @version		0.2.3
 // @description	save OPR statistics in local browser storage
 // @author		https://gitlab.com/fotofreund0815
 // @match		https://opr.ingress.com/
@@ -76,12 +76,12 @@ function oprstats() {
     	let curdate = new Date();
     	curdate.setTime(time);
 
-        let Jahr  = curdate.getFullYear(),
-            Monat = curdate.getMonth() + 1,
-            Tag   = curdate.getDate();
-        let ymd = (Jahr*10000) + (Monat*100) + Tag;
+        let Jahr  = curdate.getFullYear().toString(),
+	        Monat = ('0' + curdate.getMonth() + 1).slice(-2),
+	        Tag   = ('0' + curdate.getDate()).slice(-2);
 
-        return ymd;
+        let ymd = Tag + '.' + Monat + '.' + Jahr;
+	    return ymd;
     }
 
 }
