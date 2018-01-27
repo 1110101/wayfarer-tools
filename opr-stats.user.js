@@ -1,19 +1,20 @@
 // ==UserScript==
-// @name         OPR stats
-// @version      0.1.2
-// @description  save OPR statistics in local browser storage
-// @author       https://gitlab.com/fotofreund0815
-// @match        https://opr.ingress.com/
-// @grant        none
-// @downloadURL  https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-stats.user.js
-// @updateURL    https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-stats.user.js
+// @name		OPR stats
+// @version		0.2.3
+// @description	save OPR statistics in local browser storage
+// @author		https://gitlab.com/fotofreund0815
+// @match		https://opr.ingress.com/
+// @match		https://opr.ingress.com/?login=true
+// @grant		none
+// @downloadURL	https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-stats.user.js
+// @updateURL	https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-stats.user.js
 // ==/UserScript==
 
-(function () {
+function oprstats() {
 	let body = document.getElementsByTagName('body')[0];
 	let section = document.getElementsByTagName('section')[0];
 
-    // get Values from localStorage
+	// get Values from localStorage
 	let oprtstats = JSON.parse(localStorage.getItem('oprtstats')) || [];
 
 	section.insertAdjacentHTML("beforeEnd", '<div><button class="button" id="oprt-stats">show my stats</button></div>');
@@ -21,7 +22,7 @@
 	document.getElementById('oprt-stats').addEventListener('click', function(){
 		body.innerHTML = null;
         for (var i = 0; i < oprtstats.length;i++) {
-            body.insertAdjacentHTML("beforeEnd", YMDfromTime(oprtstats[i]['datum']) + ';' + oprtstats[i]['reviewed'] + ';' + oprtstats[i]['accepted'] + ';' + oprtstats[i]['rejected'] + '<br/>');
+            body.insertAdjacentHTML("beforeEnd", YMDfromTime(oprtstats[i].datum) + ';' + oprtstats[i].reviewed + ';' + oprtstats[i].accepted + ';' + oprtstats[i].rejected + '<br/>');
         }
 	});
 
@@ -36,8 +37,6 @@
 	}
 
 	let stunde = jetzt.getHours();
-
-	console.log(jetzt.getTime() + ' # ' + heute.getTime() + ' # ' + last);
 
 	if ((heute > last) && (stunde > 2)) {
 
@@ -60,9 +59,16 @@
 		console.log('stats already saved today');
 	}
 
-    for (var i = 0; i < oprtstats.length;i++) {
-        ymd = YMDfromTime(oprtstats[i].datum);
-       section.insertAdjacentHTML("beforeEnd", oprtstats[i]['datum'] + ': ' + ymd +'  ' + oprtstats[i]['reviewed'] + ' total | ' + oprtstats[i]['accepted'] + ' accepted | ' + oprtstats[i]['rejected'] + ' rejected <br>');
+	let end = Math.max(0, oprtstats.length - 10);
+	for (var i = oprtstats.length - 1; i >= end; i--) {
+       ymd = YMDfromTime(oprtstats[i].datum);
+       let prozent = 100*(oprtstats[i].accepted + oprtstats[i].rejected)/ oprtstats[i].reviewed;
+       if (i > 0) {
+    	   gestern = oprtstats[i].reviewed - oprtstats[i-1].reviewed;
+       } else {
+    	   gestern = ' - ';
+       }
+       section.insertAdjacentHTML("beforeEnd", ymd +':  ' + oprtstats[i].reviewed + ' / ' + oprtstats[i].accepted + ' / ' + oprtstats[i].rejected + ' - ' + prozent.toFixed(2) + '% agree / ' + gestern + ' portals yesterday<br>');
     }
 
 
@@ -70,12 +76,23 @@
     	let curdate = new Date();
     	curdate.setTime(time);
 
-        let Jahr  = curdate.getFullYear(),
-            Monat = curdate.getMonth() + 1,
-            Tag   = curdate.getDate();
-        let ymd = (Jahr*10000) + (Monat*100) + Tag;
+        let Jahr  = curdate.getFullYear().toString(),
+	        Monat = ('0' + curdate.getMonth() + 1).slice(-2),
+	        Tag   = ('0' + curdate.getDate()).slice(-2);
 
-        return ymd;
+        let ymd = Tag + '.' + Monat + '.' + Jahr;
+	    return ymd;
     }
 
+}
+
+(function () {
+	// login prüfen
+	const stats = document.querySelector("#player_stats");
+	if ( stats !== null) {
+		// los geht's
+		oprstats();
+	} else {
+		console.log('not logged in');
+	}
 })();
