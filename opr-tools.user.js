@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.12.6
+// @version      0.12.7
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -63,13 +63,13 @@ function addGlobalStyle(css) {
 	style.innerHTML = css;
 	head.appendChild(style);
 
-	addGlobalStyle = function() {}; // noop after first run
+	addGlobalStyle = () => {}; // noop after first run
 }
 
 function init() {
 	const w = typeof unsafeWindow == "undefined" ? window : unsafeWindow;
 	let tryNumber = 15;
-	const initWatcher = setInterval(function () {
+	const initWatcher = setInterval(() => {
 		if (tryNumber === 0) {
 			clearInterval(initWatcher);
 			w.document.getElementById("NewSubmissionController")
@@ -112,9 +112,7 @@ function init() {
 		w.$injector = w.$app.injector();
 		w.$rootScope = w.$app.scope();
 
-		w.$scope = function (element) {
-			return w.angular.element(element).scope();
-		};
+		w.$scope = element => w.angular.element(element).scope();
 	}
 
 	function initScript() {
@@ -200,7 +198,7 @@ function init() {
 		submitAndNext.innerHTML = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>';
 		submitAndNext.title = "Submit and go to next review";
 		submitAndNext.addEventListener('click', exportFunction(() => {
-			exportFunction(function () {
+			exportFunction(() => {
 				window.location.assign("/recon");
 			}, ansController, {defineAs: "openSubmissionCompleteModal"});
 		}, w));
@@ -230,7 +228,7 @@ function init() {
 		const buttons = w.document.getElementsByClassName("textButton");
 		for (let b in buttons) {
 			if (buttons.hasOwnProperty(b)) {
-				buttons[b].addEventListener("click", exportFunction(function (event) {
+				buttons[b].addEventListener("click", exportFunction(event => {
 					const source = event.target || event.srcElement;
 					let text;
 					switch (source.id) {
@@ -267,16 +265,13 @@ function init() {
 			}
 		}
 
-		// portal image zoom button with "=s0"   // removed, added by niantic
-		//w.document.querySelector("#AnswersController .ingress-background").insertAdjacentHTML("beforeBegin",
-		//		"<div style='position:absolute;float:left;'><a class='button btn btn-default' style='display:inline-block;' href='" + subController.pageData.imageUrl + "=s0' target='fullimage'><span class='glyphicon glyphicon-search' aria-hidden='true'></span></div>");
-
 		// Make photo filmstrip scrollable
 		const filmstrip = w.document.getElementById("map-filmstrip");
 
 		function scrollHorizontally(e) {
 			e = window.event || e;
-			const delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+			debugger;
+			const delta = Math.max(-1, Math.min(1, (e.wheelDeltaY || -e.detail)));
 			filmstrip.scrollLeft -= (delta * 50); // Multiplied by 50
 			e.preventDefault();
 		}
@@ -308,16 +303,16 @@ function init() {
 
 		// Bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
 		const imgDups = w.document.querySelectorAll("#map-filmstrip > ul > li > img");
-		const clickListener = function () {
+		const openFullImage = function () {
 			w.open(this.src + "=s0", 'fulldupimage');
 		};
 		for (let imgSep in imgDups) {
 			if (imgDups.hasOwnProperty(imgSep)) {
-				imgDups[imgSep].addEventListener("click", function () {
+				imgDups[imgSep].addEventListener("click", () => {
 					const imgDup = w.document.querySelector("#content > img");
 					if(imgDup !== null) {
-						imgDup.removeEventListener("click", clickListener);
-						imgDup.addEventListener("click", clickListener);
+						imgDup.removeEventListener("click", openFullImage);
+						imgDup.addEventListener("click", openFullImage);
 						imgDup.setAttribute("style", "cursor: pointer;");
 					}
 				});
@@ -359,7 +354,7 @@ function init() {
 		try {
 			const e = w.document.querySelector("#map-filmstrip > ul > li:nth-child(1) > img");
 			if (e !== null) {
-				setTimeout(function () {
+				setTimeout(() => {
 					e.click();
 				}, 500);
 			}
@@ -368,7 +363,7 @@ function init() {
 		// expand automatically the "What is it?" filter text box
 		try {
 			const f = w.document.querySelector("#AnswersController > form > div:nth-child(5) > div > p > span.ingress-mid-blue.text-center");
-			setTimeout(function () {
+			setTimeout(() => {
 				f.click();
 			}, 500);
 		} catch (err) {}
@@ -500,7 +495,7 @@ function init() {
 
 		highlight();
 
-		modifyPage = function() {}; // just run once
+		modifyPage = () => {}; // just run once
 
 	}
 
@@ -547,7 +542,7 @@ function init() {
 		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<p><input onFocus="this.select();" style="width: 99%;" type="text" ' +
 				'value="'+reviewed+' / '+ (accepted + rejected ) + ' (' +accepted+  '/'+rejected+') / '+Math.round(percent)+'%"/></p>');
 
-		modifyHeader = function() {}; // just run once
+		modifyHeader = () => {}; // just run once
 	}
 
 	function addRefreshContainer() {
@@ -610,7 +605,7 @@ function init() {
 			return div;
 		}
 
-		addRefreshContainer = function () {} // run only once
+		addRefreshContainer = () => {} // run only once
 	}
 
 	function startRefresh() {
