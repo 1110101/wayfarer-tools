@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name		OPR stats
-// @version		0.2.3
+// @version		0.2.4
 // @description	save OPR statistics in local browser storage
 // @author		https://gitlab.com/fotofreund0815
 // @match		https://opr.ingress.com/
@@ -66,9 +66,9 @@ function oprstats() {
        if (i > 0) {
     	   gestern = oprtstats[i].reviewed - oprtstats[i-1].reviewed;
        } else {
-    	   gestern = 'N/A';
+    	   gestern = ' -- ';
        }
-       section.insertAdjacentHTML("beforeEnd", ymd +':  ' + oprtstats[i].reviewed + ' / ' + oprtstats[i].accepted + ' / ' + oprtstats[i].rejected + ' - ' + prozent.toFixed(2) + '% agree / ' + gestern + ' portals yesterday<br>');
+       section.insertAdjacentHTML("beforeEnd", <span style="font-family: monospace;">' + ymd +':  ' + oprtstats[i].reviewed + ' / ' + oprtstats[i].accepted + ' / ' + oprtstats[i].rejected + ' - ' + prozent.toFixed(2) + '% agree / ' + gestern + ' portals yesterday<br/></span>');
     }
 
 
