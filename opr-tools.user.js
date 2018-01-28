@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.12.7
+// @version      0.12.8
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -70,7 +70,7 @@ function init() {
 	const w = typeof unsafeWindow == "undefined" ? window : unsafeWindow;
 	let tryNumber = 15;
 
-    // get Values from localStorage
+	// get Values from localStorage
 	let oprt_scanner_offset = parseInt(w.localStorage.getItem('oprt_scanner_offset')) || 0;
 
 	const initWatcher = setInterval(() => {
@@ -185,15 +185,17 @@ function init() {
 				"<div class='button btn btn-primary dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>" + mapDropdown.join("") + "</div></div>");
 
 
-		// moving submit button to right side of classification-div
-		const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
-		const classificationRow = w.document.querySelector(".classification-row");
-		const newSubmitDiv = w.document.createElement("div");
-		newSubmitDiv.className = "col-xs-12 col-sm-6";
-		submitDiv[0].style.marginTop = 16;
-		newSubmitDiv.appendChild(submitDiv[0]);
-		newSubmitDiv.appendChild(submitDiv[1]);
-		classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
+		// moving submit button to right side of classification-div. don't move on mobile devices / small width
+		if(screen.availWidth > 768) {
+			const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
+			const classificationRow = w.document.querySelector(".classification-row");
+			const newSubmitDiv = w.document.createElement("div");
+			newSubmitDiv.className = "col-xs-12 col-sm-6";
+			submitDiv[0].style.marginTop = 16;
+			newSubmitDiv.appendChild(submitDiv[0]);
+			newSubmitDiv.appendChild(submitDiv[1]);
+			classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
+		}
 
 		// add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
 		let submitButton = submitDiv[0].querySelector("button");
@@ -527,16 +529,16 @@ function init() {
 		}
 		const nextBadgeProcess = processed / nextBadgeCount * 100;
 
-	        lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
         		<br/><p><span class="ingress-mid-blue pull-left">scanner offset (use negative values,<br/>if scanner is ahead of OPR): </span>
         		<input style="margin: 5px 0px 0px 10px;" id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="`+oprt_scanner_offset+`">
         		<br/></p>`);
 
-       		w.document.getElementById('scannerOffset').addEventListener('change', (event) => {
-	            w.localStorage.setItem('oprt_scanner_offset',event.target.value);
-	        });
+		w.document.getElementById('scannerOffset').addEventListener('change', (event) => {
+			w.localStorage.setItem('oprt_scanner_offset',event.target.value);
+		});
 
-	        lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span>' +
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span>' +
 				'<span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses</span> <span class="gold pull-right">' + processed + ' (' + percent + '%) </span></p>');
 
 		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
