@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.12.8
+// @version      0.13.1
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -184,10 +184,10 @@ function init() {
 		descDiv.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join("") +
 				"<div class='button btn btn-primary dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>" + mapDropdown.join("") + "</div></div>");
 
+		const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
 
 		// moving submit button to right side of classification-div. don't move on mobile devices / small width
 		if(screen.availWidth > 768) {
-			const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
 			const classificationRow = w.document.querySelector(".classification-row");
 			const newSubmitDiv = w.document.createElement("div");
 			newSubmitDiv.className = "col-xs-12 col-sm-6";
@@ -298,13 +298,15 @@ function init() {
 		subController.map2.setOptions(cloneInto(mapOptions, w));
 
 
-		// move portal rating to the right side
-		const scorePanel = w.document.querySelector("div[class~='pull-right']");
-		let nodesToMove = Array.from(w.document.querySelector("div[class='btn-group']").parentElement.children);
-		nodesToMove = nodesToMove.splice(2, 6);
-		nodesToMove.push(w.document.createElement("br"));
-		for (let j = nodesToMove.length - 1; j >= 0; --j) {
-			scorePanel.insertBefore(nodesToMove[j], scorePanel.firstChild);
+		// move portal rating to the right side. don't move on mobile devices / small width
+		if(screen.availWidth > 768) {
+			const scorePanel = w.document.querySelector("div[class~='pull-right']");
+			let nodesToMove = Array.from(w.document.querySelector("div[class='btn-group']").parentElement.children);
+			nodesToMove = nodesToMove.splice(2, 6);
+			nodesToMove.push(w.document.createElement("br"));
+			for (let j = nodesToMove.length - 1; j >= 0; --j) {
+				scorePanel.insertBefore(nodesToMove[j], scorePanel.firstChild);
+			}
 		}
 
 		// Bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
