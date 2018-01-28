@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.13.1
+// @version      0.13.2
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -145,6 +145,8 @@ function init() {
 
 		checkIfAutorefresh();
 
+		startExpirationTimer(subController);
+
 	}
 
 	function modifyPage(descDiv, ansController, subController, scope, newPortalData) {
@@ -182,10 +184,13 @@ function init() {
 		];
 
 		descDiv.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join("") +
-				"<div class='button btn btn-primary dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>" + mapDropdown.join("") + "</div></div>");
+				"<div class='button btn btn-primary dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>" + mapDropdown.join("") +
+				// add countdown timer display
+				"</div><br/><small class='gold'>Expires</small><p id='countdownDisplay'></p></div>");
 
 		const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
-			let newSubmitDiv;
+
+		let newSubmitDiv;
 
 		// moving submit button to right side of classification-div. don't move on mobile devices / small width
 		if(screen.availWidth > 768) {
@@ -693,6 +698,31 @@ function init() {
 	function changeFavicon(src) {
 		let link = w.document.querySelector("link[rel='shortcut icon']");
 		link.href = src;
+	}
+
+	function startExpirationTimer(subController) {
+		let countdownEnd = subController.countdownDate;
+		let countdownDisplay = document.getElementById('countdownDisplay');
+
+		// Update the count down every 1 second
+		let counterInterval = setInterval(function() {
+			// Get todays date and time
+			let now = new Date().getTime();
+			// Find the distance between now an the count down date
+			let distance = countdownEnd - now;
+			// Time calculations for minutes and seconds
+			let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+			let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+			// Display the result in the element
+			countdownDisplay.innerHTML = minutes + "m " + seconds + "s ";
+
+			// If the count down is finished, write some text
+			if (distance < 0) {
+				clearInterval(counterInterval);
+				countdownDisplay.innerHTML = "EXPIRED";
+			}
+		}, 1000);
 	}
 }
 
