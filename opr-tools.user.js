@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.13.3
+// @version      0.13.4
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -285,9 +285,11 @@ function init() {
 		function scrollHorizontally(e) {
 			e = window.event || e;
 			debugger;
-			const delta = Math.max(-1, Math.min(1, (e.wheelDeltaY || -e.detail)));
-			filmstrip.scrollLeft -= (delta * 50); // Multiplied by 50
-			e.preventDefault();
+			if("wheelDeltaY" in e && e.wheelDeltaY !== 0) {
+				const delta = Math.max(-1, Math.min(1, (e.wheelDeltaY || -e.detail)));
+				filmstrip.scrollLeft -= (delta * 50); // Multiplied by 50
+				e.preventDefault();
+			}
 		}
 
 		filmstrip.addEventListener("DOMMouseScroll", exportFunction(scrollHorizontally, w), false);
