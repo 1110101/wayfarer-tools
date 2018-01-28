@@ -185,16 +185,19 @@ function init() {
 				"<div class='button btn btn-primary dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>" + mapDropdown.join("") + "</div></div>");
 
 		const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
+			let newSubmitDiv;
 
 		// moving submit button to right side of classification-div. don't move on mobile devices / small width
 		if(screen.availWidth > 768) {
+			newSubmitDiv = w.document.createElement("div");
 			const classificationRow = w.document.querySelector(".classification-row");
-			const newSubmitDiv = w.document.createElement("div");
 			newSubmitDiv.className = "col-xs-12 col-sm-6";
 			submitDiv[0].style.marginTop = 16;
 			newSubmitDiv.appendChild(submitDiv[0]);
 			newSubmitDiv.appendChild(submitDiv[1]);
 			classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
+		} else {
+			newSubmitDiv = submitDiv;
 		}
 
 		// add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
