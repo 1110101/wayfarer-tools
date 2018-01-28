@@ -69,6 +69,10 @@ function addGlobalStyle(css) {
 function init() {
 	const w = typeof unsafeWindow == "undefined" ? window : unsafeWindow;
 	let tryNumber = 15;
+
+    // get Values from localStorage
+	let oprt_scanner_offset = parseInt(w.localStorage.getItem('oprt_scanner_offset')) || 0;
+
 	const initWatcher = setInterval(() => {
 		if (tryNumber === 0) {
 			clearInterval(initWatcher);
@@ -508,7 +512,7 @@ function init() {
 		const accepted = parseInt(stats.children[5].children[2].innerText);
 		const rejected = parseInt(stats.children[7].children[2].innerText);
 
-		const processed = accepted + rejected;
+		const processed = accepted + rejected - oprt_scanner_offset;
 		const percent = Math.round(processed / reviewed * 1000) / 10;
 
 		const reconBadge = { 100: "Bronze", 750: "Silver", 2500: "Gold", 5000: "Platin", 10000: "Black"};
@@ -523,7 +527,16 @@ function init() {
 		}
 		const nextBadgeProcess = processed / nextBadgeCount * 100;
 
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span>' +
+	        lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
+        		<br/><p><span class="ingress-mid-blue pull-left">scanner offset (use negative values,<br/>if scanner is ahead of OPR): </span>
+        		<input style="margin: 5px 0px 0px 10px;" id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="`+oprt_scanner_offset+`">
+        		<br/></p>`);
+
+       		w.document.getElementById('scannerOffset').addEventListener('change', (event) => {
+	            w.localStorage.setItem('oprt_scanner_offset',event.target.value);
+	        });
+
+	        lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span>' +
 				'<span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses</span> <span class="gold pull-right">' + processed + ' (' + percent + '%) </span></p>');
 
 		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
