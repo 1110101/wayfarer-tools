@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name		OPR stats
-// @version		0.2.3
+// @version		0.2.6
 // @description	save OPR statistics in local browser storage
 // @author		https://gitlab.com/fotofreund0815
 // @match		https://opr.ingress.com/
@@ -20,6 +20,12 @@ function oprstats() {
 	section.insertAdjacentHTML("beforeEnd", '<div><button class="button" id="oprt-stats">show my stats</button></div>');
 
 	document.getElementById('oprt-stats').addEventListener('click', function(){
+        // fake history Eintrag (wegen zurückbutton)
+        var stateObj = {info: "fake Chronik"};
+        history.pushState(stateObj, "opr main page", "/");
+        window.addEventListener('popstate', function(){
+            location.reload();
+        });
 		body.innerHTML = null;
         for (var i = 0; i < oprtstats.length;i++) {
             body.insertAdjacentHTML("beforeEnd", YMDfromTime(oprtstats[i].datum) + ';' + oprtstats[i].reviewed + ';' + oprtstats[i].accepted + ';' + oprtstats[i].rejected + '<br/>');
@@ -66,9 +72,9 @@ function oprstats() {
        if (i > 0) {
     	   gestern = oprtstats[i].reviewed - oprtstats[i-1].reviewed;
        } else {
-    	   gestern = ' - ';
+    	   gestern = ' -- ';
        }
-       section.insertAdjacentHTML("beforeEnd", ymd +':  ' + oprtstats[i].reviewed + ' / ' + oprtstats[i].accepted + ' / ' + oprtstats[i].rejected + ' - ' + prozent.toFixed(2) + '% agree / ' + gestern + ' portals yesterday<br>');
+       section.insertAdjacentHTML("beforeEnd", '<span style="font-family: monospace;">' + ymd +':  ' + oprtstats[i].reviewed + ' / ' + oprtstats[i].accepted + ' / ' + oprtstats[i].rejected + ' - ' + prozent.toFixed(2) + '% agree / ' + gestern + ' portals yesterday<br/></span>');
     }
 
 
