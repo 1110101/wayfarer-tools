@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.12.6.5
+// @version      0.13.4
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -63,17 +63,17 @@ function addGlobalStyle(css) {
 	style.innerHTML = css;
 	head.appendChild(style);
 
-	addGlobalStyle = function() {}; // noop after first run
+	addGlobalStyle = () => {}; // noop after first run
 }
 
 function init() {
 	const w = typeof unsafeWindow == "undefined" ? window : unsafeWindow;
 	let tryNumber = 15;
 
-    // get Values from localStorage
+	// get Values from localStorage
 	let oprt_scanner_offset = parseInt(w.localStorage.getItem('oprt_scanner_offset')) || 0;
 
-	const initWatcher = setInterval(function () {
+	const initWatcher = setInterval(() => {
 		if (tryNumber === 0) {
 			clearInterval(initWatcher);
 			w.document.getElementById("NewSubmissionController")
@@ -116,9 +116,7 @@ function init() {
 		w.$injector = w.$app.injector();
 		w.$rootScope = w.$app.scope();
 
-		w.$scope = function (element) {
-			return w.angular.element(element).scope();
-		};
+		w.$scope = element => w.angular.element(element).scope();
 	}
 
 	function initScript() {
@@ -146,6 +144,8 @@ function init() {
 		modifyPage(descDiv, ansController, subController, scope, newPortalData);
 
 		checkIfAutorefresh();
+
+		startExpirationTimer(subController);
 
 	}
 
@@ -184,18 +184,26 @@ function init() {
 		];
 
 		descDiv.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join("") +
-				"<div class='button btn btn-primary dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>" + mapDropdown.join("") + "</div></div>");
+				"<div class='button btn btn-primary dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>" + mapDropdown.join("") +
+				// add countdown timer display
+				"</div><br/><small class='gold'>Expires</small><p id='countdownDisplay'></p></div>");
 
-
-		// moving submit button to right side of classification-div
 		const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
-		const classificationRow = w.document.querySelector(".classification-row");
-		const newSubmitDiv = w.document.createElement("div");
-		newSubmitDiv.className = "col-xs-12 col-sm-6";
-		submitDiv[0].style.marginTop = 16;
-		newSubmitDiv.appendChild(submitDiv[0]);
-		newSubmitDiv.appendChild(submitDiv[1]);
-		classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
+
+		let newSubmitDiv;
+
+		// moving submit button to right side of classification-div. don't move on mobile devices / small width
+		if(screen.availWidth > 768) {
+			newSubmitDiv = w.document.createElement("div");
+			const classificationRow = w.document.querySelector(".classification-row");
+			newSubmitDiv.className = "col-xs-12 col-sm-6";
+			submitDiv[0].style.marginTop = 16;
+			newSubmitDiv.appendChild(submitDiv[0]);
+			newSubmitDiv.appendChild(submitDiv[1]);
+			classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
+		} else {
+			newSubmitDiv = submitDiv;
+		}
 
 		// add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
 		let submitButton = submitDiv[0].querySelector("button");
@@ -204,7 +212,7 @@ function init() {
 		submitAndNext.innerHTML = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>';
 		submitAndNext.title = "Submit and go to next review";
 		submitAndNext.addEventListener('click', exportFunction(() => {
-			exportFunction(function () {
+			exportFunction(() => {
 				window.location.assign("/recon");
 			}, ansController, {defineAs: "openSubmissionCompleteModal"});
 		}, w));
@@ -234,7 +242,7 @@ function init() {
 		const buttons = w.document.getElementsByClassName("textButton");
 		for (let b in buttons) {
 			if (buttons.hasOwnProperty(b)) {
-				buttons[b].addEventListener("click", exportFunction(function (event) {
+				buttons[b].addEventListener("click", exportFunction(event => {
 					const source = event.target || event.srcElement;
 					let text;
 					switch (source.id) {
@@ -271,18 +279,17 @@ function init() {
 			}
 		}
 
-		// portal image zoom button with "=s0"
-		w.document.querySelector("#AnswersController .ingress-background").insertAdjacentHTML("beforeBegin",
-				"<div style='position:absolute;float:left;'><a class='button btn btn-default' style='display:inline-block;' href='" + subController.pageData.imageUrl + "=s0' target='fullimage'><span class='glyphicon glyphicon-search' aria-hidden='true'></span></div>");
-
 		// Make photo filmstrip scrollable
 		const filmstrip = w.document.getElementById("map-filmstrip");
 
 		function scrollHorizontally(e) {
 			e = window.event || e;
-			const delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
-			filmstrip.scrollLeft -= (delta * 50); // Multiplied by 50
-			e.preventDefault();
+			debugger;
+			if("wheelDeltaY" in e && e.wheelDeltaY !== 0) {
+				const delta = Math.max(-1, Math.min(1, (e.wheelDeltaY || -e.detail)));
+				filmstrip.scrollLeft -= (delta * 50); // Multiplied by 50
+				e.preventDefault();
+			}
 		}
 
 		filmstrip.addEventListener("DOMMouseScroll", exportFunction(scrollHorizontally, w), false);
@@ -301,27 +308,29 @@ function init() {
 		subController.map2.setOptions(cloneInto(mapOptions, w));
 
 
-		// move portal rating to the right side
-		const scorePanel = w.document.querySelector("div[class~='pull-right']");
-		let nodesToMove = Array.from(w.document.querySelector("div[class='btn-group']").parentElement.children);
-		nodesToMove = nodesToMove.splice(2, 6);
-		nodesToMove.push(w.document.createElement("br"));
-		for (let j = nodesToMove.length - 1; j >= 0; --j) {
-			scorePanel.insertBefore(nodesToMove[j], scorePanel.firstChild);
+		// move portal rating to the right side. don't move on mobile devices / small width
+		if(screen.availWidth > 768) {
+			const scorePanel = w.document.querySelector("div[class~='pull-right']");
+			let nodesToMove = Array.from(w.document.querySelector("div[class='btn-group']").parentElement.children);
+			nodesToMove = nodesToMove.splice(2, 6);
+			nodesToMove.push(w.document.createElement("br"));
+			for (let j = nodesToMove.length - 1; j >= 0; --j) {
+				scorePanel.insertBefore(nodesToMove[j], scorePanel.firstChild);
+			}
 		}
 
 		// Bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
 		const imgDups = w.document.querySelectorAll("#map-filmstrip > ul > li > img");
-		const clickListener = function () {
+		const openFullImage = function () {
 			w.open(this.src + "=s0", 'fulldupimage');
 		};
 		for (let imgSep in imgDups) {
 			if (imgDups.hasOwnProperty(imgSep)) {
-				imgDups[imgSep].addEventListener("click", function () {
+				imgDups[imgSep].addEventListener("click", () => {
 					const imgDup = w.document.querySelector("#content > img");
 					if(imgDup !== null) {
-						imgDup.removeEventListener("click", clickListener);
-						imgDup.addEventListener("click", clickListener);
+						imgDup.removeEventListener("click", openFullImage);
+						imgDup.addEventListener("click", openFullImage);
 						imgDup.setAttribute("style", "cursor: pointer;");
 					}
 				});
@@ -363,7 +372,7 @@ function init() {
 		try {
 			const e = w.document.querySelector("#map-filmstrip > ul > li:nth-child(1) > img");
 			if (e !== null) {
-				setTimeout(function () {
+				setTimeout(() => {
 					e.click();
 				}, 500);
 			}
@@ -372,7 +381,7 @@ function init() {
 		// expand automatically the "What is it?" filter text box
 		try {
 			const f = w.document.querySelector("#AnswersController > form > div:nth-child(5) > div > p > span.ingress-mid-blue.text-center");
-			setTimeout(function () {
+			setTimeout(() => {
 				f.click();
 			}, 500);
 		} catch (err) {}
@@ -504,7 +513,7 @@ function init() {
 
 		highlight();
 
-		modifyPage = function() {}; // just run once
+		modifyPage = () => {}; // just run once
 
 	}
 
@@ -532,16 +541,16 @@ function init() {
 		}
 		const nextBadgeProcess = processed / nextBadgeCount * 100;
 
-	        lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
         		<br/><p><span class="ingress-mid-blue pull-left">scanner offset (use negative values,<br/>if scanner is ahead of OPR): </span>
         		<input style="margin: 5px 0px 0px 10px;" id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="`+oprt_scanner_offset+`">
         		<br/></p>`);
 
-       		w.document.getElementById('scannerOffset').addEventListener('change', (event) => {
-	            w.localStorage.setItem('oprt_scanner_offset',event.target.value);
-	        });
+		w.document.getElementById('scannerOffset').addEventListener('change', (event) => {
+			w.localStorage.setItem('oprt_scanner_offset',event.target.value);
+		});
 
-	        lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span>' +
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span>' +
 				'<span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses</span> <span class="gold pull-right">' + processed + ' (' + percent + '%) </span></p>');
 
 		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
@@ -560,7 +569,7 @@ function init() {
 		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<p><input onFocus="this.select();" style="width: 99%;" type="text" ' +
 				'value="'+reviewed+' / '+ (accepted + rejected ) + ' (' +accepted+  '/'+rejected+') / '+Math.round(percent)+'%"/></p>');
 
-		modifyHeader = function() {}; // just run once
+		modifyHeader = () => {}; // just run once
 	}
 
 	function addRefreshContainer() {
@@ -623,7 +632,7 @@ function init() {
 			return div;
 		}
 
-		addRefreshContainer = function () {} // run only once
+		addRefreshContainer = () => {} // run only once
 	}
 
 	function startRefresh() {
@@ -691,6 +700,31 @@ function init() {
 	function changeFavicon(src) {
 		let link = w.document.querySelector("link[rel='shortcut icon']");
 		link.href = src;
+	}
+
+	function startExpirationTimer(subController) {
+		let countdownEnd = subController.countdownDate;
+		let countdownDisplay = document.getElementById('countdownDisplay');
+
+		// Update the count down every 1 second
+		let counterInterval = setInterval(function() {
+			// Get todays date and time
+			let now = new Date().getTime();
+			// Find the distance between now an the count down date
+			let distance = countdownEnd - now;
+			// Time calculations for minutes and seconds
+			let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+			let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+			// Display the result in the element
+			countdownDisplay.innerHTML = minutes + "m " + seconds + "s ";
+
+			// If the count down is finished, write some text
+			if (distance < 0) {
+				clearInterval(counterInterval);
+				countdownDisplay.innerHTML = "EXPIRED";
+			}
+		}, 1000);
 	}
 }
 
