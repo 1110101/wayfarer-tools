@@ -284,7 +284,6 @@ function init() {
 
 		function scrollHorizontally(e) {
 			e = window.event || e;
-			debugger;
 			if("wheelDeltaY" in e && e.wheelDeltaY !== 0) {
 				const delta = Math.max(-1, Math.min(1, (e.wheelDeltaY || -e.detail)));
 				filmstrip.scrollLeft -= (delta * 50); // Multiplied by 50
