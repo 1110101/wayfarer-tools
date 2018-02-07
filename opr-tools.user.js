@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.13.4
+// @version      0.13.5
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
 // @match        https://opr.ingress.com/recon
 // @grant        unsafeWindow
 // @grant        GM_notification
-// @downloadURL  https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-tools.user.js
-// @updateURL    https://gitlab.com/fotofreund0815/opr-tools/raw/release/opr-tools.user.js
+// @downloadURL  https://gitlab.com/1110101/opr-tools/raw/release/opr-tools.user.js
+// @updateURL    https://gitlab.com/1110101/opr-tools/raw/release/opr-tools.user.js
 // @supportURL   https://gitlab.com/1110101/opr-tools/issues
 
 // ==/UserScript==
@@ -284,7 +284,6 @@ function init() {
 
 		function scrollHorizontally(e) {
 			e = window.event || e;
-			debugger;
 			if("wheelDeltaY" in e && e.wheelDeltaY !== 0) {
 				const delta = Math.max(-1, Math.min(1, (e.wheelDeltaY || -e.detail)));
 				filmstrip.scrollLeft -= (delta * 50); // Multiplied by 50
