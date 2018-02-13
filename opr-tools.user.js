@@ -7,8 +7,8 @@
 // @match        https://opr.ingress.com/recon
 // @grant        unsafeWindow
 // @grant        GM_notification
-// @downloadURL  https://gitlab.com/1110101/opr-tools/raw/release/opr-tools.user.js
-// @updateURL    https://gitlab.com/1110101/opr-tools/raw/release/opr-tools.user.js
+// @downloadURL  https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
+// @updateURL    https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 // @supportURL   https://gitlab.com/1110101/opr-tools/issues
 
 // ==/UserScript==
