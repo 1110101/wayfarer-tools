@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.13.5
+// @version      0.13.6
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -282,15 +282,15 @@ function init() {
 
 		function scrollHorizontally(e) {
 			e = window.event || e;
-			if("wheelDeltaY" in e && e.wheelDeltaY !== 0) {
+			if("deltaY" in e && e.deltaY !== 0) {
 				const delta = Math.max(-1, Math.min(1, (e.wheelDeltaY || -e.detail)));
 				filmstrip.scrollLeft -= (delta * 50); // Multiplied by 50
 				e.preventDefault();
 			}
 		}
 
-		filmstrip.addEventListener("DOMMouseScroll", exportFunction(scrollHorizontally, w), false);
-		filmstrip.addEventListener("mousewheel", exportFunction(scrollHorizontally, w), false);
+		filmstrip.addEventListener("wheel ", exportFunction(scrollHorizontally, w), false);
+		// filmstrip.addEventListener("mousewheel", exportFunction(scrollHorizontally, w), false);
 
 		// Replace map markers with a nice circle
 		for (let i = 0; i < subController.markers.length; ++i) {
