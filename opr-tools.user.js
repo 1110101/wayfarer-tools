@@ -538,17 +538,8 @@ function init() {
 		}
 		const nextBadgeProcess = processed / nextBadgeCount * 100;
 
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
-        		<br/><p><span class="ingress-mid-blue pull-left">scanner offset (use negative values,<br/>if scanner is ahead of OPR): </span>
-        		<input style="margin: 5px 0px 0px 10px;" id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="`+oprt_scanner_offset+`">
-        		<br/></p>`);
-
-		w.document.getElementById('scannerOffset').addEventListener('change', (event) => {
-			w.localStorage.setItem('oprt_scanner_offset',event.target.value);
-		});
-
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span>' +
-				'<span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses</span> <span class="gold pull-right">' + processed + ' (' + percent + '%) </span></p>');
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
+				`<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses</span> <span class="gold pull-right">${processed} (${percent}%) </span></p>`);
 
 		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
 				`<br><div>Next recon badge tier: <b>`+nextBadgeName + ' (' + nextBadgeCount +')'+`</b><span class="pull-right"></span>
@@ -563,8 +554,35 @@ function init() {
 				            `+ Math.round(nextBadgeProcess) +`%
 			        </div></div></div>`);
 
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<p><input onFocus="this.select();" style="width: 99%;" type="text" ' +
-				'value="'+reviewed+' / '+ (accepted + rejected ) + ' (' +accepted+  '/'+rejected+') / '+Math.round(percent)+'%"/></p>');
+		if(accepted < 10000) {
+			lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
+					`<p><input readonly onFocus="this.select();" style="width: 99%;" type="text" value="${reviewed} / ${accepted + rejected} (${accepted}/${rejected}) / ${Math.round(percent)}%"/></p>`);
+		}
+
+
+		let tooltipSpan = `<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" 
+        		uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
+
+		// ** opr-scanner offset
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
+        		<p id='scannerOffsetContainer'>
+        		    <span style="margin-left: 5px" class="ingress-mid-blue pull-left">Scanner offset:</span>
+        		    <input id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="`+oprt_scanner_offset+`">
+        		</p>`);
+
+		// we have to inject the tooltip to angular
+		w.$injector.invoke(cloneInto(['$compile', ($compile) => {
+			let compiledSubmit = $compile(tooltipSpan)(w.$scope(stats));
+			w.document.getElementById("scannerOffsetContainer").insertAdjacentElement("afterbegin", compiledSubmit[0]);
+		}], w, {cloneFunctions: true}));
+
+
+		['change', 'keyup', 'cut', 'paste', 'input'].forEach(e => {
+			w.document.getElementById('scannerOffset').addEventListener(e, (event) => {
+				w.localStorage.setItem('oprt_scanner_offset',event.target.value);
+			});
+		});
+		// **
 
 		modifyHeader = () => {}; // just run once
 	}
