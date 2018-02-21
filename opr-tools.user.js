@@ -200,7 +200,7 @@ function init() {
 			newSubmitDiv.appendChild(submitDiv[1]);
 			classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
 		} else {
-			newSubmitDiv = submitDiv;
+			newSubmitDiv = submitDiv[0];
 		}
 
 		// add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
