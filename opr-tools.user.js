@@ -78,7 +78,7 @@ function init() {
 			clearInterval(initWatcher);
 			w.document.getElementById("NewSubmissionController")
 			.insertAdjacentHTML("afterBegin", `
-<div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR tools initialization failed, refresh page</strong> or check developer console for error details</div>
+<div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR tools initialization failed, refresh page</strong></div>
 `);
 			addRefreshContainer();
 			return;
@@ -184,9 +184,7 @@ function init() {
 		];
 
 		descDiv.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join("") +
-				"<div class='button btn btn-primary dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>" + mapDropdown.join("") +
-				// add countdown timer display
-				"</div><br/><small class='gold'>Expires</small><p id='countdownDisplay'></p></div>");
+				"<div class='button btn btn-primary dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>" + mapDropdown.join("") + "</div>");
 
 		const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
 
@@ -702,8 +700,12 @@ function init() {
 	}
 
 	function startExpirationTimer(subController) {
+
+		w.document.querySelector("ul.nav.navbar-nav > li:nth-child(7)").insertAdjacentHTML("afterbegin", '<a><span id="countdownDisplay"></span></a>' );
+
 		let countdownEnd = subController.countdownDate;
 		let countdownDisplay = document.getElementById('countdownDisplay');
+		countdownDisplay.style.color = "white";
 
 		// Update the count down every 1 second
 		let counterInterval = setInterval(function() {
@@ -716,12 +718,15 @@ function init() {
 			let seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
 			// Display the result in the element
-			countdownDisplay.innerHTML = minutes + "m " + seconds + "s ";
+			countdownDisplay.innerText = `${minutes}m ${seconds}s `;
 
-			// If the count down is finished, write some text
 			if (distance < 0) {
+				// If the count down is finished, write some text
 				clearInterval(counterInterval);
-				countdownDisplay.innerHTML = "EXPIRED";
+				countdownDisplay.innerText = "EXPIRED";
+				countdownDisplay.classList.add("blink");
+			} else if (distance < 60) {
+				countdownDisplay.style.color = "red";
 			}
 		}, 1000);
 	}
@@ -839,6 +844,29 @@ visibility: visible;
 -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
 filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=100);
 opacity: 1;
+}
+
+blink, .blink {
+  -webkit-animation: blink 2s step-end infinite;
+  -moz-animation: blink 2s step-end infinite;
+  -o-animation: blink 2s step-end infinite;
+  animation: blink 2s step-end infinite;
+}
+
+@-webkit-keyframes blink {
+  67% { opacity: 0 }
+}
+
+@-moz-keyframes blink {
+  67% { opacity: 0 }
+}
+
+@-o-keyframes blink {
+  67% { opacity: 0 }
+}
+
+@keyframes blink {
+  67% { opacity: 0 }
 }
 `;
 
