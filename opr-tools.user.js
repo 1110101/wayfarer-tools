@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.13.5
+// @version      0.13.10
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -78,7 +78,7 @@ function init() {
 			clearInterval(initWatcher);
 			w.document.getElementById("NewSubmissionController")
 			.insertAdjacentHTML("afterBegin", `
-<div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR tools initialization failed, refresh page</strong> or check developer console for error details</div>
+<div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR tools initialization failed, refresh page</strong></div>
 `);
 			addRefreshContainer();
 			return;
@@ -184,9 +184,7 @@ function init() {
 		];
 
 		descDiv.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join("") +
-				"<div class='button btn btn-primary dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>" + mapDropdown.join("") +
-				// add countdown timer display
-				"</div><br/><small class='gold'>Expires</small><p id='countdownDisplay'></p></div>");
+				"<div class='button btn btn-primary dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>" + mapDropdown.join("") + "</div>");
 
 		const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
 
@@ -202,7 +200,7 @@ function init() {
 			newSubmitDiv.appendChild(submitDiv[1]);
 			classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
 		} else {
-			newSubmitDiv = submitDiv;
+			newSubmitDiv = submitDiv[0];
 		}
 
 		// add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
@@ -284,15 +282,15 @@ function init() {
 
 		function scrollHorizontally(e) {
 			e = window.event || e;
-			if("wheelDeltaY" in e && e.wheelDeltaY !== 0) {
+			if("deltaY" in e && e.deltaY !== 0) {
 				const delta = Math.max(-1, Math.min(1, (e.wheelDeltaY || -e.detail)));
 				filmstrip.scrollLeft -= (delta * 50); // Multiplied by 50
 				e.preventDefault();
 			}
 		}
 
-		filmstrip.addEventListener("DOMMouseScroll", exportFunction(scrollHorizontally, w), false);
-		filmstrip.addEventListener("mousewheel", exportFunction(scrollHorizontally, w), false);
+		filmstrip.addEventListener("wheel ", exportFunction(scrollHorizontally, w), false);
+		// filmstrip.addEventListener("mousewheel", exportFunction(scrollHorizontally, w), false);
 
 		// Replace map markers with a nice circle
 		for (let i = 0; i < subController.markers.length; ++i) {
@@ -540,17 +538,8 @@ function init() {
 		}
 		const nextBadgeProcess = processed / nextBadgeCount * 100;
 
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
-        		<br/><p><span class="ingress-mid-blue pull-left">scanner offset (use negative values,<br/>if scanner is ahead of OPR): </span>
-        		<input style="margin: 5px 0px 0px 10px;" id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="`+oprt_scanner_offset+`">
-        		<br/></p>`);
-
-		w.document.getElementById('scannerOffset').addEventListener('change', (event) => {
-			w.localStorage.setItem('oprt_scanner_offset',event.target.value);
-		});
-
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span>' +
-				'<span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses</span> <span class="gold pull-right">' + processed + ' (' + percent + '%) </span></p>');
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
+				`<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses</span> <span class="gold pull-right">${processed} (${percent}%) </span></p>`);
 
 		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
 				`<br><div>Next recon badge tier: <b>`+nextBadgeName + ' (' + nextBadgeCount +')'+`</b><span class="pull-right"></span>
@@ -565,8 +554,35 @@ function init() {
 				            `+ Math.round(nextBadgeProcess) +`%
 			        </div></div></div>`);
 
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", '<p><input onFocus="this.select();" style="width: 99%;" type="text" ' +
-				'value="'+reviewed+' / '+ (accepted + rejected ) + ' (' +accepted+  '/'+rejected+') / '+Math.round(percent)+'%"/></p>');
+		if(accepted < 10000) {
+			lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
+					`<p><input readonly onFocus="this.select();" style="width: 99%;" type="text" value="${reviewed} / ${accepted + rejected} (${accepted}/${rejected}) / ${Math.round(percent)}%"/></p>`);
+		}
+
+
+		let tooltipSpan = `<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" 
+        		uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
+
+		// ** opr-scanner offset
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
+        		<p id='scannerOffsetContainer'>
+        		    <span style="margin-left: 5px" class="ingress-mid-blue pull-left">Scanner offset:</span>
+        		    <input id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="`+oprt_scanner_offset+`">
+        		</p>`);
+
+		// we have to inject the tooltip to angular
+		w.$injector.invoke(cloneInto(['$compile', ($compile) => {
+			let compiledSubmit = $compile(tooltipSpan)(w.$scope(stats));
+			w.document.getElementById("scannerOffsetContainer").insertAdjacentElement("afterbegin", compiledSubmit[0]);
+		}], w, {cloneFunctions: true}));
+
+
+		['change', 'keyup', 'cut', 'paste', 'input'].forEach(e => {
+			w.document.getElementById('scannerOffset').addEventListener(e, (event) => {
+				w.localStorage.setItem('oprt_scanner_offset',event.target.value);
+			});
+		});
+		// **
 
 		modifyHeader = () => {}; // just run once
 	}
@@ -702,8 +718,12 @@ function init() {
 	}
 
 	function startExpirationTimer(subController) {
+
+		w.document.querySelector("ul.nav.navbar-nav > li:nth-child(7)").insertAdjacentHTML("afterbegin", '<a><span id="countdownDisplay"></span></a>' );
+
 		let countdownEnd = subController.countdownDate;
 		let countdownDisplay = document.getElementById('countdownDisplay');
+		countdownDisplay.style.color = "white";
 
 		// Update the count down every 1 second
 		let counterInterval = setInterval(function() {
@@ -716,12 +736,15 @@ function init() {
 			let seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
 			// Display the result in the element
-			countdownDisplay.innerHTML = minutes + "m " + seconds + "s ";
+			countdownDisplay.innerText = `${minutes}m ${seconds}s `;
 
-			// If the count down is finished, write some text
 			if (distance < 0) {
+				// If the count down is finished, write some text
 				clearInterval(counterInterval);
-				countdownDisplay.innerHTML = "EXPIRED";
+				countdownDisplay.innerText = "EXPIRED";
+				countdownDisplay.classList.add("blink");
+			} else if (distance < 60) {
+				countdownDisplay.style.color = "red";
 			}
 		}, 1000);
 	}
@@ -839,6 +862,29 @@ visibility: visible;
 -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
 filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=100);
 opacity: 1;
+}
+
+blink, .blink {
+  -webkit-animation: blink 2s step-end infinite;
+  -moz-animation: blink 2s step-end infinite;
+  -o-animation: blink 2s step-end infinite;
+  animation: blink 2s step-end infinite;
+}
+
+@-webkit-keyframes blink {
+  67% { opacity: 0 }
+}
+
+@-moz-keyframes blink {
+  67% { opacity: 0 }
+}
+
+@-o-keyframes blink {
+  67% { opacity: 0 }
+}
+
+@keyframes blink {
+  67% { opacity: 0 }
 }
 `;
 
