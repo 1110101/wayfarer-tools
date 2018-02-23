@@ -344,7 +344,7 @@ function init() {
 		span.className = "glyphicon glyphicon-book";
 		span.innerHTML = " ";
 		a.appendChild(span);
-		a.className = "button btn btn-default pull-right";
+		a.className = "translate-title button btn btn-default pull-right";
 		a.target = 'translate';
 		a.style.padding = '0px 4px';
 		a.href = "https://translate.google.com/#auto/" + lang + "/" + content;
@@ -357,7 +357,7 @@ function init() {
 			span.className = "glyphicon glyphicon-book";
 			span.innerHTML = " ";
 			a.appendChild(span);
-			a.className = "button btn btn-default pull-right";
+			a.className = "translate-description button btn btn-default pull-right";
 			a.target = 'translate';
 			a.style.padding = '0px 4px';
 			a.href = "https://translate.google.com/#auto/" + lang + "/" + description;
@@ -458,6 +458,22 @@ function init() {
 				w.document.querySelector('#content > button').click();
 				currentSelectable = 0;
 				event.preventDefault();
+
+			} // click first/selected duplicate (key T)
+			else if(event.keyCode === 84) {
+				const link = w.document.querySelector('#descriptionDiv > .translate-title');
+				if (link) {
+					link.click();
+					event.preventDefault();
+				}
+
+			} // click first/selected duplicate (key Y)
+			else if(event.keyCode === 89) {
+				const link = w.document.querySelector('#descriptionDiv > .translate-description');
+				if (link) {
+					link.click();
+					event.preventDefault();
+				}
 
 			} // submit duplicate
 			else if((event.keyCode === 13 ||event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {

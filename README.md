@@ -29,6 +29,8 @@ You can use keyboard to fully control the page as follows:
 | :------------------------: | :--------------------------------------: |
 |    Keys 1-5, Numpad 1-5    | Valuate current selected field (the red highlighted one) |
 |             D              | Mark current candidate as a duplicate of the opened portal in "duplicates" |
+|             T              |          Open title translation          |
+|             Y              |      Open description translation        |
 | Space, Enter, Numpad Enter |     Confirm dialog / Send valuation      |
 |       Tab, Numpad +        |                Next field                |
 | Shift, Backspace, Numpad - |              Previous field              |
