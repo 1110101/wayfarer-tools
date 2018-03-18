@@ -347,7 +347,7 @@ function init() {
 		a.className = "button btn btn-default pull-right";
 		a.target = 'translate';
 		a.style.padding = '0px 4px';
-		a.href = "https://translate.google.com/#auto/" + lang + "/" + content;
+		a.href = "https://translate.google.com/#auto/" + lang + "/" + encodeURIComponent(content);
 		link.insertAdjacentElement("afterend",a);
 
 		const description = w.document.querySelector("#descriptionDiv").innerHTML.split("<br>")[3].trim();
@@ -360,7 +360,7 @@ function init() {
 			a.className = "button btn btn-default pull-right";
 			a.target = 'translate';
 			a.style.padding = '0px 4px';
-			a.href = "https://translate.google.com/#auto/" + lang + "/" + description;
+			a.href = "https://translate.google.com/#auto/" + lang + "/" + encodeURIComponent(description);
 			const br = w.document.querySelectorAll("#descriptionDiv br")[2];
 			br.insertAdjacentElement("afterend",a);
 		}
