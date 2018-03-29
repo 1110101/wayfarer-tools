@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.14.0
+// @version      0.14.1
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -377,7 +377,7 @@ function init() {
 
 		// expand automatically the "What is it?" filter text box
 		try {
-			const f = w.document.querySelector("#AnswersController > form > div:nth-child(5) > div > p > span.ingress-mid-blue.text-center");
+			const f = w.document.querySelector("#WhatIsItController > div > p > span.ingress-mid-blue.text-center");
 			setTimeout(() => {
 				f.click();
 			}, 500);
