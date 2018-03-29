@@ -377,7 +377,7 @@ function init() {
 
 		// expand automatically the "What is it?" filter text box
 		try {
-			const f = w.document.querySelector("#AnswersController > form > div:nth-child(5) > div > p > span.ingress-mid-blue.text-center");
+			const f = w.document.querySelector("#WhatIsItController > div > p > span.ingress-mid-blue.text-center");
 			setTimeout(() => {
 				f.click();
 			}, 500);
