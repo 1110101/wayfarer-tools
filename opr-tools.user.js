@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.14.1
+// @version      0.15.0
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -90,14 +90,14 @@ function init() {
 			}
 			catch (error) {
 				err = error;
-				console.log(error);
+				// console.log(error);
 			}
 			if (!err) {
 				try {
 					initScript();
 					clearInterval(initWatcher);
 				} catch (error) {
-					console.log(error);
+					// console.log(error);
 					if(error === 41) {
 						addRefreshContainer();
 					}
@@ -152,39 +152,32 @@ function init() {
 	function modifyPage(descDiv, ansController, subController, scope, newPortalData) {
 
 		// adding map buttons
-		const mapButtons = [
-			"<a class='button btn btn-default' target='intel' href='https://www.ingress.com/intel?ll=" + newPortalData.lat + "," + newPortalData.lng + "&z=17'>Intel</a>",
-			"<a class='button btn btn-default' target='osm' href='https://www.openstreetmap.org/?mlat=" + newPortalData.lat + "&mlon=" + newPortalData.lng + "&zoom=16'>OSM</a>",
-			"<a class='button btn btn-default' target='bing' href='https://bing.com/maps/default.aspx?cp=" + newPortalData.lat + "~" + newPortalData.lng + "&lvl=16&style=a'>bing</a>"
-		];
+		const mapButtons = `
+<a class='button btn btn-default' target='intel' href='https://www.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=17'>Intel</a>
+<a class='button btn btn-default' target='osm' href='https://www.openstreetmap.org/?mlat=${newPortalData.lat}&mlon=${newPortalData.lng}&zoom=16'>OSM</a>
+`;
 
 		// more map buttons in a dropdown menu
-		const mapDropdown = [
-			"<li><a target='heremaps' href='https://wego.here.com/?map=" + newPortalData.lat + "," + newPortalData.lng + ",17,satellite'>HERE maps</a></li>",
-			"<li><a target='wikimapia' href='http://wikimapia.org/#lat=" + newPortalData.lat + "&lon=" + newPortalData.lng + "&z=16'>Wikimapia</a></li>",
-			"<li><a targeT='zoomearth' href='https://zoom.earth/#" + newPortalData.lat + "," + newPortalData.lng + ",18z,sat'>Zoom Earth</a></li>",
+		const mapDropdown = `
+<li><a target='bing' href='https://bing.com/maps/default.aspx?cp=${newPortalData.lat}~${newPortalData.lng}&lvl=16&style=a'>bing</a></li>
+<li><a target='heremaps' href='https://wego.here.com/?map=${newPortalData.lat},${newPortalData.lng},17,satellite'>HERE maps</a></li>
+<li><a target='wikimapia' href='http://wikimapia.org/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=16'>Wikimapia</a></li>
+<li><a targeT='zoomearth' href='https://zoom.earth/#${newPortalData.lat},${newPortalData.lng},18z,sat'>Zoom Earth</a></li>
+<li role='separator' class='divider'></li>
+<li><a target='swissgeo' href='http://map.geo.admin.ch/?swisssearch=${newPortalData.lat},${newPortalData.lng}'>CH - Swiss Geo Map</a></li>
+<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (ortofoto)</a></li>
+<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&m3d=1&height=180&yaw=-279.39&pitch=-40.7&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (orto+3D)</a></li>
+<li><a target='kompass' href='http://maps.kompass.de/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=17'>DE - Kompass.maps</a></li>
+<li><a target='bayernatlas' href='https://geoportal.bayern.de/bayernatlas/index.html?X=${newPortalData.lat}&Y=${newPortalData.lng}&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>
+<li><a target='eniro' href='http://opr.pegel.dk/?17/${newPortalData.lat}/${newPortalData.lng}'>DK - SDFE Orthophotos</a></li>
+<li><a target='kakao' href='http://map.daum.net/link/map/${newPortalData.lat},${newPortalData.lng}'>KR - Kakao map</a></li>
+<li><a target='naver' href='http://map.naver.com/?menu=location&lat=${newPortalData.lat}&lng=${newPortalData.lng}&dLevel=14&title=CandidatePortalLocation'>KR - Naver map</a></li>
+<li><a target='yandex' href='https://maps.yandex.ru/?text=${newPortalData.lat},${newPortalData.lng}'>RU - Yandex</a></li>
+<li><a target='hitta' href='https://www.hitta.se/kartan!~${newPortalData.lat},${newPortalData.lng},18z/tileLayer!l=1'>SE - Hitta.se</a></li>
+<li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=17&l=nautical'>SE - Eniro Sjökort</a></li>
+`;
 
-			"<li role='separator' class='divider'></li>",
-
-			// national maps
-			"<li><a target='swissgeo' href='http://map.geo.admin.ch/?swisssearch=" + newPortalData.lat + "," + newPortalData.lng + "'>CH - Swiss Geo Map</a></li>",
-			"<li><a target='mapycz' href='https://mapy.cz/zakladni?x=" + newPortalData.lng + "&y=" + newPortalData.lat +
-			"&z=17&base=ophoto&source=coor&id=" + newPortalData.lng + "%2C" + newPortalData.lat + "&q=" + newPortalData.lng + "%20" + newPortalData.lat + "'>CZ-mapy.cz (ortofoto)</a></li>",
-			"<li><a target='mapycz' href='https://mapy.cz/zakladni?x=" + newPortalData.lng + "&y=" + newPortalData.lat +
-			"&z=17&base=ophoto&m3d=1&height=180&yaw=-279.39&pitch=-40.7&source=coor&id=" + newPortalData.lng + "%2C" + newPortalData.lat + "&q=" + newPortalData.lng + "%20" + newPortalData.lat + "'>CZ-mapy.cz (orto+3D)</a></li>",
-			"<li><a target='kompass' href='http://maps.kompass.de/#lat=" + newPortalData.lat + "&lon=" + newPortalData.lng + "&z=17'>DE - Kompass.maps</a></li>",
-			"<li><a target='bayernatlas' href='https://geoportal.bayern.de/bayernatlas/index.html?X=" + newPortalData.lat + "&Y=" + newPortalData.lng + "&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>",
-			"<li><a target='eniro' href='http://opr.pegel.dk/?17/" + newPortalData.lat + "/" + newPortalData.lng + "'>DK - SDFE Orthophotos</a></li>",
-			"<li><a target='kakao' href='http://map.daum.net/link/map/" + newPortalData.lat + "," + newPortalData.lng + "'>KR - Kakao map</a></li>",
-			"<li><a target='naver' href='http://map.naver.com/?menu=location&lat=" + newPortalData.lat + "&lng=" + newPortalData.lng + "&dLevel=14&title=CandidatePortalLocation"+"'>KR - Naver map</a></li>",
-
-			"<li><a target='yandex' href='https://maps.yandex.ru/?text=" + newPortalData.lat + "," + newPortalData.lng + "'>RU - Yandex</a></li>",
-			"<li><a target='hitta' href='https://www.hitta.se/kartan!~" + newPortalData.lat + "," + newPortalData.lng + ",18z/tileLayer!l=1'>SE - Hitta.se</a></li>",
-			"<li><a target='eniro' href='https://kartor.eniro.se/?c=" + newPortalData.lat + "," + newPortalData.lng + "&z=17&l=nautical'>SE - Eniro Sjökort</a></li>"
-		];
-
-		descDiv.insertAdjacentHTML("beforeEnd", "<div><div class='btn-group'>" + mapButtons.join("") +
-				"<div class='button btn btn-primary dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>" + mapDropdown.join("") + "</div>");
+		descDiv.insertAdjacentHTML("beforeEnd", `<div><div class='btn-group'>${mapButtons}<div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${mapDropdown}</div>`);
 
 		const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
 
@@ -207,7 +200,7 @@ function init() {
 		let submitButton = submitDiv[0].querySelector("button");
 		submitButton.classList.add("btn", "btn-warning");
 		let submitAndNext = submitButton.cloneNode(false);
-		submitAndNext.innerHTML = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>';
+		submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`;
 		submitAndNext.title = "Submit and go to next review";
 		submitAndNext.addEventListener('click', exportFunction(() => {
 			exportFunction(() => {
@@ -222,18 +215,18 @@ function init() {
 
 
 		// adding text buttons
-		const textButtons = [
-			"<button id='photo' class='button btn btn-default textButton' data-tooltip='indicates a low quality photo'>Photo</button>",
-			"<button id='private' class='button btn btn-default textButton' data-tooltip='located on private residential property'>Private</button>",
-			"<button id='duplicate' class='button btn btn-default textButton' data-tooltip='duplicate of one you have previously reviewed'>Duplicate</button>",
-			"<button id='school' class='button btn btn-default textButton' data-tooltip='located on school property'>School</button>",
-			"<button id='person' class='button btn btn-default textButton' data-tooltip='photo contains 1 or more people'>Person</button>",
-			"<button id='perm' class='button btn btn-default textButton' data-tooltip='seasonal or temporary display or item'>Temporary</button>",
-			"<button id='location' class='button btn btn-default textButton' data-tooltip='location wrong'>Location</button>",
-			"<button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button>"
-		];
+		const textButtons = `
+<button id='photo' class='button btn btn-default textButton' data-tooltip='indicates a low quality photo'>Photo</button>
+<button id='private' class='button btn btn-default textButton' data-tooltip='located on private residential property'>Private</button>
+<button id='duplicate' class='button btn btn-default textButton' data-tooltip='duplicate of one you have previously reviewed'>Duplicate</button>
+<button id='school' class='button btn btn-default textButton' data-tooltip='located on school property'>School</button>
+<button id='person' class='button btn btn-default textButton' data-tooltip='photo contains 1 or more people'>Person</button>
+<button id='perm' class='button btn btn-default textButton' data-tooltip='seasonal or temporary display or item'>Temporary</button>
+<button id='location' class='button btn btn-default textButton' data-tooltip='location wrong'>Location</button>
+<button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button>
+`;
 
-		newSubmitDiv.insertAdjacentHTML("beforeEnd", "<div class='center' style='text-align: center'>" + textButtons.join("") + "</div>");
+		newSubmitDiv.insertAdjacentHTML("beforeEnd", `<div class='center' style='text-align: center'>${textButtons}</div>`);
 
 		const textBox = w.document.querySelector("#submitDiv + .text-center > textarea");
 
@@ -283,14 +276,14 @@ function init() {
 		function scrollHorizontally(e) {
 			e = window.event || e;
 			if("deltaY" in e && e.deltaY !== 0) {
+				e.preventDefault();
 				const delta = Math.max(-1, Math.min(1, (e.wheelDeltaY || -e.detail)));
 				filmstrip.scrollLeft -= (delta * 50); // Multiplied by 50
-				e.preventDefault();
 			}
 		}
 
 		filmstrip.addEventListener("wheel ", exportFunction(scrollHorizontally, w), false);
-		// filmstrip.addEventListener("mousewheel", exportFunction(scrollHorizontally, w), false);
+		filmstrip.addEventListener("mousewheel", exportFunction(scrollHorizontally, w), false);
 
 		// Replace map markers with a nice circle
 		for (let i = 0; i < subController.markers.length; ++i) {
@@ -319,7 +312,7 @@ function init() {
 		// Bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
 		const imgDups = w.document.querySelectorAll("#map-filmstrip > ul > li > img");
 		const openFullImage = function () {
-			w.open(this.src + "=s0", 'fulldupimage');
+			w.open(`${this.src}=s0`, 'fulldupimage');
 		};
 		for (let imgSep in imgDups) {
 			if (imgDups.hasOwnProperty(imgSep)) {
@@ -347,7 +340,7 @@ function init() {
 		a.className = "translate-title button btn btn-default pull-right";
 		a.target = 'translate';
 		a.style.padding = '0px 4px';
-		a.href = "https://translate.google.com/#auto/" + lang + "/" + encodeURIComponent(content);
+		a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(content)}`;
 		link.insertAdjacentElement("afterend",a);
 
 		const description = w.document.querySelector("#descriptionDiv").innerHTML.split("<br>")[3].trim();
@@ -360,7 +353,7 @@ function init() {
 			a.className = "translate-description button btn btn-default pull-right";
 			a.target = 'translate';
 			a.style.padding = '0px 4px';
-			a.href = "https://translate.google.com/#auto/" + lang + "/" + encodeURIComponent(description);
+			a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(description)}`;
 			const br = w.document.querySelectorAll("#descriptionDiv br")[2];
 			br.insertAdjacentElement("afterend",a);
 		}
@@ -502,6 +495,11 @@ function init() {
 			else if(event.keyCode === 27 || event.keyCode === 111) {
 				currentSelectable = 0;
 			}
+			// skip portal if possible
+			else if (event.keyCode === 106 || event.keyCode === 220) {
+				if(newPortalData.canSkip)
+					ansController.skipToNext();
+			}
 			// select next rating
 			else if((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
 				currentSelectable++;
@@ -554,25 +552,25 @@ function init() {
 		}
 		const nextBadgeProcess = processed / nextBadgeCount * 100;
 
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
-				`<br><p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses</span> <span class="gold pull-right">${processed} (${percent}%) </span></p>`);
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`<br>
+<p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses</span> <span class="gold pull-right">${processed} (${percent}%) </span></p>`);
 
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
-				`<br><div>Next recon badge tier: <b>`+nextBadgeName + ' (' + nextBadgeCount +')'+`</b><span class="pull-right"></span>
-			        <div class="progress">
-				        <div class="progress-bar progress-bar-warning"
-				        role="progressbar"
-				        aria-valuenow="`+ nextBadgeProcess +`"
-				        aria-valuemin="0"
-				        aria-valuemax="100"
-				        style="width: `+  Math.round(nextBadgeProcess) +`%;"
-				        title="`+ (nextBadgeCount - processed) +` to go">
-				            `+ Math.round(nextBadgeProcess) +`%
-			        </div></div></div>`);
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
+<br><div>Next recon badge tier: <b>${nextBadgeName} (${nextBadgeCount})</b><span class='pull-right'></span>
+<div class='progress'>
+    <div class='progress-bar progress-bar-warning'
+    role='progressbar'
+    aria-valuenow='${nextBadgeProcess}'
+    aria-valuemin='0'
+    aria-valuemax='100'
+    style='width: ${Math.round(nextBadgeProcess)}%;'
+    title='${nextBadgeCount - processed} to go'>
+        ${Math.round(nextBadgeProcess)}%
+</div></div></div>
+		`);
 
 		if(accepted < 10000) {
-			lastPlayerStatLine.insertAdjacentHTML("beforeEnd",
-					`<p><input readonly onFocus="this.select();" style="width: 99%;" type="text" value="${reviewed} / ${accepted + rejected} (${accepted}/${rejected}) / ${Math.round(percent)}%"/></p>`);
+			lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<p><input readonly onFocus="this.select();" style="width: 99%;" type="text" value="${reviewed} / ${accepted + rejected } (${accepted}/${rejected}) / ${Math.round(percent)}%"/></p>`);
 		}
 
 
@@ -583,7 +581,7 @@ function init() {
 		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
         		<p id='scannerOffsetContainer'>
         		    <span style="margin-left: 5px" class="ingress-mid-blue pull-left">Scanner offset:</span>
-        		    <input id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="`+oprt_scanner_offset+`">
+        		    <input id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="${oprt_scanner_offset}">
         		</p>`);
 
 		// we have to inject the tooltip to angular
@@ -599,6 +597,7 @@ function init() {
 			});
 		});
 		// **
+
 
 		modifyHeader = () => {}; // just run once
 	}
@@ -714,7 +713,7 @@ function init() {
 
 				let flashId = setInterval(() => {
 					flag = !flag;
-					changeFavicon(flag ? PORTAL_MARKER : "/imgpub/favicon.ico");
+					changeFavicon(`${flag ? PORTAL_MARKER : "/imgpub/favicon.ico"}`);
 				}, 1000);
 
 				// stop flashing if tab in foreground
