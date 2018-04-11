@@ -35,3 +35,4 @@ You can use keyboard to fully control the page as follows:
 |       Tab, Numpad +        |                Next field                |
 | Shift, Backspace, Numpad - |              Previous field              |
 |       Esc, Numpad /        |               First field                |
+|           ^, Numpad *      |                  Skip Portal             |
