@@ -42,7 +42,7 @@ SOFTWARE.
 let refreshIntervalID;
 
 // polyfill for ViolentMonkey
-if (typeof exportFunction !== 'function') {
+if (typeof exportFunction !== "function") {
 	exportFunction = (func, scope, options) => {
 		if (options && options.defineAs) {
 			scope[options.defineAs] = func;
@@ -50,7 +50,7 @@ if (typeof exportFunction !== 'function') {
 		return func;
 	};
 }
-if (typeof cloneInto !== 'function') {
+if (typeof cloneInto !== "function") {
 	cloneInto = obj => obj;
 }
 
@@ -71,7 +71,7 @@ function init() {
 	let tryNumber = 15;
 
 	// get Values from localStorage
-	let oprt_scanner_offset = parseInt(w.localStorage.getItem('oprt_scanner_offset')) || 0;
+	let oprt_scanner_offset = parseInt(w.localStorage.getItem("oprt_scanner_offset")) || 0;
 
 	const initWatcher = setInterval(() => {
 		if (tryNumber === 0) {
@@ -98,10 +98,10 @@ function init() {
 					clearInterval(initWatcher);
 				} catch (error) {
 					// console.log(error);
-					if(error === 41) {
+					if (error === 41) {
 						addRefreshContainer();
 					}
-					if(error !== 42) {
+					if (error !== 42) {
 						clearInterval(initWatcher);
 					}
 				}
@@ -131,12 +131,12 @@ function init() {
 
 		modifyHeader();
 
-		if(subController.errorMessage !== "" ) {
+		if (subController.errorMessage !== "") {
 			// no portal analysis data available
 			throw 41; // @todo better error code
 		}
 
-		if(typeof newPortalData === "undefined") {
+		if (typeof newPortalData === "undefined") {
 			// no submission data present
 			throw 42; // @todo better error code
 		}
@@ -184,7 +184,7 @@ function init() {
 		let newSubmitDiv;
 
 		// moving submit button to right side of classification-div. don't move on mobile devices / small width
-		if(screen.availWidth > 768) {
+		if (screen.availWidth > 768) {
 			newSubmitDiv = w.document.createElement("div");
 			const classificationRow = w.document.querySelector(".classification-row");
 			newSubmitDiv.className = "col-xs-12 col-sm-6";
@@ -202,13 +202,13 @@ function init() {
 		let submitAndNext = submitButton.cloneNode(false);
 		submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`;
 		submitAndNext.title = "Submit and go to next review";
-		submitAndNext.addEventListener('click', exportFunction(() => {
+		submitAndNext.addEventListener("click", exportFunction(() => {
 			exportFunction(() => {
 				window.location.assign("/recon");
 			}, ansController, {defineAs: "openSubmissionCompleteModal"});
 		}, w));
 		// we have to inject the button to angular
-		w.$injector.invoke(cloneInto(['$compile', ($compile) => {
+		w.$injector.invoke(cloneInto(["$compile", ($compile) => {
 			let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv[0]));
 			submitDiv[0].querySelector("button").insertAdjacentElement("beforeBegin", compiledSubmit[0]);
 		}], w, {cloneFunctions: true}));
@@ -216,19 +216,24 @@ function init() {
 
 		// adding text buttons
 		const textButtons = `
-<button id='photo' class='button btn btn-default textButton' data-tooltip='indicates a low quality photo'>Photo</button>
-<button id='private' class='button btn btn-default textButton' data-tooltip='located on private residential property'>Private</button>
-<button id='duplicate' class='button btn btn-default textButton' data-tooltip='duplicate of one you have previously reviewed'>Duplicate</button>
-<button id='school' class='button btn btn-default textButton' data-tooltip='located on school property'>School</button>
-<button id='person' class='button btn btn-default textButton' data-tooltip='photo contains 1 or more people'>Person</button>
-<button id='perm' class='button btn btn-default textButton' data-tooltip='seasonal or temporary display or item'>Temporary</button>
-<button id='location' class='button btn btn-default textButton' data-tooltip='location wrong'>Location</button>
-<button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button>
+<button id='photo' class='button btn btn-default textButton' data-tooltip='Indicates a low quality photo'>Photo</button>
+<button id='private' class='button btn btn-default textButton' data-tooltip='Located on private residential property'>Private</button>`;
+		const textDropdown = `
+<li><a class='textButton' id='school' data-tooltip='Located on school property'>School</a></li>
+<li><a class='textButton' id='hospital' data-tooltip='Located on hospital property'>Hospital</a></li>
+<li><a class='textButton' id='person' data-tooltip='Photo contains 1 or more people'>Person</a></li>
+<li><a class='textButton' id='perm' data-tooltip='Seasonal or temporary display or item'>Temporary</a></li>
+<li><a class='textButton' id='location' data-tooltip='Location wrong'>Location</a></li>
+<li><a class='textButton' id='natural' data-tooltip='Candidate is a natural feature'>Natural</a></li>
 `;
 
-		newSubmitDiv.insertAdjacentHTML("beforeEnd", `<div class='center' style='text-align: center'>${textButtons}</div>`);
-
 		const textBox = w.document.querySelector("#submitDiv + .text-center > textarea");
+
+		newSubmitDiv.querySelector(".text-center").insertAdjacentHTML("beforeBegin", `
+<div class='btn-group dropup'>${textButtons}
+<div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${textDropdown}</ul>
+</div></div>
+`);
 
 		const buttons = w.document.getElementsByClassName("textButton");
 		for (let b in buttons) {
@@ -258,15 +263,20 @@ function init() {
 						case "location":
 							text = "Portal candidate's location is not on object";
 							break;
-						case "clear":
-							text = "";
+						case "hospital":
+							text = "Located on hospital grounds";
+							break;
+						case "natural":
+							text = "Portal candidate is a natural feature";
 							break;
 					}
 
 					textBox.value = text;
-					textBox.dispatchEvent(new Event('change'));
+					textBox.dispatchEvent(new Event("change"));
 
-				},w), false);
+					event.target.blur();
+
+				}, w), false);
 			}
 		}
 
@@ -275,7 +285,7 @@ function init() {
 
 		function scrollHorizontally(e) {
 			e = window.event || e;
-			if("deltaY" in e && e.deltaY !== 0) {
+			if ("deltaY" in e && e.deltaY !== 0) {
 				e.preventDefault();
 				const delta = Math.max(-1, Math.min(1, (e.wheelDeltaY || -e.detail)));
 				filmstrip.scrollLeft -= (delta * 50); // Multiplied by 50
@@ -290,16 +300,28 @@ function init() {
 			const marker = subController.markers[i];
 			marker.setIcon(PORTAL_MARKER);
 		}
-		subController.map.setZoom(16);
 
 		// Re-enabling scroll zoom and allow zoom with out holding ctrl
-		const mapOptions = {scrollwheel: true, gestureHandling: 'greedy'};
+		const mapOptions = {scrollwheel: true, gestureHandling: "greedy"};
 		subController.map.setOptions(cloneInto(mapOptions, w));
 		subController.map2.setOptions(cloneInto(mapOptions, w));
 
+		// adding a 40m circle around the portal (capture range)
+		// noinspection JSUnusedLocalSymbols
+		const circle = new google.maps.Circle({
+			map          : subController.map2,
+			center       : subController.map2.center,
+			radius       : 40,
+			strokeColor  : "#ebbc4a",
+			strokeOpacity: 0.8,
+			strokeWeight : 1.5,
+			fillOpacity  : 0,
+		});
+
+		document.querySelector("#street-view + small").insertAdjacentHTML("beforeBegin", "<small class='pull-left'><span style='color:#ebbc4a'>Circle:</span> 40m</small>");
 
 		// move portal rating to the right side. don't move on mobile devices / small width
-		if(screen.availWidth > 768) {
+		if (screen.availWidth > 768) {
 			const scorePanel = w.document.querySelector("div[class~='pull-right']");
 			let nodesToMove = Array.from(w.document.querySelector("div[class='btn-group']").parentElement.children);
 			nodesToMove = nodesToMove.splice(2, 6);
@@ -312,13 +334,13 @@ function init() {
 		// Bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
 		const imgDups = w.document.querySelectorAll("#map-filmstrip > ul > li > img");
 		const openFullImage = function () {
-			w.open(`${this.src}=s0`, 'fulldupimage');
+			w.open(`${this.src}=s0`, "fulldupimage");
 		};
 		for (let imgSep in imgDups) {
 			if (imgDups.hasOwnProperty(imgSep)) {
 				imgDups[imgSep].addEventListener("click", () => {
 					const imgDup = w.document.querySelector("#content > img");
-					if(imgDup !== null) {
+					if (imgDup !== null) {
 						imgDup.removeEventListener("click", openFullImage);
 						imgDup.addEventListener("click", openFullImage);
 						imgDup.setAttribute("style", "cursor: pointer;");
@@ -329,7 +351,7 @@ function init() {
 
 		// add translate buttons to title and description (if existing)
 		let lang = "en";
-		try { lang = navigator.languages[0].split('-')[0]; } catch (e) {}
+		try { lang = navigator.languages[0].split("-")[0]; } catch (e) {}
 		const link = w.document.querySelector("#descriptionDiv a");
 		const content = link.innerText.trim();
 		let a = w.document.createElement("a");
@@ -338,24 +360,24 @@ function init() {
 		span.innerHTML = " ";
 		a.appendChild(span);
 		a.className = "translate-title button btn btn-default pull-right";
-		a.target = 'translate';
-		a.style.padding = '0px 4px';
+		a.target = "translate";
+		a.style.padding = "0px 4px";
 		a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(content)}`;
-		link.insertAdjacentElement("afterend",a);
+		link.insertAdjacentElement("afterend", a);
 
 		const description = w.document.querySelector("#descriptionDiv").innerHTML.split("<br>")[3].trim();
-		if (description !== '&lt;No description&gt;' && description !== '') {
-			a = w.document.createElement('a');
+		if (description !== "&lt;No description&gt;" && description !== "") {
+			a = w.document.createElement("a");
 			span = w.document.createElement("span");
 			span.className = "glyphicon glyphicon-book";
 			span.innerHTML = " ";
 			a.appendChild(span);
 			a.className = "translate-description button btn btn-default pull-right";
-			a.target = 'translate';
-			a.style.padding = '0px 4px';
+			a.target = "translate";
+			a.style.padding = "0px 4px";
 			a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(description)}`;
 			const br = w.document.querySelectorAll("#descriptionDiv br")[2];
-			br.insertAdjacentElement("afterend",a);
+			br.insertAdjacentElement("afterend", a);
 		}
 
 		// Automatically open the first listed possible duplicate
@@ -387,12 +409,12 @@ function init() {
 		let maxItems = 7;
 
 		// a list of all 6 star button rows, and the two submit buttons
-		let starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button');
+		let starsAndSubmitButtons = w.document.querySelectorAll(".col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button");
 
 		function highlight() {
-			starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none'; }, w));
-			if(currentSelectable <= maxItems-2) {
-				starsAndSubmitButtons[currentSelectable].style.border = cloneInto('1px dashed #ebbc4a', w);
+			starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = "none"; }, w));
+			if (currentSelectable <= maxItems - 2) {
+				starsAndSubmitButtons[currentSelectable].style.border = cloneInto("1px dashed #ebbc4a", w);
 				submitAndNext.blur();
 				submitButton.blur();
 			} else if (currentSelectable == 6) {
@@ -404,7 +426,7 @@ function init() {
 
 		}
 
-		addEventListener('keydown', (event) => {
+		addEventListener("keydown", (event) => {
 
 			/*
 			keycodes:
@@ -425,98 +447,98 @@ function init() {
 
 			 */
 
-			if(event.keyCode >= 49 && event.keyCode <= 53)
+			if (event.keyCode >= 49 && event.keyCode <= 53)
 				numkey = event.keyCode - 48;
-			else if(event.keyCode >= 97 && event.keyCode <= 101)
+			else if (event.keyCode >= 97 && event.keyCode <= 101)
 				numkey = event.keyCode - 96;
 			else
 				numkey = null;
 
 			// do not do anything if a text area or a input with type text has focus
-			if(w.document.querySelector("input[type=text]:focus") || w.document.querySelector("textarea:focus")) {
+			if (w.document.querySelector("input[type=text]:focus") || w.document.querySelector("textarea:focus")) {
 				return;
 			}
 			// "analyze next" button
-			else if((event.keyCode === 13 ||event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
-				w.document.location.href='/recon';
+			else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector("a.button[href=\"/recon\"]")) {
+				w.document.location.href = "/recon";
 				event.preventDefault();
 			} // submit low quality rating
-			else if((event.keyCode === 13 ||event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
-				w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]').click();
+			else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector("[ng-click=\"answerCtrl2.confirmLowQuality()\"]")) {
+				w.document.querySelector("[ng-click=\"answerCtrl2.confirmLowQuality()\"]").click();
 				currentSelectable = 0;
 				event.preventDefault();
 
 			} // click first/selected duplicate (key D)
-			else if((event.keyCode === 68) && w.document.querySelector('#content > button')) {
-				w.document.querySelector('#content > button').click();
+			else if ((event.keyCode === 68) && w.document.querySelector("#content > button")) {
+				w.document.querySelector("#content > button").click();
 				currentSelectable = 0;
 				event.preventDefault();
 
 			} // click first/selected duplicate (key T)
-			else if(event.keyCode === 84) {
-				const link = w.document.querySelector('#descriptionDiv > .translate-title');
+			else if (event.keyCode === 84) {
+				const link = w.document.querySelector("#descriptionDiv > .translate-title");
 				if (link) {
 					link.click();
 					event.preventDefault();
 				}
 
 			} // click first/selected duplicate (key Y)
-			else if(event.keyCode === 89) {
-				const link = w.document.querySelector('#descriptionDiv > .translate-description');
+			else if (event.keyCode === 89) {
+				const link = w.document.querySelector("#descriptionDiv > .translate-description");
 				if (link) {
 					link.click();
 					event.preventDefault();
 				}
 
 			} // submit duplicate
-			else if((event.keyCode === 13 ||event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
-				w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]').click();
+			else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector("[ng-click=\"answerCtrl2.confirmDuplicate()\"]")) {
+				w.document.querySelector("[ng-click=\"answerCtrl2.confirmDuplicate()\"]").click();
 				currentSelectable = 0;
 				event.preventDefault();
 
 			} // submit normal rating
-			else if((event.keyCode === 13 ||event.keyCode === 32) && currentSelectable === maxItems) {
-				w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click();
+			else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+				w.document.querySelector("[ng-click=\"answerCtrl.submitForm()\"]").click();
 				event.preventDefault();
 
 			} // close duplicate dialog
-			else if((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]')) {
-				w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]').click();
+			else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector("[ng-click=\"answerCtrl2.resetDuplicate()\"]")) {
+				w.document.querySelector("[ng-click=\"answerCtrl2.resetDuplicate()\"]").click();
 				currentSelectable = 0;
 				event.preventDefault();
 
 			} // close low quality ration dialog
-			else if((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]')) {
-				w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]').click();
+			else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector("[ng-click=\"answerCtrl2.resetLowQuality()\"]")) {
+				w.document.querySelector("[ng-click=\"answerCtrl2.resetLowQuality()\"]").click();
 				currentSelectable = 0;
 				event.preventDefault();
 			}
 			// return to first selection (should this be a portal)
-			else if(event.keyCode === 27 || event.keyCode === 111) {
+			else if (event.keyCode === 27 || event.keyCode === 111) {
 				currentSelectable = 0;
 			}
 			// skip portal if possible
 			else if (event.keyCode === 106 || event.keyCode === 220) {
-				if(newPortalData.canSkip)
+				if (newPortalData.canSkip)
 					ansController.skipToNext();
 			}
 			// select next rating
-			else if((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+			else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
 				currentSelectable++;
 				event.preventDefault();
 			}
 			// select previous rating
-			else if((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+			else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
 				currentSelectable--;
 				event.preventDefault();
 
 			}
-			else if(numkey === null || currentSelectable >= maxItems) {
+			else if (numkey === null || currentSelectable >= maxItems) {
 				return;
 			}
 			// rating 1-5
 			else {
-				starsAndSubmitButtons[currentSelectable].querySelectorAll('button.button-star')[numkey-1].click();
+				starsAndSubmitButtons[currentSelectable].querySelectorAll("button.button-star")[numkey - 1].click();
 				currentSelectable++;
 			}
 			highlight();
@@ -540,11 +562,11 @@ function init() {
 		const processed = accepted + rejected - oprt_scanner_offset;
 		const percent = Math.round(processed / reviewed * 1000) / 10;
 
-		const reconBadge = { 100: "Bronze", 750: "Silver", 2500: "Gold", 5000: "Platin", 10000: "Black"};
+		const reconBadge = {100: "Bronze", 750: "Silver", 2500: "Gold", 5000: "Platin", 10000: "Black"};
 		let nextBadgeName, nextBadgeCount;
 
-		for(const key in reconBadge) {
-			if(processed <= key) {
+		for (const key in reconBadge) {
+			if (processed <= key) {
 				nextBadgeCount = key;
 				nextBadgeName = reconBadge[key];
 				break;
@@ -552,48 +574,51 @@ function init() {
 		}
 		const nextBadgeProcess = processed / nextBadgeCount * 100;
 
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`<br>
-<p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses</span> <span class="gold pull-right">${processed} (${percent}%) </span></p>`);
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<br>
+<p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses:</span> <span class="gold pull-right">${processed} (${percent}%) </span></p>`);
 
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
+		if (accepted < 10000) {
+
+			lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `
 <br><div>Next recon badge tier: <b>${nextBadgeName} (${nextBadgeCount})</b><span class='pull-right'></span>
 <div class='progress'>
-    <div class='progress-bar progress-bar-warning'
-    role='progressbar'
-    aria-valuenow='${nextBadgeProcess}'
-    aria-valuemin='0'
-    aria-valuemax='100'
-    style='width: ${Math.round(nextBadgeProcess)}%;'
-    title='${nextBadgeCount - processed} to go'>
-        ${Math.round(nextBadgeProcess)}%
+<div class='progress-bar progress-bar-warning'
+role='progressbar'
+aria-valuenow='${nextBadgeProcess}'
+aria-valuemin='0'
+aria-valuemax='100'
+style='width: ${Math.round(nextBadgeProcess)}%;'
+title='${nextBadgeCount - processed} to go'>
+${Math.round(nextBadgeProcess)}%
 </div></div></div>
-		`);
-
-		if(accepted < 10000) {
-			lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<p><input readonly onFocus="this.select();" style="width: 99%;" type="text" value="${reviewed} / ${accepted + rejected } (${accepted}/${rejected}) / ${Math.round(percent)}%"/></p>`);
+`);
 		}
 
+		else lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<hr>`);
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<p><input readonly onFocus="this.select();" style="width: 99%;" type="text" value="${reviewed} / ${accepted + rejected } (${accepted}/${rejected}) / ${Math.round(percent)}%"/></p>`);
 
-		let tooltipSpan = `<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" 
-        		uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
+		let tooltipSpan = `<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder"
+uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 
 		// ** opr-scanner offset
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd",`
-        		<p id='scannerOffsetContainer'>
-        		    <span style="margin-left: 5px" class="ingress-mid-blue pull-left">Scanner offset:</span>
-        		    <input id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="${oprt_scanner_offset}">
-        		</p>`);
+		if (accepted < 10000) {
+			lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `
+<p id='scannerOffsetContainer'>
+<span style="margin-left: 5px" class="ingress-mid-blue pull-left">Scanner offset:</span>
+<input id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="${oprt_scanner_offset}">
+</p>`);
+		}
 
 		// we have to inject the tooltip to angular
-		w.$injector.invoke(cloneInto(['$compile', ($compile) => {
+		w.$injector.invoke(cloneInto(["$compile", ($compile) => {
 			let compiledSubmit = $compile(tooltipSpan)(w.$scope(stats));
 			w.document.getElementById("scannerOffsetContainer").insertAdjacentElement("afterbegin", compiledSubmit[0]);
 		}], w, {cloneFunctions: true}));
 
 
-		['change', 'keyup', 'cut', 'paste', 'input'].forEach(e => {
-			w.document.getElementById('scannerOffset').addEventListener(e, (event) => {
-				w.localStorage.setItem('oprt_scanner_offset',event.target.value);
+		["change", "keyup", "cut", "paste", "input"].forEach(e => {
+			w.document.getElementById("scannerOffset").addEventListener(e, (event) => {
+				w.localStorage.setItem("oprt_scanner_offset", event.target.value);
 			});
 		});
 		// **
@@ -610,22 +635,22 @@ function init() {
 
 		cbxRefresh.id = "oprt_refresh";
 		cbxRefresh.type = "checkbox";
-		cbxRefresh.checked = (w.localStorage.getItem(cbxRefresh.id) == 'true');
+		cbxRefresh.checked = (w.localStorage.getItem(cbxRefresh.id) == "true");
 
 		cbxRefreshSound.id = "oprt_refresh_noti_sound";
 		cbxRefreshSound.type = "checkbox";
-		cbxRefreshSound.checked = (w.localStorage.getItem(cbxRefreshSound.id) == 'true');
+		cbxRefreshSound.checked = (w.localStorage.getItem(cbxRefreshSound.id) == "true");
 
 		cbxRefreshDesktop.id = "oprt_refresh_noti_desktop";
 		cbxRefreshDesktop.type = "checkbox";
-		cbxRefreshDesktop.checked = (w.localStorage.getItem(cbxRefreshDesktop.id) == 'true');
+		cbxRefreshDesktop.checked = (w.localStorage.getItem(cbxRefreshDesktop.id) == "true");
 
 		let refreshPanel = w.document.createElement("div");
 		refreshPanel.className = "panel panel-ingress";
 
 		refreshPanel.addEventListener("change", (event) => {
 			w.localStorage.setItem(event.target.id, event.target.checked); // i'm lazy
-			if(event.target.checked) {
+			if (event.target.checked) {
 				startRefresh();
 			} else {
 				stopRefresh();
@@ -633,8 +658,8 @@ function init() {
 		});
 
 		refreshPanel.innerHTML = `
-			<div class='panel-heading'><span class='glyphicon glyphicon-refresh'></span> Refresh <sup>beta</sup> <a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success pull-right'>OPR-Tools</span></a></div>
-			<div id='cbxDiv' class='panel-body bg-primary' style='background:black;'></div>`;
+<div class='panel-heading'><span class='glyphicon glyphicon-refresh'></span> Refresh <sup>beta</sup> <a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success pull-right'>OPR-Tools</span></a></div>
+<div id='cbxDiv' class='panel-body bg-primary' style='background:black;'></div>`;
 
 		refreshPanel.querySelector("#cbxDiv").insertAdjacentElement("afterbegin", appendCheckbox(cbxRefreshSound, "Notification sound"));
 		refreshPanel.querySelector("#cbxDiv").insertAdjacentElement("afterbegin", appendCheckbox(cbxRefreshDesktop, "Desktop notification"));
@@ -662,7 +687,7 @@ function init() {
 			return div;
 		}
 
-		addRefreshContainer = () => {} // run only once
+		addRefreshContainer = () => {}; // run only once
 	}
 
 	function startRefresh() {
@@ -674,7 +699,7 @@ function init() {
 
 		function reloadOPR() {
 			clearInterval(refreshIntervalID);
-			w.sessionStorage.setItem("oprt_from_refresh", 'true');
+			w.sessionStorage.setItem("oprt_from_refresh", "true");
 			w.document.location.reload();
 		}
 
@@ -691,23 +716,23 @@ function init() {
 	}
 
 	function checkIfAutorefresh() {
-		if(w.sessionStorage.getItem("oprt_from_refresh")) {
+		if (w.sessionStorage.getItem("oprt_from_refresh")) {
 			// reset flag
 			w.sessionStorage.removeItem("oprt_from_refresh");
 
-			if(w.document.hidden) { // if tab in background: flash favicon
+			if (w.document.hidden) { // if tab in background: flash favicon
 				let flag = true;
 
-				if(w.localStorage.getItem("oprt_refresh_noti_sound") == 'true') {
+				if (w.localStorage.getItem("oprt_refresh_noti_sound") == "true") {
 					let audio = document.createElement("audio");
 					audio.src = NOTIFICATION_SOUND;
 					audio.autoplay = true;
 				}
-				if(w.localStorage.getItem("oprt_refresh_noti_desktop") == 'true') {
+				if (w.localStorage.getItem("oprt_refresh_noti_desktop") == "true") {
 					GM_notification({
 						"title": "OPR - New Portal Analysis Available",
-						"text": "by OPR-Tools",
-						"image":"https://gitlab.com/uploads/-/system/project/avatar/3311015/opr-tools.png",
+						"text" : "by OPR-Tools",
+						"image": "https://gitlab.com/uploads/-/system/project/avatar/3311015/opr-tools.png",
 					});
 				}
 
@@ -734,14 +759,14 @@ function init() {
 
 	function startExpirationTimer(subController) {
 
-		w.document.querySelector("ul.nav.navbar-nav > li:nth-child(7)").insertAdjacentHTML("afterbegin", '<a><span id="countdownDisplay"></span></a>' );
+		w.document.querySelector("ul.nav.navbar-nav > li:nth-child(7)").insertAdjacentHTML("afterbegin", "<a><span id=\"countdownDisplay\"></span></a>");
 
 		let countdownEnd = subController.countdownDate;
-		let countdownDisplay = document.getElementById('countdownDisplay');
+		let countdownDisplay = document.getElementById("countdownDisplay");
 		countdownDisplay.style.color = "white";
 
 		// Update the count down every 1 second
-		let counterInterval = setInterval(function() {
+		let counterInterval = setInterval(function () {
 			// Get todays date and time
 			let now = new Date().getTime();
 			// Find the distance between now an the count down date
@@ -820,7 +845,6 @@ color: #0ff;
 /* Add this attribute to the element that needs a tooltip */
 [data-tooltip] {
 position: relative;
-z-index: 2;
 cursor: pointer;
 }
 
@@ -853,6 +877,7 @@ content: attr(data-tooltip);
 text-align: center;
 font-size: 14px;
 line-height: 1.2;
+z-index: 100;
 }
 
 /* Triangle hack to make tooltip look like a speech bubble */
@@ -880,26 +905,26 @@ opacity: 1;
 }
 
 blink, .blink {
-  -webkit-animation: blink 2s step-end infinite;
-  -moz-animation: blink 2s step-end infinite;
-  -o-animation: blink 2s step-end infinite;
-  animation: blink 2s step-end infinite;
+-webkit-animation: blink 2s step-end infinite;
+-moz-animation: blink 2s step-end infinite;
+-o-animation: blink 2s step-end infinite;
+animation: blink 2s step-end infinite;
 }
 
 @-webkit-keyframes blink {
-  67% { opacity: 0 }
+67% { opacity: 0 }
 }
 
 @-moz-keyframes blink {
-  67% { opacity: 0 }
+67% { opacity: 0 }
 }
 
 @-o-keyframes blink {
-  67% { opacity: 0 }
+67% { opacity: 0 }
 }
 
 @keyframes blink {
-  67% { opacity: 0 }
+67% { opacity: 0 }
 }
 `;
 
