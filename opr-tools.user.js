@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.16.0
+// @version      0.16.1
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -72,6 +72,8 @@ function init() {
 
 	// get Values from localStorage
 	let oprt_scanner_offset = parseInt(w.localStorage.getItem("oprt_scanner_offset")) || 0;
+
+	let browserLocale = window.navigator.languages[0] || window.navigator.language || "en";
 
 	const initWatcher = setInterval(() => {
 		if (tryNumber === 0) {
@@ -213,6 +215,13 @@ function init() {
 			submitDiv[0].querySelector("button").insertAdjacentElement("beforeBegin", compiledSubmit[0]);
 		}], w, {cloneFunctions: true}));
 
+		let emergencyWay = "";
+		if(browserLocale.includes("de")) {
+			emergencyWay = "RETTUNGSWEG!1";
+		} else {
+			emergencyWay = "Emergency Way";
+		}
+
 
 		// adding text buttons
 		const textButtons = `
@@ -220,11 +229,11 @@ function init() {
 <button id='private' class='button btn btn-default textButton' data-tooltip='Located on private residential property'>Private</button>`;
 		const textDropdown = `
 <li><a class='textButton' id='school' data-tooltip='Located on school property'>School</a></li>
-<li><a class='textButton' id='hospital' data-tooltip='Located on hospital property'>Hospital</a></li>
 <li><a class='textButton' id='person' data-tooltip='Photo contains 1 or more people'>Person</a></li>
 <li><a class='textButton' id='perm' data-tooltip='Seasonal or temporary display or item'>Temporary</a></li>
 <li><a class='textButton' id='location' data-tooltip='Location wrong'>Location</a></li>
 <li><a class='textButton' id='natural' data-tooltip='Candidate is a natural feature'>Natural</a></li>
+<li><a class='textButton' id='emergencyway' data-tooltip='Located on hospital property'>${emergencyWay}</a></li>
 `;
 
 		const textBox = w.document.querySelector("#submitDiv + .text-center > textarea");
@@ -263,8 +272,8 @@ function init() {
 						case "location":
 							text = "Portal candidate's location is not on object";
 							break;
-						case "hospital":
-							text = "Located on hospital grounds";
+						case "emergencyway":
+							text = "Portal candidate is obstructing the path of emergency vehicles";
 							break;
 						case "natural":
 							text = "Portal candidate is a natural feature";
