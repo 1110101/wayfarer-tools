@@ -233,7 +233,7 @@ function init() {
 <li><a class='textButton' id='perm' data-tooltip='Seasonal or temporary display or item'>Temporary</a></li>
 <li><a class='textButton' id='location' data-tooltip='Location wrong'>Location</a></li>
 <li><a class='textButton' id='natural' data-tooltip='Candidate is a natural feature'>Natural</a></li>
-<li><a class='textButton' id='emergencyway' data-tooltip='Located on hospital property'>${emergencyWay}</a></li>
+<li><a class='textButton' id='emergencyway' data-tooltip='Obstructing emergency way'>${emergencyWay}</a></li>
 `;
 
 		const textBox = w.document.querySelector("#submitDiv + .text-center > textarea");
