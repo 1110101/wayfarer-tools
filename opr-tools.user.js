@@ -249,7 +249,11 @@ function init() {
 			if (buttons.hasOwnProperty(b)) {
 				buttons[b].addEventListener("click", exportFunction(event => {
 					const source = event.target || event.srcElement;
-					let text;
+					let text = textBox.value;
+                    if (text.length > 0)
+                    { 
+                        text += ", "
+                    }
 					switch (source.id) {
 						case "photo":
 							text = "Low quality photo";
