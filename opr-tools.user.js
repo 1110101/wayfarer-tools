@@ -241,7 +241,7 @@ function init() {
 		newSubmitDiv.querySelector(".text-center").insertAdjacentHTML("beforeBegin", `
 <div class='btn-group dropup'>${textButtons}
 <div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${textDropdown}</ul>
-</div></div>
+</div></div><div class="pull-right"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></div>
 `);
 
 		const buttons = w.document.getElementsByClassName("textButton");
@@ -250,37 +250,39 @@ function init() {
 				buttons[b].addEventListener("click", exportFunction(event => {
 					const source = event.target || event.srcElement;
 					let text = textBox.value;
-                    if (text.length > 0)
-                    { 
-                        text += ", "
+                    if (text.length > 0) {
+                        text += ",\n"
                     }
 					switch (source.id) {
 						case "photo":
-							text = "Low quality photo";
+							text += "Low quality photo";
 							break;
 						case "private":
-							text = "Private residential property";
+							text += "Private residential property";
 							break;
 						case "duplicate":
-							text = "Duplicate of previously reviewed portal candidate";
+							text += "Duplicate of previously reviewed portal candidate";
 							break;
 						case "school":
-							text = "Located on primary or secondary school grounds";
+							text += "Located on primary or secondary school grounds";
 							break;
 						case "person":
-							text = "Picture contains one or more people";
+							text += "Picture contains one or more people";
 							break;
 						case "perm":
-							text = "Portal candidate is seasonal or temporary";
+							text += "Portal candidate is seasonal or temporary";
 							break;
 						case "location":
-							text = "Portal candidate's location is not on object";
+							text += "Portal candidate's location is not on object";
 							break;
 						case "emergencyway":
-							text = "Portal candidate is obstructing the path of emergency vehicles";
+							text += "Portal candidate is obstructing the path of emergency vehicles";
 							break;
 						case "natural":
-							text = "Portal candidate is a natural feature";
+							text += "Portal candidate is a natural feature";
+							break;
+						case "clear":
+							text = "";
 							break;
 					}
 
