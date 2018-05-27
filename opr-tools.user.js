@@ -66,12 +66,22 @@ function addGlobalStyle(css) {
 	addGlobalStyle = () => {}; // noop after first run
 }
 
+function getCustomPresets(w) {
+    // simply to scope the string we don't need after JSON.parse
+    let presetsJSON = w.localStorage.getItem("oprt_custom_presets");
+    if (presetsJSON != null && presetsJSON != "") {
+        return JSON.parse(presetsJSON);
+    }
+    return [];
+}
+
 function init() {
 	const w = typeof unsafeWindow == "undefined" ? window : unsafeWindow;
 	let tryNumber = 15;
 
 	// get Values from localStorage
 	let oprt_scanner_offset = parseInt(w.localStorage.getItem("oprt_scanner_offset")) || 0;
+    let customPresets = getCustomPresets(w);
 
 	let browserLocale = window.navigator.languages[0] || window.navigator.language || "en";
 
@@ -125,6 +135,8 @@ function init() {
 		const descDiv = w.document.getElementById("descriptionDiv");
 		const ansController = w.$scope(descDiv).answerCtrl;
 		const subController = w.$scope(descDiv).subCtrl;
+        // not sure why, but the above format doesn't work to fetch this.
+        const whatController = angular.element(document.getElementById('WhatIsItController')).scope().whatCtrl;
 		const scope = w.$scope(descDiv);
 		const newPortalData = subController.pageData;
 
@@ -143,7 +155,7 @@ function init() {
 			throw 42; // @todo better error code
 		}
 
-		modifyPage(descDiv, ansController, subController, scope, newPortalData);
+		modifyPage(descDiv, ansController, subController, whatController, scope, newPortalData);
 
 		checkIfAutorefresh();
 
@@ -151,7 +163,7 @@ function init() {
 
 	}
 
-	function modifyPage(descDiv, ansController, subController, scope, newPortalData) {
+	function modifyPage(descDiv, ansController, subController, whatController, scope, newPortalData) {
 
 		// adding map buttons
 		const mapButtons = `
@@ -235,13 +247,24 @@ function init() {
 <li><a class='textButton' id='natural' data-tooltip='Candidate is a natural feature'>Natural</a></li>
 <li><a class='textButton' id='emergencyway' data-tooltip='Obstructing emergency way'>${emergencyWay}</a></li>
 `;
-
+        // add customPreset UI
+        let customPresetOptions = "";
+        for (let i=0; i<customPresets.length; i++) {
+            customPresetOptions += `<option value=${i}>${customPresets[i].label}</option>`;
+        }
+        const customPresetUI = `
+<select id="customPresets" style="color: #000000;"><option value=""></option><option value="save">Save</option>${customPresetOptions}</select>
+<label for="customPresetLabel">Preset Label:</label>
+<input type="text" id="customPresetLabel">
+`;
 		const textBox = w.document.querySelector("#submitDiv + .text-center > textarea");
 
 		newSubmitDiv.querySelector(".text-center").insertAdjacentHTML("beforeBegin", `
 <div class='btn-group dropup'>${textButtons}
 <div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${textDropdown}</ul>
-</div></div>
+</div>
+${customPresetUI}
+</div>
 `);
 
 		const buttons = w.document.getElementsByClassName("textButton");
@@ -251,7 +274,7 @@ function init() {
 					const source = event.target || event.srcElement;
 					let text = textBox.value;
                     if (text.length > 0)
-                    { 
+                    {
                         text += ", "
                     }
 					switch (source.id) {
@@ -292,6 +315,47 @@ function init() {
 				}, w), false);
 			}
 		}
+
+        // add change listener
+        const customPresetSelect = w.document.getElementById("customPresets");
+        customPresetSelect.addEventListener("change", exportFunction(event => {
+            const source = event.target || event.srcElement;
+            let value = source.value;
+            if (value == "") {
+                return;
+            }
+            if (value == "save") {
+                saveCustomPreset(ansController, whatController);
+                return;
+            }
+            let index = parseInt(value);
+            let preset = customPresets[index];
+
+            ansController.formData.quality = preset.quality;
+            ansController.formData.description = preset.description;
+            ansController.formData.cultural = preset.cultural;
+            ansController.formData.uniqueness = preset.uniqueness;
+            ansController.formData.location = preset.location;
+            ansController.formData.safety = preset.safety;
+
+            // the controller's set by ID function doesn't work
+            // and autocomplete breaks if there are any spaces
+            // so set the field to the first word from name and match autocomplete by ID
+            // at the very least, I know this will set it and leave the UI looking like it was manually set.
+            whatController.whatInput = preset.nodeName.split(" ")[0];
+            let nodes = whatController.getWhatAutocomplete();
+            for (let i=0; i<nodes.length; i++) {
+                if (nodes[i].id == preset.nodeId) {
+                    whatController.whatNode = nodes[i];
+                    break;
+                }
+            }
+            whatController.whatInput = "";
+
+            // update ui (or at least I was hoping this would do it)
+            textBox.dispatchEvent(new Event("change"));
+            event.target.blur();
+        }, w), false);
 
 		// Make photo filmstrip scrollable
 		const filmstrip = w.document.getElementById("map-filmstrip");
@@ -801,6 +865,26 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 			}
 		}, 1000);
 	}
+
+    function saveCustomPreset(ansController, whatController) {
+        let label = document.getElementById("customPresetLabel").value;
+        if (label == "") {
+            return;
+        }
+        let preset = {
+            label: label,
+            nodeName: whatController.whatNode.name,
+            nodeId: whatController.whatNode.id,
+            quality: ansController.formData.quality,
+            description: ansController.formData.description,
+            cultural: ansController.formData.cultural,
+            uniqueness: ansController.formData.uniqueness,
+            location: ansController.formData.location,
+            safety: ansController.formData.safety
+        };
+        customPresets.push(preset);
+        w.localStorage.setItem("oprt_custom_presets", JSON.stringify(customPresets));
+    }
 }
 
 setTimeout(() => {
