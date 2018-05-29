@@ -352,8 +352,10 @@ ${customPresetUI}
             }
             whatController.whatInput = "";
 
-            // update ui (or at least I was hoping this would do it)
+             // update ui (definitely not the best way... but it works.. but only the first time?)
+            textBox.dispatchEvent(new Event("focus"));
             textBox.dispatchEvent(new Event("change"));
+            textBox.dispatchEvent(new Event("blur"));
             event.target.blur();
         }, w), false);
 
