@@ -352,11 +352,9 @@ ${customPresetUI}
             }
             whatController.whatInput = "";
 
-             // update ui (definitely not the best way... but it works.. but only the first time?)
-            textBox.dispatchEvent(new Event("focus"));
-            textBox.dispatchEvent(new Event("change"));
-            textBox.dispatchEvent(new Event("blur"));
+            // update ui
             event.target.blur();
+            w.$rootScope.$apply();
         }, w), false);
 
 		// Make photo filmstrip scrollable
