@@ -1,15 +1,16 @@
 // ==UserScript==
-// @name         OPR tools
-// @version      0.16.2
-// @description  OPR enhancements
+// @name            OPR tools
+// @version         0.16.2
+// @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
-// @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
-// @match        https://opr.ingress.com/recon
-// @grant        unsafeWindow
-// @grant        GM_notification
-// @downloadURL  https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
-// @updateURL    https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
-// @supportURL   https://gitlab.com/1110101/opr-tools/issues
+// @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
+// @match           https://opr.ingress.com/recon
+// @grant           unsafeWindow
+// @grant           GM_notification
+// @grand           GM_addStyle
+// @downloadURL     https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
+// @updateURL       https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
+// @supportURL      https://gitlab.com/1110101/opr-tools/issues
 
 // ==/UserScript==
 
@@ -55,13 +56,7 @@ if (typeof cloneInto !== "function") {
 }
 
 function addGlobalStyle(css) {
-	let head, style;
-	head = document.getElementsByTagName("head")[0];
-	if (!head) return;
-	style = document.createElement("style");
-	style.type = "text/css";
-	style.innerHTML = css;
-	head.appendChild(style);
+	GM_addStyle(css);
 
 	addGlobalStyle = () => {}; // noop after first run
 }
@@ -250,9 +245,9 @@ function init() {
 				buttons[b].addEventListener("click", exportFunction(event => {
 					const source = event.target || event.srcElement;
 					let text = textBox.value;
-                    if (text.length > 0) {
-                        text += ",\n"
-                    }
+					if (text.length > 0) {
+						text += ",\n"
+					}
 					switch (source.id) {
 						case "photo":
 							text += "Low quality photo";
@@ -536,6 +531,9 @@ function init() {
 			else if (event.keyCode === 106 || event.keyCode === 220) {
 				if (newPortalData.canSkip)
 					ansController.skipToNext();
+							}
+			else if(event.keyCode === 72) {
+				showHelp(); // @todo
 			}
 			// select next rating
 			else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
@@ -798,10 +796,62 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 				clearInterval(counterInterval);
 				countdownDisplay.innerText = "EXPIRED";
 				countdownDisplay.classList.add("blink");
+
+
 			} else if (distance < 60) {
 				countdownDisplay.style.color = "red";
 			}
 		}, 1000);
+	}
+
+	function showHelp() {
+		let tmp = `<table class="table table-condensed">
+	<thead>
+	<tr>
+		<th>Key(s)</th>
+		<th>Function</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td>Keys 1-5, Numpad 1-5</td>
+		<td>Valuate current selected field (the yellow highlighted one)</td>
+	</tr>
+	<tr>
+		<td>D</td>
+		<td>Mark current candidate as a duplicate of the opened portal in "duplicates"</td>
+	</tr>
+	<tr>
+		<td>T</td>
+		<td>Open title translation</td>
+	</tr>
+	<tr>
+		<td>Y</td>
+		<td>Open description translation</td>
+	</tr>
+	<tr>
+		<td>Space, Enter, Numpad Enter</td>
+		<td>Confirm dialog / Send valuation</td>
+	</tr>
+	<tr>
+		<td>Tab, Numpad +</td>
+		<td>Next field</td>
+	</tr>
+	<tr>
+		<td>Shift, Backspace, Numpad -</td>
+		<td>Previous field</td>
+	</tr>
+	<tr>
+		<td>Esc, Numpad /</td>
+		<td>First field</td>
+	</tr>
+	<tr>
+		<td>^, Numpad *</td>
+		<td>Skip Portal (if possible)</td>
+	</tr>
+	</tbody>
+</table>`;
+
 	}
 }
 
