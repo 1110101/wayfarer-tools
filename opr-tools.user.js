@@ -7,10 +7,11 @@
 // @match           https://opr.ingress.com/recon
 // @grant           unsafeWindow
 // @grant           GM_notification
-// @grand           GM_addStyle
+// @grant           GM_addStyle
 // @downloadURL     https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 // @updateURL       https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 // @supportURL      https://gitlab.com/1110101/opr-tools/issues
+// @require         https://cdn.rawgit.com/alertifyjs/alertify.js/v1.0.10/dist/js/alertify.js
 
 // ==/UserScript==
 
@@ -68,6 +69,8 @@ function init() {
 	// get Values from localStorage
 	let oprt_scanner_offset = parseInt(w.localStorage.getItem("oprt_scanner_offset")) || 0;
 
+	let oprt_customPresets;
+
 	let browserLocale = window.navigator.languages[0] || window.navigator.language || "en";
 
 	const initWatcher = setInterval(() => {
@@ -75,7 +78,7 @@ function init() {
 			clearInterval(initWatcher);
 			w.document.getElementById("NewSubmissionController")
 			.insertAdjacentHTML("afterBegin", `
-<div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR tools initialization failed, refresh page</strong></div>
+<div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
 `);
 			addRefreshContainer();
 			return;
@@ -118,9 +121,10 @@ function init() {
 
 	function initScript() {
 		const descDiv = w.document.getElementById("descriptionDiv");
+		const scope = w.$scope(descDiv);
 		const ansController = w.$scope(descDiv).answerCtrl;
 		const subController = w.$scope(descDiv).subCtrl;
-		const scope = w.$scope(descDiv);
+		const whatController = w.$scope(w.document.getElementById("WhatIsItController")).whatCtrl;
 		const newPortalData = subController.pageData;
 
 		// adding CSS
@@ -138,7 +142,7 @@ function init() {
 			throw 42; // @todo better error code
 		}
 
-		modifyPage(descDiv, ansController, subController, scope, newPortalData);
+		modifyPage(descDiv, ansController, subController, whatController, scope, newPortalData);
 
 		checkIfAutorefresh();
 
@@ -146,7 +150,7 @@ function init() {
 
 	}
 
-	function modifyPage(descDiv, ansController, subController, scope, newPortalData) {
+	function modifyPage(descDiv, ansController, subController, whatController, scope, newPortalData) {
 
 		// adding map buttons
 		const mapButtons = `
@@ -211,7 +215,7 @@ function init() {
 		}], w, {cloneFunctions: true}));
 
 		let emergencyWay = "";
-		if(browserLocale.includes("de")) {
+		if (browserLocale.includes("de")) {
 			emergencyWay = "RETTUNGSWEG!1";
 		} else {
 			emergencyWay = "Emergency Way";
@@ -232,11 +236,11 @@ function init() {
 `;
 
 		const textBox = w.document.querySelector("#submitDiv + .text-center > textarea");
-
 		newSubmitDiv.querySelector(".text-center").insertAdjacentHTML("beforeBegin", `
 <div class='btn-group dropup'>${textButtons}
 <div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${textDropdown}</ul>
-</div></div><div class="pull-right"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></div>
+</div>
+</div><div class="pull-right"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></div>
 `);
 
 		const buttons = w.document.getElementsByClassName("textButton");
@@ -246,7 +250,7 @@ function init() {
 					const source = event.target || event.srcElement;
 					let text = textBox.value;
 					if (text.length > 0) {
-						text += ",\n"
+						text += ", \n";
 					}
 					switch (source.id) {
 						case "photo":
@@ -289,6 +293,88 @@ function init() {
 				}, w), false);
 			}
 		}
+
+		// add customPreset UI
+		oprt_customPresets = getCustomPresets(w);
+		let customPresetOptions = "";
+		for (const customPreset of oprt_customPresets) {
+			customPresetOptions += `<button class='button btn btn-default' id='${customPreset.uid}'>${customPreset.label}</button>`;
+		}
+
+		const customPresetUI = `
+<div class="row"><div class="col-xs-12">
+	<div>Presets&nbsp;<button class="button btn btn-default btn-xs" id="addPreset">+</button></div> 
+	<div class='btn-group' id="customPresets">${customPresetOptions}</div>
+</div></div>
+`;
+		w.document.querySelector("form[name='answers'] div.row").insertAdjacentHTML("afterend", customPresetUI);
+
+		// we have to inject the tooltip to angular
+		w.$injector.invoke(cloneInto(["$compile", ($compile) => {
+			// @todo add preset help/explanation to tooltip
+			let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="Shift-Click to delete preset"></span>&nbsp; `)(scope);
+			w.document.getElementById("addPreset").insertAdjacentElement("beforebegin", compiledSubmit[0]);
+		}], w, {cloneFunctions: true}));
+
+		// add click listener for new presets
+		w.document.getElementById("addPreset").addEventListener("click", exportFunction(event => {
+			alertify.okBtn("Save").prompt("New preset name:",
+					(value, event) => {
+						event.preventDefault();
+						saveCustomPreset(value, ansController, whatController);
+						alertify.success(`✔ Saved preset <i>${value}</i>`);
+
+					}, event => {
+						event.preventDefault();
+					}
+			);
+		}), w, false);
+
+		// add click listener for presets
+		w.document.getElementById("customPresets").addEventListener("click", exportFunction(event => {
+			const source = event.target || event.srcElement;
+			let value = source.id;
+			if (value === "" || event.target.nodeName !== "BUTTON") {
+				return;
+			}
+
+			let preset = oprt_customPresets.find(item => item.uid === value);
+
+			if(event.shiftKey) {
+				alertify.log(`Deleted preset <i>${preset.label}</i>`);
+				w.document.getElementById(preset.uid).remove();
+				deleteCustomPreset(preset);
+				return;
+			}
+
+			ansController.formData.quality = preset.quality;
+			ansController.formData.description = preset.description;
+			ansController.formData.cultural = preset.cultural;
+			ansController.formData.uniqueness = preset.uniqueness;
+			ansController.formData.location = preset.location;
+			ansController.formData.safety = preset.safety;
+
+			// the controller's set by ID function doesn't work
+			// and autocomplete breaks if there are any spaces
+			// so set the field to the first word from name and match autocomplete by ID
+			// at the very least, I know this will set it and leave the UI looking like it was manually set.
+			whatController.whatInput = preset.nodeName.split(" ")[0];
+			let nodes = whatController.getWhatAutocomplete();
+			for (let i = 0; i < nodes.length; i++) {
+				if (nodes[i].id == preset.nodeId) {
+					whatController.whatNode = nodes[i];
+					break;
+				}
+			}
+			whatController.whatInput = "";
+
+			// update ui
+			event.target.blur();
+			w.$rootScope.$apply();
+
+			alertify.success(`✔ Applied <i>${preset.label}</i>`);
+
+		}, w), false);
 
 		// Make photo filmstrip scrollable
 		const filmstrip = w.document.getElementById("map-filmstrip");
@@ -531,8 +617,8 @@ function init() {
 			else if (event.keyCode === 106 || event.keyCode === 220) {
 				if (newPortalData.canSkip)
 					ansController.skipToNext();
-							}
-			else if(event.keyCode === 72) {
+			}
+			else if (event.keyCode === 72) {
 				showHelp(); // @todo
 			}
 			// select next rating
@@ -635,7 +721,6 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 			});
 		});
 		// **
-
 
 		modifyHeader = () => {}; // just run once
 	}
@@ -804,8 +889,43 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 		}, 1000);
 	}
 
+	function getCustomPresets(w) {
+		// simply to scope the string we don't need after JSON.parse
+		let presetsJSON = w.localStorage.getItem("oprt_custom_presets");
+		if (presetsJSON != null && presetsJSON != "") {
+			return JSON.parse(presetsJSON);
+		}
+		return [];
+	}
+
+	function saveCustomPreset(label, ansController, whatController) {
+		if (label === "") {
+			return;
+		}
+		// uid snippet from https://stackoverflow.com/a/47496558/6447397
+		let preset = {
+			uid        : [...Array(5)].map(() => Math.random().toString(36)[3]).join(''),
+			label      : label,
+			nodeName   : whatController.whatNode.name,
+			nodeId     : whatController.whatNode.id,
+			quality    : ansController.formData.quality,
+			description: ansController.formData.description,
+			cultural   : ansController.formData.cultural,
+			uniqueness : ansController.formData.uniqueness,
+			location   : ansController.formData.location,
+			safety     : ansController.formData.safety
+		};
+		oprt_customPresets.push(preset);
+		w.localStorage.setItem("oprt_custom_presets", JSON.stringify(oprt_customPresets));
+	}
+	function deleteCustomPreset(preset) {
+		oprt_customPresets = oprt_customPresets.filter(item => item.uid !== preset.uid);
+		w.localStorage.setItem("oprt_custom_presets", JSON.stringify(oprt_customPresets));
+	}
+
 	function showHelp() {
-		let tmp = `<table class="table table-condensed">
+		let helpString = `<a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success'>OPR-Tools</span></a> Key shortcuts
+<table class="table table-condensed ">
 	<thead>
 	<tr>
 		<th>Key(s)</th>
@@ -852,7 +972,14 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 	</tbody>
 </table>`;
 
+		alertify.closeLogOnClick(false).logPosition("bottom right").delay(0).log(helpString, (ev) => {
+			ev.preventDefault();
+			ev.target.closest("div.default.show").remove();
+
+		}).reset();
+
 	}
+
 }
 
 setTimeout(() => {
@@ -991,6 +1118,18 @@ animation: blink 2s step-end infinite;
 @keyframes blink {
 67% { opacity: 0 }
 }
+
+.alertify .dialog .msg {
+color: black;
+}
+.alertify-logs > .default {
+    background-image: url(/img/ingress-background-dark.png) !important;
+}
+
+.btn-xs {
+padding: 1px 5px !important;
+}
+
 `;
 
 const PORTAL_MARKER = `data:image/png;base64,
