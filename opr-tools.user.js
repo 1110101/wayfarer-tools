@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         OPR tools
-// @version      0.16.2
+// @version      0.17.0
 // @description  OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -99,7 +99,7 @@ function init() {
 					initScript();
 					clearInterval(initWatcher);
 				} catch (error) {
-					// console.log(error);
+					console.log(error);
 					if (error === 41) {
 						addRefreshContainer();
 					}
@@ -122,11 +122,12 @@ function init() {
 	}
 
 	function initScript() {
-		const descDiv = w.document.getElementById("descriptionDiv");
-		const ansController = w.$scope(descDiv).answerCtrl;
-		const subController = w.$scope(descDiv).subCtrl;
-		const scope = w.$scope(descDiv);
+		const subMissionDiv = w.document.getElementById("NewSubmissionController");
+		const subController = w.$scope(subMissionDiv).subCtrl;
 		const newPortalData = subController.pageData;
+
+		const answerDiv = w.document.getElementById("AnswersController");
+		const ansController = w.$scope(answerDiv).answerCtrl;
 
 		// adding CSS
 		addGlobalStyle(GLOBAL_CSS);
@@ -143,7 +144,12 @@ function init() {
 			throw 42; // @todo better error code
 		}
 
-		modifyPage(descDiv, ansController, subController, scope, newPortalData);
+		// detect portal edit
+		if (subController.reviewType === "NEW") {
+			modifyNewPage(ansController, subController, newPortalData);
+		} else if (subController.reviewType === "EDIT") {
+			modifyEditPage(ansController, subController, newPortalData);
+		}
 
 		checkIfAutorefresh();
 
@@ -151,151 +157,16 @@ function init() {
 
 	}
 
-	function modifyPage(descDiv, ansController, subController, scope, newPortalData) {
+	function modifyNewPage(ansController, subController, newPortalData) {
 
-		// adding map buttons
-		const mapButtons = `
-<a class='button btn btn-default' target='intel' href='https://www.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=17'>Intel</a>
-<a class='button btn btn-default' target='osm' href='https://www.openstreetmap.org/?mlat=${newPortalData.lat}&mlon=${newPortalData.lng}&zoom=16'>OSM</a>
-`;
+		mapButtons(newPortalData, w.document.getElementById("descriptionDiv"), "beforeEnd");
 
-		// more map buttons in a dropdown menu
-		const mapDropdown = `
-<li><a target='bing' href='https://bing.com/maps/default.aspx?cp=${newPortalData.lat}~${newPortalData.lng}&lvl=16&style=a'>bing</a></li>
-<li><a target='heremaps' href='https://wego.here.com/?map=${newPortalData.lat},${newPortalData.lng},17,satellite'>HERE maps</a></li>
-<li><a target='wikimapia' href='http://wikimapia.org/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=16'>Wikimapia</a></li>
-<li><a targeT='zoomearth' href='https://zoom.earth/#${newPortalData.lat},${newPortalData.lng},18z,sat'>Zoom Earth</a></li>
-<li role='separator' class='divider'></li>
-<li><a target='swissgeo' href='http://map.geo.admin.ch/?swisssearch=${newPortalData.lat},${newPortalData.lng}'>CH - Swiss Geo Map</a></li>
-<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (ortofoto)</a></li>
-<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&m3d=1&height=180&yaw=-279.39&pitch=-40.7&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (orto+3D)</a></li>
-<li><a target='kompass' href='http://maps.kompass.de/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=17'>DE - Kompass.maps</a></li>
-<li><a target='bayernatlas' href='https://geoportal.bayern.de/bayernatlas/index.html?X=${newPortalData.lat}&Y=${newPortalData.lng}&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>
-<li><a target='eniro' href='http://opr.pegel.dk/?17/${newPortalData.lat}/${newPortalData.lng}'>DK - SDFE Orthophotos</a></li>
-<li><a target='kakao' href='http://map.daum.net/link/map/${newPortalData.lat},${newPortalData.lng}'>KR - Kakao map</a></li>
-<li><a target='naver' href='http://map.naver.com/?menu=location&lat=${newPortalData.lat}&lng=${newPortalData.lng}&dLevel=14&title=CandidatePortalLocation'>KR - Naver map</a></li>
-<li><a target='yandex' href='https://maps.yandex.ru/?text=${newPortalData.lat},${newPortalData.lng}'>RU - Yandex</a></li>
-<li><a target='hitta' href='https://www.hitta.se/kartan!~${newPortalData.lat},${newPortalData.lng},18z/tileLayer!l=1'>SE - Hitta.se</a></li>
-<li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=17&l=nautical'>SE - Eniro Sjökort</a></li>
-`;
+		let newSubmitDiv = moveSubmitButton();
+		let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController);
 
-		descDiv.insertAdjacentHTML("beforeEnd", `<div><div class='btn-group'>${mapButtons}<div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${mapDropdown}</div>`);
+		textButtons();
 
-		const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
-
-		let newSubmitDiv;
-
-		// moving submit button to right side of classification-div. don't move on mobile devices / small width
-		if (screen.availWidth > 768) {
-			newSubmitDiv = w.document.createElement("div");
-			const classificationRow = w.document.querySelector(".classification-row");
-			newSubmitDiv.className = "col-xs-12 col-sm-6";
-			submitDiv[0].style.marginTop = 16;
-			newSubmitDiv.appendChild(submitDiv[0]);
-			newSubmitDiv.appendChild(submitDiv[1]);
-			classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
-		} else {
-			newSubmitDiv = submitDiv[0];
-		}
-
-		// add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
-		let submitButton = submitDiv[0].querySelector("button");
-		submitButton.classList.add("btn", "btn-warning");
-		let submitAndNext = submitButton.cloneNode(false);
-		submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`;
-		submitAndNext.title = "Submit and go to next review";
-		submitAndNext.addEventListener("click", exportFunction(() => {
-			exportFunction(() => {
-				window.location.assign("/recon");
-			}, ansController, {defineAs: "openSubmissionCompleteModal"});
-		}, w));
-		// we have to inject the button to angular
-		w.$injector.invoke(cloneInto(["$compile", ($compile) => {
-			let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv[0]));
-			submitDiv[0].querySelector("button").insertAdjacentElement("beforeBegin", compiledSubmit[0]);
-		}], w, {cloneFunctions: true}));
-
-		let emergencyWay = "";
-		if(browserLocale.includes("de")) {
-			emergencyWay = "RETTUNGSWEG!1";
-		} else {
-			emergencyWay = "Emergency Way";
-		}
-
-
-		// adding text buttons
-		const textButtons = `
-<button id='photo' class='button btn btn-default textButton' data-tooltip='Indicates a low quality photo'>Photo</button>
-<button id='private' class='button btn btn-default textButton' data-tooltip='Located on private residential property'>Private</button>`;
-		const textDropdown = `
-<li><a class='textButton' id='school' data-tooltip='Located on school property'>School</a></li>
-<li><a class='textButton' id='person' data-tooltip='Photo contains 1 or more people'>Person</a></li>
-<li><a class='textButton' id='perm' data-tooltip='Seasonal or temporary display or item'>Temporary</a></li>
-<li><a class='textButton' id='location' data-tooltip='Location wrong'>Location</a></li>
-<li><a class='textButton' id='natural' data-tooltip='Candidate is a natural feature'>Natural</a></li>
-<li><a class='textButton' id='emergencyway' data-tooltip='Obstructing emergency way'>${emergencyWay}</a></li>
-`;
-
-		const textBox = w.document.querySelector("#submitDiv + .text-center > textarea");
-
-		newSubmitDiv.querySelector(".text-center").insertAdjacentHTML("beforeBegin", `
-<div class='btn-group dropup'>${textButtons}
-<div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${textDropdown}</ul>
-</div></div><div class="pull-right"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></div>
-`);
-
-		const buttons = w.document.getElementsByClassName("textButton");
-		for (let b in buttons) {
-			if (buttons.hasOwnProperty(b)) {
-				buttons[b].addEventListener("click", exportFunction(event => {
-					const source = event.target || event.srcElement;
-					let text = textBox.value;
-                    if (text.length > 0) {
-                        text += ",\n"
-                    }
-					switch (source.id) {
-						case "photo":
-							text += "Low quality photo";
-							break;
-						case "private":
-							text += "Private residential property";
-							break;
-						case "duplicate":
-							text += "Duplicate of previously reviewed portal candidate";
-							break;
-						case "school":
-							text += "Located on primary or secondary school grounds";
-							break;
-						case "person":
-							text += "Picture contains one or more people";
-							break;
-						case "perm":
-							text += "Portal candidate is seasonal or temporary";
-							break;
-						case "location":
-							text += "Portal candidate's location is not on object";
-							break;
-						case "emergencyway":
-							text += "Portal candidate is obstructing the path of emergency vehicles";
-							break;
-						case "natural":
-							text += "Portal candidate is a natural feature";
-							break;
-						case "clear":
-							text = "";
-							break;
-					}
-
-					textBox.value = text;
-					textBox.dispatchEvent(new Event("change"));
-
-					event.target.blur();
-
-				}, w), false);
-			}
-		}
-
-		// Make photo filmstrip scrollable
+		// make photo filmstrip scrollable
 		const filmstrip = w.document.getElementById("map-filmstrip");
 
 		function scrollHorizontally(e) {
@@ -310,13 +181,9 @@ function init() {
 		filmstrip.addEventListener("wheel ", exportFunction(scrollHorizontally, w), false);
 		filmstrip.addEventListener("mousewheel", exportFunction(scrollHorizontally, w), false);
 
-		// Replace map markers with a nice circle
-		for (let i = 0; i < subController.markers.length; ++i) {
-			const marker = subController.markers[i];
-			marker.setIcon(PORTAL_MARKER);
-		}
+		mapMarker(subController.markers);
 
-		// Re-enabling scroll zoom and allow zoom with out holding ctrl
+		// re-enabling map scroll zoom and allow zoom with out holding ctrl
 		const mapOptions = {scrollwheel: true, gestureHandling: "greedy"};
 		subController.map.setOptions(cloneInto(mapOptions, w));
 		subController.map2.setOptions(cloneInto(mapOptions, w));
@@ -346,7 +213,7 @@ function init() {
 			}
 		}
 
-		// Bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
+		// bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
 		const imgDups = w.document.querySelectorAll("#map-filmstrip > ul > li > img");
 		const openFullImage = function () {
 			w.open(`${this.src}=s0`, "fulldupimage");
@@ -365,8 +232,6 @@ function init() {
 		}
 
 		// add translate buttons to title and description (if existing)
-		let lang = "en";
-		try { lang = navigator.languages[0].split("-")[0]; } catch (e) {}
 		const link = w.document.querySelector("#descriptionDiv a");
 		const content = link.innerText.trim();
 		let a = w.document.createElement("a");
@@ -377,7 +242,7 @@ function init() {
 		a.className = "translate-title button btn btn-default pull-right";
 		a.target = "translate";
 		a.style.padding = "0px 4px";
-		a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(content)}`;
+		a.href = `https://translate.google.com/#auto/${browserLocale}/${encodeURIComponent(content)}`;
 		link.insertAdjacentElement("afterend", a);
 
 		const description = w.document.querySelector("#descriptionDiv").innerHTML.split("<br>")[3].trim();
@@ -390,12 +255,12 @@ function init() {
 			a.className = "translate-description button btn btn-default pull-right";
 			a.target = "translate";
 			a.style.padding = "0px 4px";
-			a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(description)}`;
+			a.href = `https://translate.google.com/#auto/${browserLocale}/${encodeURIComponent(description)}`;
 			const br = w.document.querySelectorAll("#descriptionDiv br")[2];
 			br.insertAdjacentElement("afterend", a);
 		}
 
-		// Automatically open the first listed possible duplicate
+		// automatically open the first listed possible duplicate
 		try {
 			const e = w.document.querySelector("#map-filmstrip > ul > li:nth-child(1) > img");
 			if (e !== null) {
@@ -405,14 +270,7 @@ function init() {
 			}
 		} catch (err) {}
 
-		// expand automatically the "What is it?" filter text box
-		try {
-			const f = w.document.querySelector("#WhatIsItController > div > p > span.ingress-mid-blue.text-center");
-			setTimeout(() => {
-				f.click();
-			}, 500);
-		} catch (err) {}
-
+		expandWhatIsItBox();
 
 		// keyboard navigation
 		// keys 1-5 to vote
@@ -561,12 +419,258 @@ function init() {
 
 		highlight();
 
-		modifyPage = () => {}; // just run once
+		modifyNewPage = () => {}; // just run once
 
 	}
 
+	function modifyEditPage(ansController, subController, newPortalData) {
+		let editDiv = w.document.querySelector("div[ng-show=\"subCtrl.reviewType==='EDIT'\"]");
+
+		mapButtons(newPortalData, editDiv, "afterEnd");
+
+		let newSubmitDiv = moveSubmitButton();
+		let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController);
+
+		textButtons();
+
+		// re-enable map scroll zoom and allow zoom with out holding ctrl
+		const mapOptions = {scrollwheel: true, gestureHandling: "greedy"};
+		subController.locationEditsMap.setOptions(cloneInto(mapOptions, w));
+
+		// add translation links to title and description edits
+		if (newPortalData.titleEdits.length > 1 || newPortalData.descriptionEdits.length > 1) {
+			for (const titleEditBox of editDiv.querySelectorAll(".titleEditBox")) {
+				const content = titleEditBox.innerText.trim();
+				let a = w.document.createElement("a");
+				let span = w.document.createElement("span");
+				span.className = "glyphicon glyphicon-book";
+				span.innerHTML = " ";
+				a.appendChild(span);
+				a.className = "translate-title button btn btn-default pull-right";
+				a.target = "translate";
+				a.style.padding = "0px 4px";
+				a.href = `https://translate.google.com/#auto/${browserLocale.split("-")[0]}/${encodeURIComponent(content)}`;
+				titleEditBox.querySelector("p").style.display = "inline-block";
+				titleEditBox.insertAdjacentElement("beforeEnd", a);
+			}
+		}
+
+		if (newPortalData.titleEdits.length <= 1) {
+			let titleDiv = editDiv.querySelector("div[ng-show=\"subCtrl.pageData.titleEdits.length <= 1\"] h3");
+			const content = titleDiv.innerText.trim();
+			let a = w.document.createElement("a");
+			let span = w.document.createElement("span");
+			span.className = "glyphicon glyphicon-book";
+			span.innerHTML = " ";
+			a.appendChild(span);
+			a.className = "translate-title button btn btn-default";
+			a.target = "translate";
+			a.style.padding = "0px 4px";
+			a.style.marginLeft = "14px";
+			a.href = `https://translate.google.com/#auto/${browserLocale.split("-")[0]}/${encodeURIComponent(content)}`;
+			titleDiv.insertAdjacentElement("beforeend", a);
+		}
+
+		if (newPortalData.descriptionEdits.length <= 1) {
+			let titleDiv = editDiv.querySelector("div[ng-show=\"subCtrl.pageData.descriptionEdits.length <= 1\"] p");
+			const content = titleDiv.innerText.trim() || "";
+			if (content !== "<No description>" && content !== "") {
+				let a = w.document.createElement("a");
+				let span = w.document.createElement("span");
+				span.className = "glyphicon glyphicon-book";
+				span.innerHTML = " ";
+				a.appendChild(span);
+				a.className = "translate-title button btn btn-default";
+				a.target = "translate";
+				a.style.padding = "0px 4px";
+				a.style.marginLeft = "14px";
+				a.href = `https://translate.google.com/#auto/${browserLocale.split("-")[0]}/${encodeURIComponent(content)}`;
+				titleDiv.insertAdjacentElement("beforeEnd", a);
+			}
+		}
+
+		expandWhatIsItBox();
+
+		// fix locationEditsMap if only one location edit exists
+		if(newPortalData.locationEdits.length <= 1)
+			subController.locationEditsMap.setZoom(19);
+
+	}
+
+	// add map buttons
+	function mapButtons(newPortalData, targetElement, where) {
+		const mapButtons = `
+<a class='button btn btn-default' target='intel' href='https://www.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=17'>Intel</a>
+<a class='button btn btn-default' target='osm' href='https://www.openstreetmap.org/?mlat=${newPortalData.lat}&mlon=${newPortalData.lng}&zoom=16'>OSM</a>
+`;
+
+		// more map buttons in a dropdown menu
+		const mapDropdown = `
+<li><a target='bing' href='https://bing.com/maps/default.aspx?cp=${newPortalData.lat}~${newPortalData.lng}&lvl=16&style=a'>bing</a></li>
+<li><a target='heremaps' href='https://wego.here.com/?map=${newPortalData.lat},${newPortalData.lng},17,satellite'>HERE maps</a></li>
+<li><a target='wikimapia' href='http://wikimapia.org/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=16'>Wikimapia</a></li>
+<li><a targeT='zoomearth' href='https://zoom.earth/#${newPortalData.lat},${newPortalData.lng},18z,sat'>Zoom Earth</a></li>
+<li role='separator' class='divider'></li>
+<li><a target='swissgeo' href='http://map.geo.admin.ch/?swisssearch=${newPortalData.lat},${newPortalData.lng}'>CH - Swiss Geo Map</a></li>
+<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (ortofoto)</a></li>
+<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&m3d=1&height=180&yaw=-279.39&pitch=-40.7&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (orto+3D)</a></li>
+<li><a target='kompass' href='http://maps.kompass.de/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=17'>DE - Kompass.maps</a></li>
+<li><a target='bayernatlas' href='https://geoportal.bayern.de/bayernatlas/index.html?X=${newPortalData.lat}&Y=${newPortalData.lng}&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>
+<li><a target='eniro' href='http://opr.pegel.dk/?17/${newPortalData.lat}/${newPortalData.lng}'>DK - SDFE Orthophotos</a></li>
+<li><a target='kakao' href='http://map.daum.net/link/map/${newPortalData.lat},${newPortalData.lng}'>KR - Kakao map</a></li>
+<li><a target='naver' href='http://map.naver.com/?menu=location&lat=${newPortalData.lat}&lng=${newPortalData.lng}&dLevel=14&title=CandidatePortalLocation'>KR - Naver map</a></li>
+<li><a target='yandex' href='https://maps.yandex.ru/?text=${newPortalData.lat},${newPortalData.lng}'>RU - Yandex</a></li>
+<li><a target='hitta' href='https://www.hitta.se/kartan!~${newPortalData.lat},${newPortalData.lng},18z/tileLayer!l=1'>SE - Hitta.se</a></li>
+<li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=17&l=nautical'>SE - Eniro Sjökort</a></li>
+`;
+
+		targetElement.insertAdjacentHTML(where, `<div><div class='btn-group'>${mapButtons}<div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${mapDropdown}</div>`);
+	}
+
+	// add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
+	function quickSubmitButton(submitDiv, ansController) {
+		let submitButton = submitDiv.querySelector("button");
+		submitButton.classList.add("btn", "btn-warning");
+		let submitAndNext = submitButton.cloneNode(false);
+		submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`;
+		submitAndNext.title = "Submit and go to next review";
+		submitAndNext.addEventListener("click", exportFunction(() => {
+			exportFunction(() => {
+				window.location.assign("/recon");
+			}, ansController, {defineAs: "openSubmissionCompleteModal"});
+		}, w));
+
+		w.$injector.invoke(cloneInto(["$compile", ($compile) => {
+			let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv));
+			submitDiv.querySelector("button").insertAdjacentElement("beforeBegin", compiledSubmit[0]);
+		}], w, {cloneFunctions: true}));
+		return {submitButton, submitAndNext};
+	}
+
+	function textButtons() {
+
+		let emergencyWay = "";
+		if (browserLocale.includes("de")) {
+			emergencyWay = "RETTUNGSWEG!1";
+		} else {
+			emergencyWay = "Emergency Way";
+		}
+
+		// add text buttons
+		const textButtons = `
+<button id='photo' class='button btn btn-default textButton' data-tooltip='Indicates a low quality photo'>Photo</button>
+<button id='private' class='button btn btn-default textButton' data-tooltip='Located on private residential property'>Private</button>`;
+		const textDropdown = `
+<li><a class='textButton' id='school' data-tooltip='Located on school property'>School</a></li>
+<li><a class='textButton' id='person' data-tooltip='Photo contains 1 or more people'>Person</a></li>
+<li><a class='textButton' id='perm' data-tooltip='Seasonal or temporary display or item'>Temporary</a></li>
+<li><a class='textButton' id='location' data-tooltip='Location wrong'>Location</a></li>
+<li><a class='textButton' id='natural' data-tooltip='Candidate is a natural feature'>Natural</a></li>
+<li><a class='textButton' id='emergencyway' data-tooltip='Obstructing emergency way'>${emergencyWay}</a></li>
+`;
+
+		const textBox = w.document.querySelector("#submitDiv + .text-center > textarea");
+
+		w.document.querySelector("#submitDiv + .text-center").insertAdjacentHTML("beforebegin", `
+<div class='btn-group dropup'>${textButtons}
+<div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${textDropdown}</ul>
+</div></div><div class="pull-right"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></div>
+`);
+
+		const buttons = w.document.getElementsByClassName("textButton");
+		for (let b in buttons) {
+			if (buttons.hasOwnProperty(b)) {
+				buttons[b].addEventListener("click", exportFunction(event => {
+					const source = event.target || event.srcElement;
+					let text = textBox.value;
+					if (text.length > 0) {
+						text += ",\n";
+					}
+					switch (source.id) {
+						case "photo":
+							text += "Low quality photo";
+							break;
+						case "private":
+							text += "Private residential property";
+							break;
+						case "duplicate":
+							text += "Duplicate of previously reviewed portal candidate";
+							break;
+						case "school":
+							text += "Located on primary or secondary school grounds";
+							break;
+						case "person":
+							text += "Picture contains one or more people";
+							break;
+						case "perm":
+							text += "Portal candidate is seasonal or temporary";
+							break;
+						case "location":
+							text += "Portal candidate's location is not on object";
+							break;
+						case "emergencyway":
+							text += "Portal candidate is obstructing the path of emergency vehicles";
+							break;
+						case "natural":
+							text += "Portal candidate is a natural feature";
+							break;
+						case "clear":
+							text = "";
+							break;
+					}
+
+					textBox.value = text;
+					textBox.dispatchEvent(new Event("change"));
+
+					event.target.blur();
+
+				}, w), false);
+			}
+		}
+	}
+
+	// replace map markers with a nice circle
+	function mapMarker(markers) {
+		for (let i = 0; i < markers.length; ++i) {
+			const marker = markers[i];
+			marker.setIcon(PORTAL_MARKER);
+		}
+	}
+
+	// move submit button to right side of classification-div. don't move on mobile devices / small width
+	function moveSubmitButton() {
+		const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
+
+		if (screen.availWidth > 768) {
+			let newSubmitDiv = w.document.createElement("div");
+			const classificationRow = w.document.querySelector(".classification-row");
+			newSubmitDiv.className = "col-xs-12 col-sm-6";
+			submitDiv[0].style.marginTop = 16;
+			newSubmitDiv.appendChild(submitDiv[0]);
+			newSubmitDiv.appendChild(submitDiv[1]);
+			classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
+
+			// edit-page - remove .col-sm-offset-3 from .classification-row (why did you add this, niantic?
+			classificationRow.classList.remove("col-sm-offset-3");
+			return newSubmitDiv;
+		} else {
+			return submitDiv[0];
+		}
+	}
+
+	// expand automatically the "What is it?" filter text box
+	function expandWhatIsItBox() {
+		try {
+			const f = w.document.querySelector("#WhatIsItController > div > p > span.ingress-mid-blue.text-center");
+			setTimeout(() => {
+				f.click();
+			}, 250);
+		} catch (err) {}
+	}
+
+
 	function modifyHeader() {
-		// stats enhancements: adding processed by nia, percent processed, progress to next recon badge numbers
+		// stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
 		const lastPlayerStatLine = w.document.querySelector("#player_stats:not(.visible-xs) div");
 		const stats = w.document.querySelector("#player_stats").children[2];
 
@@ -637,7 +741,6 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 			});
 		});
 		// **
-
 
 		modifyHeader = () => {}; // just run once
 	}
@@ -941,6 +1044,15 @@ animation: blink 2s step-end infinite;
 @keyframes blink {
 67% { opacity: 0 }
 }
+
+.titleEditBox:hover {
+	box-shadow: inset 0 0 20px #ebbc4a;
+}
+
+.titleEditBox:active {
+	box-shadow: inset 0 0 15px 2px white;
+}
+
 `;
 
 const PORTAL_MARKER = `data:image/png;base64,
