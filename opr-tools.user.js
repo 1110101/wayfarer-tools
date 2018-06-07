@@ -1,15 +1,17 @@
 // ==UserScript==
-// @name         OPR tools
-// @version      0.16.2
-// @description  OPR enhancements
+// @name            OPR tools
+// @version         0.17.1
+// @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
-// @author       1110101, https://gitlab.com/1110101/opr-tools/graphs/master
-// @match        https://opr.ingress.com/recon
-// @grant        unsafeWindow
-// @grant        GM_notification
-// @downloadURL  https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
-// @updateURL    https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
-// @supportURL   https://gitlab.com/1110101/opr-tools/issues
+// @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
+// @match           https://opr.ingress.com/recon
+// @grant           unsafeWindow
+// @grant           GM_notification
+// @grant           GM_addStyle
+// @downloadURL     https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
+// @updateURL       https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
+// @supportURL      https://gitlab.com/1110101/opr-tools/issues
+// @require         https://cdn.rawgit.com/alertifyjs/alertify.js/v1.0.10/dist/js/alertify.js
 
 // ==/UserScript==
 
@@ -39,7 +41,14 @@ SOFTWARE.
 
 */
 
-let refreshIntervalID;
+const OPRT = {
+	SCANNER_OFFSET      : "oprt_scanner_offset",
+	REFRESH             : "oprt_refresh",
+	FROM_REFRESH        : "oprt_from_refresh",
+	REFRESH_NOTI_SOUND  : "oprt_refresh_noti_sound",
+	REFRESH_NOTI_DESKTOP: "oprt_refresh_noti_desktop",
+};
+
 
 // polyfill for ViolentMonkey
 if (typeof exportFunction !== "function") {
@@ -55,23 +64,17 @@ if (typeof cloneInto !== "function") {
 }
 
 function addGlobalStyle(css) {
-	let head, style;
-	head = document.getElementsByTagName("head")[0];
-	if (!head) return;
-	style = document.createElement("style");
-	style.type = "text/css";
-	style.innerHTML = css;
-	head.appendChild(style);
+	GM_addStyle(css);
 
 	addGlobalStyle = () => {}; // noop after first run
 }
+
 
 function init() {
 	const w = typeof unsafeWindow == "undefined" ? window : unsafeWindow;
 	let tryNumber = 15;
 
-	// get Values from localStorage
-	let oprt_scanner_offset = parseInt(w.localStorage.getItem("oprt_scanner_offset")) || 0;
+	let oprt_customPresets;
 
 	let browserLocale = window.navigator.languages[0] || window.navigator.language || "en";
 
@@ -80,7 +83,7 @@ function init() {
 			clearInterval(initWatcher);
 			w.document.getElementById("NewSubmissionController")
 			.insertAdjacentHTML("afterBegin", `
-<div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR tools initialization failed, refresh page</strong></div>
+<div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
 `);
 			addRefreshContainer();
 			return;
@@ -99,7 +102,7 @@ function init() {
 					initScript();
 					clearInterval(initWatcher);
 				} catch (error) {
-					// console.log(error);
+					console.log(error);
 					if (error === 41) {
 						addRefreshContainer();
 					}
@@ -122,11 +125,14 @@ function init() {
 	}
 
 	function initScript() {
-		const descDiv = w.document.getElementById("descriptionDiv");
-		const ansController = w.$scope(descDiv).answerCtrl;
-		const subController = w.$scope(descDiv).subCtrl;
-		const scope = w.$scope(descDiv);
+		const subMissionDiv = w.document.getElementById("NewSubmissionController");
+		const subController = w.$scope(subMissionDiv).subCtrl;
 		const newPortalData = subController.pageData;
+
+		const whatController = w.$scope(w.document.getElementById("WhatIsItController")).whatCtrl;
+
+		const answerDiv = w.document.getElementById("AnswersController");
+		const ansController = w.$scope(answerDiv).answerCtrl;
 
 		// adding CSS
 		addGlobalStyle(GLOBAL_CSS);
@@ -143,7 +149,12 @@ function init() {
 			throw 42; // @todo better error code
 		}
 
-		modifyPage(descDiv, ansController, subController, scope, newPortalData);
+		// detect portal edit
+		if (subController.reviewType === "NEW") {
+			modifyNewPage(ansController, subController, whatController, newPortalData);
+		} else if (subController.reviewType === "EDIT") {
+			modifyEditPage(ansController, subController, newPortalData);
+		}
 
 		checkIfAutorefresh();
 
@@ -151,151 +162,99 @@ function init() {
 
 	}
 
-	function modifyPage(descDiv, ansController, subController, scope, newPortalData) {
+	function modifyNewPage(ansController, subController, whatController, newPortalData) {
 
-		// adding map buttons
-		const mapButtons = `
-<a class='button btn btn-default' target='intel' href='https://www.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=17'>Intel</a>
-<a class='button btn btn-default' target='osm' href='https://www.openstreetmap.org/?mlat=${newPortalData.lat}&mlon=${newPortalData.lng}&zoom=16'>OSM</a>
-`;
+		mapButtons(newPortalData, w.document.getElementById("descriptionDiv"), "beforeEnd");
 
-		// more map buttons in a dropdown menu
-		const mapDropdown = `
-<li><a target='bing' href='https://bing.com/maps/default.aspx?cp=${newPortalData.lat}~${newPortalData.lng}&lvl=16&style=a'>bing</a></li>
-<li><a target='heremaps' href='https://wego.here.com/?map=${newPortalData.lat},${newPortalData.lng},17,satellite'>HERE maps</a></li>
-<li><a target='wikimapia' href='http://wikimapia.org/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=16'>Wikimapia</a></li>
-<li><a targeT='zoomearth' href='https://zoom.earth/#${newPortalData.lat},${newPortalData.lng},18z,sat'>Zoom Earth</a></li>
-<li role='separator' class='divider'></li>
-<li><a target='swissgeo' href='http://map.geo.admin.ch/?swisssearch=${newPortalData.lat},${newPortalData.lng}'>CH - Swiss Geo Map</a></li>
-<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (ortofoto)</a></li>
-<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&m3d=1&height=180&yaw=-279.39&pitch=-40.7&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (orto+3D)</a></li>
-<li><a target='kompass' href='http://maps.kompass.de/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=17'>DE - Kompass.maps</a></li>
-<li><a target='bayernatlas' href='https://geoportal.bayern.de/bayernatlas/index.html?X=${newPortalData.lat}&Y=${newPortalData.lng}&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>
-<li><a target='eniro' href='http://opr.pegel.dk/?17/${newPortalData.lat}/${newPortalData.lng}'>DK - SDFE Orthophotos</a></li>
-<li><a target='kakao' href='http://map.daum.net/link/map/${newPortalData.lat},${newPortalData.lng}'>KR - Kakao map</a></li>
-<li><a target='naver' href='http://map.naver.com/?menu=location&lat=${newPortalData.lat}&lng=${newPortalData.lng}&dLevel=14&title=CandidatePortalLocation'>KR - Naver map</a></li>
-<li><a target='yandex' href='https://maps.yandex.ru/?text=${newPortalData.lat},${newPortalData.lng}'>RU - Yandex</a></li>
-<li><a target='hitta' href='https://www.hitta.se/kartan!~${newPortalData.lat},${newPortalData.lng},18z/tileLayer!l=1'>SE - Hitta.se</a></li>
-<li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=17&l=nautical'>SE - Eniro Sjökort</a></li>
-`;
+		let newSubmitDiv = moveSubmitButton();
+		let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController);
 
-		descDiv.insertAdjacentHTML("beforeEnd", `<div><div class='btn-group'>${mapButtons}<div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${mapDropdown}</div>`);
+		textButtons();
 
-		const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
+		const customPresetUI = `
+<div class="row" id="presets"><div class="col-xs-12">
+	<div>Presets&nbsp;<button class="button btn btn-default btn-xs" id="addPreset">+</button></div> 
+	<div class='btn-group' id="customPresets"></div>
+</div></div>`;
 
-		let newSubmitDiv;
+		w.document.querySelector("form[name='answers'] div.row").insertAdjacentHTML("afterend", customPresetUI);
 
-		// moving submit button to right side of classification-div. don't move on mobile devices / small width
-		if (screen.availWidth > 768) {
-			newSubmitDiv = w.document.createElement("div");
-			const classificationRow = w.document.querySelector(".classification-row");
-			newSubmitDiv.className = "col-xs-12 col-sm-6";
-			submitDiv[0].style.marginTop = 16;
-			newSubmitDiv.appendChild(submitDiv[0]);
-			newSubmitDiv.appendChild(submitDiv[1]);
-			classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
-		} else {
-			newSubmitDiv = submitDiv[0];
-		}
+		addCustomPresetButtons();
 
-		// add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
-		let submitButton = submitDiv[0].querySelector("button");
-		submitButton.classList.add("btn", "btn-warning");
-		let submitAndNext = submitButton.cloneNode(false);
-		submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`;
-		submitAndNext.title = "Submit and go to next review";
-		submitAndNext.addEventListener("click", exportFunction(() => {
-			exportFunction(() => {
-				window.location.assign("/recon");
-			}, ansController, {defineAs: "openSubmissionCompleteModal"});
-		}, w));
-		// we have to inject the button to angular
+		// we have to inject the tooltip to angular
 		w.$injector.invoke(cloneInto(["$compile", ($compile) => {
-			let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv[0]));
-			submitDiv[0].querySelector("button").insertAdjacentElement("beforeBegin", compiledSubmit[0]);
+			// @todo add preset help/explanation to tooltip
+			let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById("descriptionDiv")));
+			w.document.getElementById("addPreset").insertAdjacentElement("beforebegin", compiledSubmit[0]);
 		}], w, {cloneFunctions: true}));
 
-		let emergencyWay = "";
-		if(browserLocale.includes("de")) {
-			emergencyWay = "RETTUNGSWEG!1";
-		} else {
-			emergencyWay = "Emergency Way";
-		}
+		// click listener for +preset button
+		w.document.getElementById("addPreset").addEventListener("click", exportFunction(event => {
+			alertify.okBtn("Save").prompt("New preset name:",
+					(value, event) => {
+						event.preventDefault();
+						if (value == "undefined" || value == "") {
+							return;
+						}
+						saveCustomPreset(value, ansController, whatController);
+						alertify.success(`✔ Created preset <i>${value}</i>`);
+						addCustomPresetButtons();
 
-
-		// adding text buttons
-		const textButtons = `
-<button id='photo' class='button btn btn-default textButton' data-tooltip='Indicates a low quality photo'>Photo</button>
-<button id='private' class='button btn btn-default textButton' data-tooltip='Located on private residential property'>Private</button>`;
-		const textDropdown = `
-<li><a class='textButton' id='school' data-tooltip='Located on school property'>School</a></li>
-<li><a class='textButton' id='person' data-tooltip='Photo contains 1 or more people'>Person</a></li>
-<li><a class='textButton' id='perm' data-tooltip='Seasonal or temporary display or item'>Temporary</a></li>
-<li><a class='textButton' id='location' data-tooltip='Location wrong'>Location</a></li>
-<li><a class='textButton' id='natural' data-tooltip='Candidate is a natural feature'>Natural</a></li>
-<li><a class='textButton' id='emergencyway' data-tooltip='Obstructing emergency way'>${emergencyWay}</a></li>
-`;
-
-		const textBox = w.document.querySelector("#submitDiv + .text-center > textarea");
-
-		newSubmitDiv.querySelector(".text-center").insertAdjacentHTML("beforeBegin", `
-<div class='btn-group dropup'>${textButtons}
-<div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${textDropdown}</ul>
-</div></div><div class="pull-right"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></div>
-`);
-
-		const buttons = w.document.getElementsByClassName("textButton");
-		for (let b in buttons) {
-			if (buttons.hasOwnProperty(b)) {
-				buttons[b].addEventListener("click", exportFunction(event => {
-					const source = event.target || event.srcElement;
-					let text = textBox.value;
-                    if (text.length > 0) {
-                        text += ",\n"
-                    }
-					switch (source.id) {
-						case "photo":
-							text += "Low quality photo";
-							break;
-						case "private":
-							text += "Private residential property";
-							break;
-						case "duplicate":
-							text += "Duplicate of previously reviewed portal candidate";
-							break;
-						case "school":
-							text += "Located on primary or secondary school grounds";
-							break;
-						case "person":
-							text += "Picture contains one or more people";
-							break;
-						case "perm":
-							text += "Portal candidate is seasonal or temporary";
-							break;
-						case "location":
-							text += "Portal candidate's location is not on object";
-							break;
-						case "emergencyway":
-							text += "Portal candidate is obstructing the path of emergency vehicles";
-							break;
-						case "natural":
-							text += "Portal candidate is a natural feature";
-							break;
-						case "clear":
-							text = "";
-							break;
+					}, event => {
+						event.preventDefault();
 					}
+			);
+		}), w, false);
 
-					textBox.value = text;
-					textBox.dispatchEvent(new Event("change"));
-
-					event.target.blur();
-
-				}, w), false);
+		let clickListener = exportFunction(event => {
+			const source = event.target || event.srcElement;
+			let value = source.id;
+			if (value === "" || event.target.nodeName !== "BUTTON") {
+				return;
 			}
-		}
 
-		// Make photo filmstrip scrollable
+			let preset = oprt_customPresets.find(item => item.uid === value);
+
+			if (event.shiftKey) {
+				alertify.log(`Deleted preset <i>${preset.label}</i>`);
+				w.document.getElementById(preset.uid).remove();
+				deleteCustomPreset(preset);
+				return;
+			}
+
+			ansController.formData.quality = preset.quality;
+			ansController.formData.description = preset.description;
+			ansController.formData.cultural = preset.cultural;
+			ansController.formData.uniqueness = preset.uniqueness;
+			ansController.formData.location = preset.location;
+			ansController.formData.safety = preset.safety;
+
+			// the controller's set by ID function doesn't work
+			// and autocomplete breaks if there are any spaces
+			// so set the field to the first word from name and match autocomplete by ID
+			// at the very least, I know this will set it and leave the UI looking like it was manually set.
+			whatController.whatInput = preset.nodeName.split(" ")[0];
+			let nodes = whatController.getWhatAutocomplete();
+			for (let i = 0; i < nodes.length; i++) {
+				if (nodes[i].id == preset.nodeId) {
+					whatController.whatNode = nodes[i];
+					break;
+				}
+			}
+			whatController.whatInput = "";
+
+			// update ui
+			event.target.blur();
+			w.$rootScope.$apply();
+
+			alertify.success(`✔ Applied <i>${preset.label}</i>`);
+
+		}, w);
+
+		w.document.getElementById("customPresets").addEventListener("click", clickListener, false);
+
+
+		// make photo filmstrip scrollable
 		const filmstrip = w.document.getElementById("map-filmstrip");
 
 		function scrollHorizontally(e) {
@@ -310,13 +269,9 @@ function init() {
 		filmstrip.addEventListener("wheel ", exportFunction(scrollHorizontally, w), false);
 		filmstrip.addEventListener("mousewheel", exportFunction(scrollHorizontally, w), false);
 
-		// Replace map markers with a nice circle
-		for (let i = 0; i < subController.markers.length; ++i) {
-			const marker = subController.markers[i];
-			marker.setIcon(PORTAL_MARKER);
-		}
+		mapMarker(subController.markers);
 
-		// Re-enabling scroll zoom and allow zoom with out holding ctrl
+		// re-enabling map scroll zoom and allow zoom with out holding ctrl
 		const mapOptions = {scrollwheel: true, gestureHandling: "greedy"};
 		subController.map.setOptions(cloneInto(mapOptions, w));
 		subController.map2.setOptions(cloneInto(mapOptions, w));
@@ -346,7 +301,7 @@ function init() {
 			}
 		}
 
-		// Bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
+		// bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
 		const imgDups = w.document.querySelectorAll("#map-filmstrip > ul > li > img");
 		const openFullImage = function () {
 			w.open(`${this.src}=s0`, "fulldupimage");
@@ -365,8 +320,6 @@ function init() {
 		}
 
 		// add translate buttons to title and description (if existing)
-		let lang = "en";
-		try { lang = navigator.languages[0].split("-")[0]; } catch (e) {}
 		const link = w.document.querySelector("#descriptionDiv a");
 		const content = link.innerText.trim();
 		let a = w.document.createElement("a");
@@ -377,7 +330,7 @@ function init() {
 		a.className = "translate-title button btn btn-default pull-right";
 		a.target = "translate";
 		a.style.padding = "0px 4px";
-		a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(content)}`;
+		a.href = `https://translate.google.com/#auto/${browserLocale}/${encodeURIComponent(content)}`;
 		link.insertAdjacentElement("afterend", a);
 
 		const description = w.document.querySelector("#descriptionDiv").innerHTML.split("<br>")[3].trim();
@@ -390,12 +343,12 @@ function init() {
 			a.className = "translate-description button btn btn-default pull-right";
 			a.target = "translate";
 			a.style.padding = "0px 4px";
-			a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(description)}`;
+			a.href = `https://translate.google.com/#auto/${browserLocale}/${encodeURIComponent(description)}`;
 			const br = w.document.querySelectorAll("#descriptionDiv br")[2];
 			br.insertAdjacentElement("afterend", a);
 		}
 
-		// Automatically open the first listed possible duplicate
+		// automatically open the first listed possible duplicate
 		try {
 			const e = w.document.querySelector("#map-filmstrip > ul > li:nth-child(1) > img");
 			if (e !== null) {
@@ -405,14 +358,7 @@ function init() {
 			}
 		} catch (err) {}
 
-		// expand automatically the "What is it?" filter text box
-		try {
-			const f = w.document.querySelector("#WhatIsItController > div > p > span.ingress-mid-blue.text-center");
-			setTimeout(() => {
-				f.click();
-			}, 500);
-		} catch (err) {}
-
+		expandWhatIsItBox();
 
 		// keyboard navigation
 		// keys 1-5 to vote
@@ -489,7 +435,7 @@ function init() {
 				currentSelectable = 0;
 				event.preventDefault();
 
-			} // click first/selected duplicate (key T)
+			} // click on translate title link (key T)
 			else if (event.keyCode === 84) {
 				const link = w.document.querySelector("#descriptionDiv > .translate-title");
 				if (link) {
@@ -497,7 +443,7 @@ function init() {
 					event.preventDefault();
 				}
 
-			} // click first/selected duplicate (key Y)
+			} // click on translate description link (key Y)
 			else if (event.keyCode === 89) {
 				const link = w.document.querySelector("#descriptionDiv > .translate-description");
 				if (link) {
@@ -537,6 +483,9 @@ function init() {
 				if (newPortalData.canSkip)
 					ansController.skipToNext();
 			}
+			else if (event.keyCode === 72) {
+				showHelp(); // @todo
+			}
 			// select next rating
 			else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
 				currentSelectable++;
@@ -546,10 +495,16 @@ function init() {
 			else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
 				currentSelectable--;
 				event.preventDefault();
-
 			}
-			else if (numkey === null || currentSelectable >= maxItems) {
+			else if (numkey === null || currentSelectable > maxItems - 2) {
 				return;
+			}
+			else if (numkey !== null && event.shiftKey) {
+				try {
+					w.document.getElementsByClassName("customPresetButton")[numkey - 1].click();
+				} catch (e) {
+					// ignore
+				}
 			}
 			// rating 1-5
 			else {
@@ -561,12 +516,389 @@ function init() {
 
 		highlight();
 
-		modifyPage = () => {}; // just run once
+		modifyNewPage = () => {}; // just run once
 
 	}
 
+	function modifyEditPage(ansController, subController, newPortalData) {
+		let editDiv = w.document.querySelector("div[ng-show=\"subCtrl.reviewType==='EDIT'\"]");
+
+		mapButtons(newPortalData, editDiv, "afterEnd");
+
+		let newSubmitDiv = moveSubmitButton();
+		let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController);
+
+		textButtons();
+
+		// re-enable map scroll zoom and allow zoom with out holding ctrl
+		const mapOptions = {scrollwheel: true, gestureHandling: "greedy"};
+		subController.locationEditsMap.setOptions(cloneInto(mapOptions, w));
+
+		// add translation links to title and description edits
+		if (newPortalData.titleEdits.length > 1 || newPortalData.descriptionEdits.length > 1) {
+			for (const titleEditBox of editDiv.querySelectorAll(".titleEditBox")) {
+				const content = titleEditBox.innerText.trim();
+				let a = w.document.createElement("a");
+				let span = w.document.createElement("span");
+				span.className = "glyphicon glyphicon-book";
+				span.innerHTML = " ";
+				a.appendChild(span);
+				a.className = "translate-title button btn btn-default pull-right";
+				a.target = "translate";
+				a.style.padding = "0px 4px";
+				a.href = `https://translate.google.com/#auto/${browserLocale.split("-")[0]}/${encodeURIComponent(content)}`;
+				titleEditBox.querySelector("p").style.display = "inline-block";
+				titleEditBox.insertAdjacentElement("beforeEnd", a);
+			}
+		}
+
+		if (newPortalData.titleEdits.length <= 1) {
+			let titleDiv = editDiv.querySelector("div[ng-show=\"subCtrl.pageData.titleEdits.length <= 1\"] h3");
+			const content = titleDiv.innerText.trim();
+			let a = w.document.createElement("a");
+			let span = w.document.createElement("span");
+			span.className = "glyphicon glyphicon-book";
+			span.innerHTML = " ";
+			a.appendChild(span);
+			a.className = "translate-title button btn btn-default";
+			a.target = "translate";
+			a.style.padding = "0px 4px";
+			a.style.marginLeft = "14px";
+			a.href = `https://translate.google.com/#auto/${browserLocale.split("-")[0]}/${encodeURIComponent(content)}`;
+			titleDiv.insertAdjacentElement("beforeend", a);
+		}
+
+		if (newPortalData.descriptionEdits.length <= 1) {
+			let titleDiv = editDiv.querySelector("div[ng-show=\"subCtrl.pageData.descriptionEdits.length <= 1\"] p");
+			const content = titleDiv.innerText.trim() || "";
+			if (content !== "<No description>" && content !== "") {
+				let a = w.document.createElement("a");
+				let span = w.document.createElement("span");
+				span.className = "glyphicon glyphicon-book";
+				span.innerHTML = " ";
+				a.appendChild(span);
+				a.className = "translate-title button btn btn-default";
+				a.target = "translate";
+				a.style.padding = "0px 4px";
+				a.style.marginLeft = "14px";
+				a.href = `https://translate.google.com/#auto/${browserLocale.split("-")[0]}/${encodeURIComponent(content)}`;
+				titleDiv.insertAdjacentElement("beforeEnd", a);
+			}
+		}
+
+		expandWhatIsItBox();
+
+		// fix locationEditsMap if only one location edit exists
+		if (newPortalData.locationEdits.length <= 1)
+			subController.locationEditsMap.setZoom(19);
+
+
+		/* EDIT PORTAL */
+		// keyboard navigation
+
+		let currentSelectable = 0;
+		let hasLocationEdit = (newPortalData.locationEdits.length > 1);
+		// counting *true*, please don't shoot me
+		let maxItems = (newPortalData.descriptionEdits.length > 1) + (newPortalData.titleEdits.length > 1) + (hasLocationEdit) + 2;
+
+		let mapMarkers;
+		if (hasLocationEdit) mapMarkers = subController.allLocationMarkers;
+		else mapMarkers = [];
+
+		// a list of all 6 star button rows, and the two submit buttons
+		let starsAndSubmitButtons = w.document.querySelectorAll(
+				"div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.titleEdits.length > 1\"]:not(.ng-hide)," +
+				"div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.descriptionEdits.length > 1\"]:not(.ng-hide)," +
+				"div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.locationEdits.length > 1\"]:not(.ng-hide)," +
+				".big-submit-button");
+
+
+		/* EDIT PORTAL */
+		function highlight() {
+			let el = editDiv.querySelector("h3[ng-show=\"subCtrl.pageData.locationEdits.length > 1\"]");
+			el.style.border = "none";
+
+			starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = "none"; }, w));
+			if (hasLocationEdit && currentSelectable === maxItems - 3) {
+				el.style.borderLeft = cloneInto("4px dashed #ebbc4a", w);
+				el.style.borderTop = cloneInto("4px dashed #ebbc4a", w);
+				el.style.borderRight = cloneInto("4px dashed #ebbc4a", w);
+				el.style.padding = cloneInto("16px", w);
+				el.style.marginBottom = cloneInto("0", w);
+				submitAndNext.blur();
+				submitButton.blur();
+			}
+			else if (currentSelectable < maxItems - 2) {
+				starsAndSubmitButtons[currentSelectable].style.borderLeft = cloneInto("4px dashed #ebbc4a", w);
+				starsAndSubmitButtons[currentSelectable].style.paddingLeft = cloneInto("16px", w);
+				submitAndNext.blur();
+				submitButton.blur();
+			} else if (currentSelectable === maxItems - 2) {
+				submitAndNext.focus();
+			}
+			else if (currentSelectable === maxItems) {
+				submitButton.focus();
+			}
+
+		}
+
+		/* EDIT PORTAL */
+		addEventListener("keydown", (event) => {
+
+			/*
+			Keycodes:
+
+			8: Backspace
+			9: TAB
+			13: Enter
+			16: Shift
+			27: Escape
+			32: Space
+			68: D
+			107: NUMPAD +
+			109: NUMPAD -
+			111: NUMPAD /
+
+			49 - 53:  Keys 1-5
+			97 - 101: NUMPAD 1-5
+			 */
+
+			if (event.keyCode >= 49 && event.keyCode <= 53)
+				numkey = event.keyCode - 48;
+			else if (event.keyCode >= 97 && event.keyCode <= 101)
+				numkey = event.keyCode - 96;
+			else
+				numkey = null;
+
+			// do not do anything if a text area or a input with type text has focus
+			if (w.document.querySelector("input[type=text]:focus") || w.document.querySelector("textarea:focus")) {
+				return;
+			}
+			// "analyze next" button
+			else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector("a.button[href=\"/recon\"]")) {
+				w.document.location.href = "/recon";
+				event.preventDefault();
+			}  // submit normal rating
+			else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+				w.document.querySelector("[ng-click=\"answerCtrl.submitForm()\"]").click();
+				event.preventDefault();
+
+			} // return to first selection (should this be a portal)
+			else if (event.keyCode === 27 || event.keyCode === 111) {
+				currentSelectable = 0;
+			}
+			// select next rating
+			else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+				currentSelectable++;
+				event.preventDefault();
+			}
+			// select previous rating
+			else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+				currentSelectable--;
+				event.preventDefault();
+
+			}
+			else if (numkey === null || currentSelectable > maxItems - 2) {
+				return;
+			}
+			// rating 1-5
+			else {
+
+				if (hasLocationEdit && currentSelectable === maxItems - 3 && numkey <= mapMarkers.length) {
+					google.maps.event.trigger(angular.element(document.getElementById("NewSubmissionController")).scope().getAllLocationMarkers()[numkey - 1], "click");
+				}
+				else {
+					if (hasLocationEdit) numkey = 1;
+					starsAndSubmitButtons[currentSelectable].querySelectorAll(".titleEditBox, input[type='checkbox']")[numkey - 1].click();
+					currentSelectable++;
+				}
+
+			}
+			highlight();
+		});
+
+		highlight();
+
+	}
+
+	// add map buttons
+	function mapButtons(newPortalData, targetElement, where) {
+		const mapButtons = `
+<a class='button btn btn-default' target='intel' href='https://www.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=17'>Intel</a>
+<a class='button btn btn-default' target='osm' href='https://www.openstreetmap.org/?mlat=${newPortalData.lat}&mlon=${newPortalData.lng}&zoom=16'>OSM</a>
+`;
+
+		// more map buttons in a dropdown menu
+		const mapDropdown = `
+<li><a target='bing' href='https://bing.com/maps/default.aspx?cp=${newPortalData.lat}~${newPortalData.lng}&lvl=16&style=a'>bing</a></li>
+<li><a target='heremaps' href='https://wego.here.com/?map=${newPortalData.lat},${newPortalData.lng},17,satellite'>HERE maps</a></li>
+<li><a target='wikimapia' href='http://wikimapia.org/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=16'>Wikimapia</a></li>
+<li><a targeT='zoomearth' href='https://zoom.earth/#${newPortalData.lat},${newPortalData.lng},18z,sat'>Zoom Earth</a></li>
+<li role='separator' class='divider'></li>
+<li><a target='swissgeo' href='http://map.geo.admin.ch/?swisssearch=${newPortalData.lat},${newPortalData.lng}'>CH - Swiss Geo Map</a></li>
+<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (ortofoto)</a></li>
+<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&m3d=1&height=180&yaw=-279.39&pitch=-40.7&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (orto+3D)</a></li>
+<li><a target='kompass' href='http://maps.kompass.de/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=17'>DE - Kompass.maps</a></li>
+<li><a target='bayernatlas' href='https://geoportal.bayern.de/bayernatlas/index.html?X=${newPortalData.lat}&Y=${newPortalData.lng}&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>
+<li><a target='eniro' href='http://opr.pegel.dk/?17/${newPortalData.lat}/${newPortalData.lng}'>DK - SDFE Orthophotos</a></li>
+<li><a target='kakao' href='http://map.daum.net/link/map/${newPortalData.lat},${newPortalData.lng}'>KR - Kakao map</a></li>
+<li><a target='naver' href='http://map.naver.com/?menu=location&lat=${newPortalData.lat}&lng=${newPortalData.lng}&dLevel=14&title=CandidatePortalLocation'>KR - Naver map</a></li>
+<li><a target='yandex' href='https://maps.yandex.ru/?text=${newPortalData.lat},${newPortalData.lng}'>RU - Yandex</a></li>
+<li><a target='hitta' href='https://www.hitta.se/kartan!~${newPortalData.lat},${newPortalData.lng},18z/tileLayer!l=1'>SE - Hitta.se</a></li>
+<li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=17&l=nautical'>SE - Eniro Sjökort</a></li>
+`;
+
+		targetElement.insertAdjacentHTML(where, `<div><div class='btn-group'>${mapButtons}<div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${mapDropdown}</div>`);
+	}
+
+	// add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
+	function quickSubmitButton(submitDiv, ansController) {
+		let submitButton = submitDiv.querySelector("button");
+		submitButton.classList.add("btn", "btn-warning");
+		let submitAndNext = submitButton.cloneNode(false);
+		submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`;
+		submitAndNext.title = "Submit and go to next review";
+		submitAndNext.addEventListener("click", exportFunction(() => {
+			exportFunction(() => {
+				window.location.assign("/recon");
+			}, ansController, {defineAs: "openSubmissionCompleteModal"});
+		}, w));
+
+		w.$injector.invoke(cloneInto(["$compile", ($compile) => {
+			let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv));
+			submitDiv.querySelector("button").insertAdjacentElement("beforeBegin", compiledSubmit[0]);
+		}], w, {cloneFunctions: true}));
+		return {submitButton, submitAndNext};
+	}
+
+	function textButtons() {
+
+		let emergencyWay = "";
+		if (browserLocale.includes("de")) {
+			emergencyWay = "RETTUNGSWEG!1";
+		} else {
+			emergencyWay = "Emergency Way";
+		}
+
+		// add text buttons
+		const textButtons = `
+<button id='photo' class='button btn btn-default textButton' data-tooltip='Indicates a low quality photo'>Photo</button>
+<button id='private' class='button btn btn-default textButton' data-tooltip='Located on private residential property'>Private</button>`;
+		const textDropdown = `
+<li><a class='textButton' id='school' data-tooltip='Located on school property'>School</a></li>
+<li><a class='textButton' id='person' data-tooltip='Photo contains 1 or more people'>Person</a></li>
+<li><a class='textButton' id='perm' data-tooltip='Seasonal or temporary display or item'>Temporary</a></li>
+<li><a class='textButton' id='location' data-tooltip='Location wrong'>Location</a></li>
+<li><a class='textButton' id='natural' data-tooltip='Candidate is a natural feature'>Natural</a></li>
+<li><a class='textButton' id='emergencyway' data-tooltip='Obstructing emergency way'>${emergencyWay}</a></li>
+`;
+
+		const textBox = w.document.querySelector("#submitDiv + .text-center > textarea");
+
+		w.document.querySelector("#submitDiv + .text-center").insertAdjacentHTML("beforebegin", `
+<div class='btn-group dropup'>${textButtons}
+<div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${textDropdown}</ul>
+</div></div><div class="pull-right hidden-xs"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></div>
+`);
+
+		const buttons = w.document.getElementsByClassName("textButton");
+		for (let b in buttons) {
+			if (buttons.hasOwnProperty(b)) {
+				buttons[b].addEventListener("click", exportFunction(event => {
+					const source = event.target || event.srcElement;
+					let text = textBox.value;
+					if (text.length > 0) {
+						text += ",\n";
+					}
+					switch (source.id) {
+						case "photo":
+							text += "Low quality photo";
+							break;
+						case "private":
+							text += "Private residential property";
+							break;
+						case "duplicate":
+							text += "Duplicate of previously reviewed portal candidate";
+							break;
+						case "school":
+							text += "Located on primary or secondary school grounds";
+							break;
+						case "person":
+							text += "Picture contains one or more people";
+							break;
+						case "perm":
+							text += "Portal candidate is seasonal or temporary";
+							break;
+						case "location":
+							text += "Portal candidate's location is not on object";
+							break;
+						case "emergencyway":
+							text += "Portal candidate is obstructing the path of emergency vehicles";
+							break;
+						case "natural":
+							text += "Portal candidate is a natural feature";
+							break;
+						case "clear":
+							text = "";
+							break;
+					}
+
+					textBox.value = text;
+					textBox.dispatchEvent(new Event("change"));
+
+					event.target.blur();
+
+				}, w), false);
+			}
+		}
+	}
+
+	// replace map markers with a nice circle
+	function mapMarker(markers) {
+		for (let i = 0; i < markers.length; ++i) {
+			const marker = markers[i];
+			marker.setIcon(PORTAL_MARKER);
+		}
+	}
+
+	// move submit button to right side of classification-div. don't move on mobile devices / small width
+	function moveSubmitButton() {
+		const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
+
+		if (screen.availWidth > 768) {
+			let newSubmitDiv = w.document.createElement("div");
+			const classificationRow = w.document.querySelector(".classification-row");
+			newSubmitDiv.className = "col-xs-12 col-sm-6";
+			submitDiv[0].style.marginTop = 16;
+			newSubmitDiv.appendChild(submitDiv[0]);
+			newSubmitDiv.appendChild(submitDiv[1]);
+			classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
+
+			// edit-page - remove .col-sm-offset-3 from .classification-row (why did you add this, niantic?
+			classificationRow.classList.remove("col-sm-offset-3");
+			return newSubmitDiv;
+		} else {
+			return submitDiv[0];
+		}
+	}
+
+	// expand automatically the "What is it?" filter text box
+	function expandWhatIsItBox() {
+		try {
+			const f = w.document.querySelector("#WhatIsItController > div > p > span.ingress-mid-blue.text-center");
+			setTimeout(() => {
+				f.click();
+			}, 250);
+		} catch (err) {}
+	}
+
+
 	function modifyHeader() {
-		// stats enhancements: adding processed by nia, percent processed, progress to next recon badge numbers
+		// stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
+
+		// get scanner offset from localStorage
+		let oprt_scanner_offset = parseInt(w.localStorage.getItem(OPRT.SCANNER_OFFSET)) || 0;
+
 		const lastPlayerStatLine = w.document.querySelector("#player_stats:not(.visible-xs) div");
 		const stats = w.document.querySelector("#player_stats").children[2];
 
@@ -633,11 +965,10 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 
 		["change", "keyup", "cut", "paste", "input"].forEach(e => {
 			w.document.getElementById("scannerOffset").addEventListener(e, (event) => {
-				w.localStorage.setItem("oprt_scanner_offset", event.target.value);
+				w.localStorage.setItem(OPRT.SCANNER_OFFSET, event.target.value);
 			});
 		});
 		// **
-
 
 		modifyHeader = () => {}; // just run once
 	}
@@ -648,15 +979,15 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 		let cbxRefreshSound = w.document.createElement("input");
 		let cbxRefreshDesktop = w.document.createElement("input");
 
-		cbxRefresh.id = "oprt_refresh";
+		cbxRefresh.id = OPRT.REFRESH;
 		cbxRefresh.type = "checkbox";
 		cbxRefresh.checked = (w.localStorage.getItem(cbxRefresh.id) == "true");
 
-		cbxRefreshSound.id = "oprt_refresh_noti_sound";
+		cbxRefreshSound.id = OPRT.REFRESH_NOTI_SOUND;
 		cbxRefreshSound.type = "checkbox";
 		cbxRefreshSound.checked = (w.localStorage.getItem(cbxRefreshSound.id) == "true");
 
-		cbxRefreshDesktop.id = "oprt_refresh_noti_desktop";
+		cbxRefreshDesktop.id = OPRT.REFRESH_NOTI_DESKTOP;
 		cbxRefreshDesktop.type = "checkbox";
 		cbxRefreshDesktop.checked = (w.localStorage.getItem(cbxRefreshDesktop.id) == "true");
 
@@ -705,6 +1036,8 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 		addRefreshContainer = () => {}; // run only once
 	}
 
+	let refreshIntervalID;
+
 	function startRefresh() {
 		let time = getRandomIntInclusive(5, 10) * 60000;
 
@@ -714,7 +1047,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 
 		function reloadOPR() {
 			clearInterval(refreshIntervalID);
-			w.sessionStorage.setItem("oprt_from_refresh", "true");
+			w.sessionStorage.setItem(OPRT.FROM_REFRESH, "true");
 			w.document.location.reload();
 		}
 
@@ -731,19 +1064,19 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 	}
 
 	function checkIfAutorefresh() {
-		if (w.sessionStorage.getItem("oprt_from_refresh")) {
+		if (w.sessionStorage.getItem(OPRT.FROM_REFRESH)) {
 			// reset flag
-			w.sessionStorage.removeItem("oprt_from_refresh");
+			w.sessionStorage.removeItem(OPRT.FROM_REFRESH);
 
 			if (w.document.hidden) { // if tab in background: flash favicon
 				let flag = true;
 
-				if (w.localStorage.getItem("oprt_refresh_noti_sound") == "true") {
+				if (w.localStorage.getItem(OPRT.REFRESH_NOTI_SOUND) == "true") {
 					let audio = document.createElement("audio");
 					audio.src = NOTIFICATION_SOUND;
 					audio.autoplay = true;
 				}
-				if (w.localStorage.getItem("oprt_refresh_noti_desktop") == "true") {
+				if (w.localStorage.getItem(OPRT.REFRESH_NOTI_DESKTOP) == "true") {
 					GM_notification({
 						"title": "OPR - New Portal Analysis Available",
 						"text" : "by OPR-Tools",
@@ -798,11 +1131,118 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 				clearInterval(counterInterval);
 				countdownDisplay.innerText = "EXPIRED";
 				countdownDisplay.classList.add("blink");
+
+
 			} else if (distance < 60) {
 				countdownDisplay.style.color = "red";
 			}
 		}, 1000);
 	}
+
+
+	function addCustomPresetButtons() {
+		// add customPreset UI
+		oprt_customPresets = getCustomPresets(w);
+		let customPresetOptions = "";
+		for (const customPreset of oprt_customPresets) {
+			customPresetOptions += `<button class='button btn btn-default customPresetButton' id='${customPreset.uid}'>${customPreset.label}</button>`;
+		}
+		w.document.getElementById("customPresets").innerHTML = customPresetOptions;
+	}
+
+	function getCustomPresets(w) {
+		// simply to scope the string we don't need after JSON.parse
+		let presetsJSON = w.localStorage.getItem("oprt_custom_presets");
+		if (presetsJSON != null && presetsJSON != "") {
+			return JSON.parse(presetsJSON);
+		}
+		return [];
+	}
+
+	function saveCustomPreset(label, ansController, whatController) {
+		// uid snippet from https://stackoverflow.com/a/47496558/6447397
+		let preset = {
+			uid        : [...Array(5)].map(() => Math.random().toString(36)[3]).join(""),
+			label      : label,
+			nodeName   : whatController.whatNode.name,
+			nodeId     : whatController.whatNode.id,
+			quality    : ansController.formData.quality,
+			description: ansController.formData.description,
+			cultural   : ansController.formData.cultural,
+			uniqueness : ansController.formData.uniqueness,
+			location   : ansController.formData.location,
+			safety     : ansController.formData.safety
+		};
+		oprt_customPresets.push(preset);
+		w.localStorage.setItem("oprt_custom_presets", JSON.stringify(oprt_customPresets));
+	}
+
+	function deleteCustomPreset(preset) {
+		oprt_customPresets = oprt_customPresets.filter(item => item.uid !== preset.uid);
+		w.localStorage.setItem("oprt_custom_presets", JSON.stringify(oprt_customPresets));
+	}
+
+	function showHelp() {
+		let helpString = `<a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success'>OPR-Tools</span></a> Key shortcuts
+<table class="table table-condensed ">
+	<thead>
+	<tr>
+		<th>Key(s)</th>
+		<th>Function</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td>Keys 1-5, Numpad 1-5</td>
+		<td>Valuate current selected field (the yellow highlighted one)</td>
+	</tr>
+	<tr>
+		<td><i>Shift</i> + Keys 1-5</td>
+		<td>Apply custom preset (if exists)</td>
+	</tr>
+	<tr>
+		<td>D</td>
+		<td>Mark current candidate as a duplicate of the opened portal in "duplicates"</td>
+	</tr>
+	<tr>
+		<td>T</td>
+		<td>Open title translation</td>
+	</tr>
+	<tr>
+		<td>Y</td>
+		<td>Open description translation</td>
+	</tr>
+	<tr>
+		<td>Space, Enter, Numpad Enter</td>
+		<td>Confirm dialog / Send valuation</td>
+	</tr>
+	<tr>
+		<td>Tab, Numpad +</td>
+		<td>Next field</td>
+	</tr>
+	<tr>
+		<td>Shift, Backspace, Numpad -</td>
+		<td>Previous field</td>
+	</tr>
+	<tr>
+		<td>Esc, Numpad /</td>
+		<td>First field</td>
+	</tr>
+	<tr>
+		<td>^, Numpad *</td>
+		<td>Skip Portal (if possible)</td>
+	</tr>
+	</tbody>
+</table>`;
+
+		alertify.closeLogOnClick(false).logPosition("bottom right").delay(0).log(helpString, (ev) => {
+			ev.preventDefault();
+			ev.target.closest("div.default.show").remove();
+
+		}).reset();
+
+	}
+
 }
 
 setTimeout(() => {
@@ -941,6 +1381,26 @@ animation: blink 2s step-end infinite;
 @keyframes blink {
 67% { opacity: 0 }
 }
+
+.titleEditBox:hover {
+	box-shadow: inset 0 0 20px #ebbc4a;
+}
+
+.titleEditBox:active {
+	box-shadow: inset 0 0 15px 2px white;
+}
+
+.alertify .dialog .msg {
+color: black;
+}
+.alertify-logs > .default {
+    background-image: url(/img/ingress-background-dark.png) !important;
+}
+
+.btn-xs {
+padding: 1px 5px !important;
+}
+
 `;
 
 const PORTAL_MARKER = `data:image/png;base64,
