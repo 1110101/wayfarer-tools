@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR tools
-// @version         0.17.0
+// @version         0.17.1
 // @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -68,6 +68,7 @@ function addGlobalStyle(css) {
 
 	addGlobalStyle = () => {}; // noop after first run
 }
+
 
 function init() {
 	const w = typeof unsafeWindow == "undefined" ? window : unsafeWindow;
@@ -434,7 +435,7 @@ function init() {
 				currentSelectable = 0;
 				event.preventDefault();
 
-			} // click first/selected duplicate (key T)
+			} // click on translate title link (key T)
 			else if (event.keyCode === 84) {
 				const link = w.document.querySelector("#descriptionDiv > .translate-title");
 				if (link) {
@@ -442,7 +443,7 @@ function init() {
 					event.preventDefault();
 				}
 
-			} // click first/selected duplicate (key Y)
+			} // click on translate description link (key Y)
 			else if (event.keyCode === 89) {
 				const link = w.document.querySelector("#descriptionDiv > .translate-description");
 				if (link) {
@@ -494,10 +495,16 @@ function init() {
 			else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
 				currentSelectable--;
 				event.preventDefault();
-
 			}
 			else if (numkey === null || currentSelectable > maxItems - 2) {
 				return;
+			}
+			else if (numkey !== null && event.shiftKey) {
+				try {
+					w.document.getElementsByClassName("customPresetButton")[numkey - 1].click();
+				} catch (e) {
+					// ignore
+				}
 			}
 			// rating 1-5
 			else {
@@ -1138,7 +1145,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 		oprt_customPresets = getCustomPresets(w);
 		let customPresetOptions = "";
 		for (const customPreset of oprt_customPresets) {
-			customPresetOptions += `<button class='button btn btn-default' id='${customPreset.uid}'>${customPreset.label}</button>`;
+			customPresetOptions += `<button class='button btn btn-default customPresetButton' id='${customPreset.uid}'>${customPreset.label}</button>`;
 		}
 		w.document.getElementById("customPresets").innerHTML = customPresetOptions;
 	}
@@ -1188,6 +1195,10 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 	<tr>
 		<td>Keys 1-5, Numpad 1-5</td>
 		<td>Valuate current selected field (the yellow highlighted one)</td>
+	</tr>
+	<tr>
+		<td><i>Shift</i> + Keys 1-5</td>
+		<td>Apply custom preset (if exists)</td>
 	</tr>
 	<tr>
 		<td>D</td>
