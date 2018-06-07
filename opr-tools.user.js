@@ -183,7 +183,6 @@ function init() {
 
 		// we have to inject the tooltip to angular
 		w.$injector.invoke(cloneInto(["$compile", ($compile) => {
-			// @todo add preset help/explanation to tooltip
 			let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById("descriptionDiv")));
 			w.document.getElementById("addPreset").insertAdjacentElement("beforebegin", compiledSubmit[0]);
 		}], w, {cloneFunctions: true}));
