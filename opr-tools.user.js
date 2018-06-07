@@ -406,7 +406,7 @@ function init() {
 				event.preventDefault();
 
 			}
-			else if (numkey === null || currentSelectable >= maxItems) {
+			else if (numkey === null || currentSelectable > maxItems - 2) {
 				return;
 			}
 			// rating 1-5
@@ -492,8 +492,134 @@ function init() {
 		expandWhatIsItBox();
 
 		// fix locationEditsMap if only one location edit exists
-		if(newPortalData.locationEdits.length <= 1)
+		if (newPortalData.locationEdits.length <= 1)
 			subController.locationEditsMap.setZoom(19);
+
+
+		/* EDIT PORTAL */
+		// keyboard navigation
+
+		let currentSelectable = 0;
+		let hasLocationEdit = (newPortalData.locationEdits.length > 1);
+		// counting *true*, please don't shoot me
+		let maxItems = (newPortalData.descriptionEdits.length > 1) + (newPortalData.titleEdits.length > 1) + (hasLocationEdit) + 2;
+
+		let mapMarkers;
+		if (hasLocationEdit) mapMarkers = subController.allLocationMarkers;
+		else mapMarkers = [];
+
+		// a list of all 6 star button rows, and the two submit buttons
+		let starsAndSubmitButtons = w.document.querySelectorAll(
+				"div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.titleEdits.length > 1\"]:not(.ng-hide)," +
+				"div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.descriptionEdits.length > 1\"]:not(.ng-hide)," +
+				"div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.locationEdits.length > 1\"]:not(.ng-hide)," +
+				".big-submit-button");
+
+
+		/* EDIT PORTAL */
+		function highlight() {
+			let el = editDiv.querySelector("h3[ng-show=\"subCtrl.pageData.locationEdits.length > 1\"]");
+			el.style.border = "none";
+
+			starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = "none"; }, w));
+			if (hasLocationEdit && currentSelectable === maxItems - 3) {
+				el.style.borderLeft = cloneInto("4px dashed #ebbc4a", w);
+				el.style.borderTop = cloneInto("4px dashed #ebbc4a", w);
+				el.style.borderRight = cloneInto("4px dashed #ebbc4a", w);
+				el.style.padding = cloneInto("16px", w);
+				el.style.marginBottom = cloneInto("0", w);
+				submitAndNext.blur();
+				submitButton.blur();
+			}
+			else if (currentSelectable < maxItems - 2) {
+				starsAndSubmitButtons[currentSelectable].style.borderLeft = cloneInto("4px dashed #ebbc4a", w);
+				starsAndSubmitButtons[currentSelectable].style.paddingLeft = cloneInto("16px", w);
+				submitAndNext.blur();
+				submitButton.blur();
+			} else if (currentSelectable == maxItems - 2) {
+				submitAndNext.focus();
+			}
+			else if (currentSelectable == maxItems) {
+				submitButton.focus();
+			}
+
+		}
+		/* EDIT PORTAL */
+		addEventListener("keydown", (event) => {
+
+			/*
+			Keycodes:
+
+			8: Backspace
+			9: TAB
+			13: Enter
+			16: Shift
+			27: Escape
+			32: Space
+			68: D
+			107: NUMPAD +
+			109: NUMPAD -
+			111: NUMPAD /
+
+			49 - 53:  Keys 1-5
+			97 - 101: NUMPAD 1-5
+			 */
+
+			if (event.keyCode >= 49 && event.keyCode <= 53)
+				numkey = event.keyCode - 48;
+			else if (event.keyCode >= 97 && event.keyCode <= 101)
+				numkey = event.keyCode - 96;
+			else
+				numkey = null;
+
+			// do not do anything if a text area or a input with type text has focus
+			if (w.document.querySelector("input[type=text]:focus") || w.document.querySelector("textarea:focus")) {
+				return;
+			}
+			// "analyze next" button
+			else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector("a.button[href=\"/recon\"]")) {
+				w.document.location.href = "/recon";
+				event.preventDefault();
+			}  // submit normal rating
+			else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+				w.document.querySelector("[ng-click=\"answerCtrl.submitForm()\"]").click();
+				event.preventDefault();
+
+			} // return to first selection (should this be a portal)
+			else if (event.keyCode === 27 || event.keyCode === 111) {
+				currentSelectable = 0;
+			}
+			// select next rating
+			else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+				currentSelectable++;
+				event.preventDefault();
+			}
+			// select previous rating
+			else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+				currentSelectable--;
+				event.preventDefault();
+
+			}
+			else if (numkey === null || currentSelectable > maxItems -2) {
+				return;
+			}
+			// rating 1-5
+			else {
+
+				if (hasLocationEdit && currentSelectable === maxItems - 3 && numkey <= mapMarkers.length) {
+					google.maps.event.trigger(angular.element(document.getElementById("NewSubmissionController")).scope().getAllLocationMarkers()[numkey - 1], "click");
+				}
+				else {
+					if (hasLocationEdit) numkey = 1;
+					starsAndSubmitButtons[currentSelectable].querySelectorAll(".titleEditBox, input[type='checkbox']")[numkey - 1].click();
+					currentSelectable++;
+				}
+
+			}
+			highlight();
+		});
+
+		highlight();
 
 	}
 
