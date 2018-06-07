@@ -39,7 +39,14 @@ SOFTWARE.
 
 */
 
-let refreshIntervalID;
+const OPRT = {
+	SCANNER_OFFSET      : "oprt_scanner_offset",
+	REFRESH             : "oprt_refresh",
+	FROM_REFRESH        : "oprt_from_refresh",
+	REFRESH_NOTI_SOUND  : "oprt_refresh_noti_sound",
+	REFRESH_NOTI_DESKTOP: "oprt_refresh_noti_desktop",
+};
+
 
 // polyfill for ViolentMonkey
 if (typeof exportFunction !== "function") {
@@ -69,9 +76,6 @@ function addGlobalStyle(css) {
 function init() {
 	const w = typeof unsafeWindow == "undefined" ? window : unsafeWindow;
 	let tryNumber = 15;
-
-	// get Values from localStorage
-	let oprt_scanner_offset = parseInt(w.localStorage.getItem("oprt_scanner_offset")) || 0;
 
 	let browserLocale = window.navigator.languages[0] || window.navigator.language || "en";
 
@@ -536,14 +540,15 @@ function init() {
 				starsAndSubmitButtons[currentSelectable].style.paddingLeft = cloneInto("16px", w);
 				submitAndNext.blur();
 				submitButton.blur();
-			} else if (currentSelectable == maxItems - 2) {
+			} else if (currentSelectable === maxItems - 2) {
 				submitAndNext.focus();
 			}
-			else if (currentSelectable == maxItems) {
+			else if (currentSelectable === maxItems) {
 				submitButton.focus();
 			}
 
 		}
+
 		/* EDIT PORTAL */
 		addEventListener("keydown", (event) => {
 
@@ -600,7 +605,7 @@ function init() {
 				event.preventDefault();
 
 			}
-			else if (numkey === null || currentSelectable > maxItems -2) {
+			else if (numkey === null || currentSelectable > maxItems - 2) {
 				return;
 			}
 			// rating 1-5
@@ -797,6 +802,10 @@ function init() {
 
 	function modifyHeader() {
 		// stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
+
+		// get scanner offset from localStorage
+		let oprt_scanner_offset = parseInt(w.localStorage.getItem(OPRT.SCANNER_OFFSET)) || 0;
+
 		const lastPlayerStatLine = w.document.querySelector("#player_stats:not(.visible-xs) div");
 		const stats = w.document.querySelector("#player_stats").children[2];
 
@@ -863,7 +872,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 
 		["change", "keyup", "cut", "paste", "input"].forEach(e => {
 			w.document.getElementById("scannerOffset").addEventListener(e, (event) => {
-				w.localStorage.setItem("oprt_scanner_offset", event.target.value);
+				w.localStorage.setItem(OPRT.SCANNER_OFFSET, event.target.value);
 			});
 		});
 		// **
@@ -877,15 +886,15 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 		let cbxRefreshSound = w.document.createElement("input");
 		let cbxRefreshDesktop = w.document.createElement("input");
 
-		cbxRefresh.id = "oprt_refresh";
+		cbxRefresh.id = OPRT.REFRESH;
 		cbxRefresh.type = "checkbox";
 		cbxRefresh.checked = (w.localStorage.getItem(cbxRefresh.id) == "true");
 
-		cbxRefreshSound.id = "oprt_refresh_noti_sound";
+		cbxRefreshSound.id = OPRT.REFRESH_NOTI_SOUND;
 		cbxRefreshSound.type = "checkbox";
 		cbxRefreshSound.checked = (w.localStorage.getItem(cbxRefreshSound.id) == "true");
 
-		cbxRefreshDesktop.id = "oprt_refresh_noti_desktop";
+		cbxRefreshDesktop.id = OPRT.REFRESH_NOTI_DESKTOP;
 		cbxRefreshDesktop.type = "checkbox";
 		cbxRefreshDesktop.checked = (w.localStorage.getItem(cbxRefreshDesktop.id) == "true");
 
@@ -934,6 +943,8 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 		addRefreshContainer = () => {}; // run only once
 	}
 
+	let refreshIntervalID;
+
 	function startRefresh() {
 		let time = getRandomIntInclusive(5, 10) * 60000;
 
@@ -943,7 +954,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 
 		function reloadOPR() {
 			clearInterval(refreshIntervalID);
-			w.sessionStorage.setItem("oprt_from_refresh", "true");
+			w.sessionStorage.setItem(OPRT.FROM_REFRESH, "true");
 			w.document.location.reload();
 		}
 
@@ -960,19 +971,19 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 	}
 
 	function checkIfAutorefresh() {
-		if (w.sessionStorage.getItem("oprt_from_refresh")) {
+		if (w.sessionStorage.getItem(OPRT.FROM_REFRESH)) {
 			// reset flag
-			w.sessionStorage.removeItem("oprt_from_refresh");
+			w.sessionStorage.removeItem(OPRT.FROM_REFRESH);
 
 			if (w.document.hidden) { // if tab in background: flash favicon
 				let flag = true;
 
-				if (w.localStorage.getItem("oprt_refresh_noti_sound") == "true") {
+				if (w.localStorage.getItem(OPRT.REFRESH_NOTI_SOUND) == "true") {
 					let audio = document.createElement("audio");
 					audio.src = NOTIFICATION_SOUND;
 					audio.autoplay = true;
 				}
-				if (w.localStorage.getItem("oprt_refresh_noti_desktop") == "true") {
+				if (w.localStorage.getItem(OPRT.REFRESH_NOTI_DESKTOP) == "true") {
 					GM_notification({
 						"title": "OPR - New Portal Analysis Available",
 						"text" : "by OPR-Tools",
