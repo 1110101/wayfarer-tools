@@ -150,6 +150,16 @@ function init() {
 
 	}
 
+	function addCustomPresetButtons() {
+		// add customPreset UI
+		oprt_customPresets = getCustomPresets(w);
+		let customPresetOptions = "";
+		for (const customPreset of oprt_customPresets) {
+			customPresetOptions += `<button class='button btn btn-default' id='${customPreset.uid}'>${customPreset.label}</button>`;
+		}
+		w.document.getElementById("customPresets").innerHTML = customPresetOptions;
+	}
+
 	function modifyPage(descDiv, ansController, subController, whatController, scope, newPortalData) {
 
 		// adding map buttons
@@ -294,35 +304,34 @@ function init() {
 			}
 		}
 
-		// add customPreset UI
-		oprt_customPresets = getCustomPresets(w);
-		let customPresetOptions = "";
-		for (const customPreset of oprt_customPresets) {
-			customPresetOptions += `<button class='button btn btn-default' id='${customPreset.uid}'>${customPreset.label}</button>`;
-		}
-
 		const customPresetUI = `
-<div class="row"><div class="col-xs-12">
+<div class="row" id="presets"><div class="col-xs-12">
 	<div>Presets&nbsp;<button class="button btn btn-default btn-xs" id="addPreset">+</button></div> 
-	<div class='btn-group' id="customPresets">${customPresetOptions}</div>
-</div></div>
-`;
+	<div class='btn-group' id="customPresets"></div>
+</div></div>`;
+
 		w.document.querySelector("form[name='answers'] div.row").insertAdjacentHTML("afterend", customPresetUI);
+
+		addCustomPresetButtons();
 
 		// we have to inject the tooltip to angular
 		w.$injector.invoke(cloneInto(["$compile", ($compile) => {
 			// @todo add preset help/explanation to tooltip
-			let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="Shift-Click to delete preset"></span>&nbsp; `)(scope);
+			let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(scope);
 			w.document.getElementById("addPreset").insertAdjacentElement("beforebegin", compiledSubmit[0]);
 		}], w, {cloneFunctions: true}));
 
-		// add click listener for new presets
+		// click listener for +preset button
 		w.document.getElementById("addPreset").addEventListener("click", exportFunction(event => {
 			alertify.okBtn("Save").prompt("New preset name:",
 					(value, event) => {
 						event.preventDefault();
+						if (value == "undefined" || value == "") {
+							return;
+						}
 						saveCustomPreset(value, ansController, whatController);
-						alertify.success(`✔ Saved preset <i>${value}</i>`);
+						alertify.success(`✔ Created preset <i>${value}</i>`);
+						addCustomPresetButtons();
 
 					}, event => {
 						event.preventDefault();
@@ -330,8 +339,7 @@ function init() {
 			);
 		}), w, false);
 
-		// add click listener for presets
-		w.document.getElementById("customPresets").addEventListener("click", exportFunction(event => {
+		let clickListener = exportFunction(event => {
 			const source = event.target || event.srcElement;
 			let value = source.id;
 			if (value === "" || event.target.nodeName !== "BUTTON") {
@@ -340,7 +348,7 @@ function init() {
 
 			let preset = oprt_customPresets.find(item => item.uid === value);
 
-			if(event.shiftKey) {
+			if (event.shiftKey) {
 				alertify.log(`Deleted preset <i>${preset.label}</i>`);
 				w.document.getElementById(preset.uid).remove();
 				deleteCustomPreset(preset);
@@ -374,7 +382,9 @@ function init() {
 
 			alertify.success(`✔ Applied <i>${preset.label}</i>`);
 
-		}, w), false);
+		}, w);
+
+		w.document.getElementById("customPresets").addEventListener("click", clickListener, false);
 
 		// Make photo filmstrip scrollable
 		const filmstrip = w.document.getElementById("map-filmstrip");
@@ -899,12 +909,9 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 	}
 
 	function saveCustomPreset(label, ansController, whatController) {
-		if (label === "") {
-			return;
-		}
 		// uid snippet from https://stackoverflow.com/a/47496558/6447397
 		let preset = {
-			uid        : [...Array(5)].map(() => Math.random().toString(36)[3]).join(''),
+			uid        : [...Array(5)].map(() => Math.random().toString(36)[3]).join(""),
 			label      : label,
 			nodeName   : whatController.whatNode.name,
 			nodeId     : whatController.whatNode.id,
@@ -918,6 +925,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 		oprt_customPresets.push(preset);
 		w.localStorage.setItem("oprt_custom_presets", JSON.stringify(oprt_customPresets));
 	}
+
 	function deleteCustomPreset(preset) {
 		oprt_customPresets = oprt_customPresets.filter(item => item.uid !== preset.uid);
 		w.localStorage.setItem("oprt_custom_presets", JSON.stringify(oprt_customPresets));
