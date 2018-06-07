@@ -798,7 +798,7 @@ function init() {
 		w.document.querySelector("#submitDiv + .text-center").insertAdjacentHTML("beforebegin", `
 <div class='btn-group dropup'>${textButtons}
 <div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${textDropdown}</ul>
-</div></div><div class="pull-right"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></div>
+</div></div><div class="pull-right hidden-xs"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></div>
 `);
 
 		const buttons = w.document.getElementsByClassName("textButton");
