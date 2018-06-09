@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR tools light
-// @version         0.17.1
+// @version         0.17.2
 // @description     light version of OPR tools for mobile browsers or if you don't need all features
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -181,6 +181,8 @@ function init() {
 		}
 
 		// add translate buttons to title and description (if existing)
+		let lang = "en";
+		try { lang = browserLocale.split("-")[0]; } catch (e) {}
 		const link = w.document.querySelector("#descriptionDiv a");
 		const content = link.innerText.trim();
 		let a = w.document.createElement("a");
@@ -191,7 +193,7 @@ function init() {
 		a.className = "translate-title button btn btn-default pull-right";
 		a.target = "translate";
 		a.style.padding = "0px 4px";
-		a.href = `https://translate.google.com/#auto/${browserLocale}/${encodeURIComponent(content)}`;
+		a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(content)}`;
 		link.insertAdjacentElement("afterend", a);
 
 		const description = w.document.querySelector("#descriptionDiv").innerHTML.split("<br>")[3].trim();
@@ -204,7 +206,7 @@ function init() {
 			a.className = "translate-description button btn btn-default pull-right";
 			a.target = "translate";
 			a.style.padding = "0px 4px";
-			a.href = `https://translate.google.com/#auto/${browserLocale}/${encodeURIComponent(description)}`;
+			a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(description)}`;
 			const br = w.document.querySelectorAll("#descriptionDiv br")[2];
 			br.insertAdjacentElement("afterend", a);
 		}
