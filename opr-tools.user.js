@@ -174,7 +174,7 @@ function init() {
 
 		const customPresetUI = `
 <div class="row" id="presets"><div class="col-xs-12">
-	<div>Presets&nbsp;<button class="button btn btn-default btn-xs" id="addPreset">+</button></div> 
+	<div>Presets&nbsp;<button class="button btn btn-default btn-xs" id="addPreset">+</button></div>
 	<div class='btn-group' id="customPresets"></div>
 </div></div>`;
 
@@ -954,7 +954,8 @@ ${Math.round(nextBadgeProcess)}%
 		}
 
 		else lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<hr>`);
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<p><input readonly onFocus="this.select();" style="width: 99%;" type="text" value="${reviewed} / ${accepted + rejected } (${accepted}/${rejected}) / ${Math.round(percent)}%"/></p>`);
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<p><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 99%;" type="text" 
+value="Reviewed: ${reviewed} / Processed: ${accepted + rejected } (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(percent)}%"/></p>`);
 
 		let tooltipSpan = `<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder"
 uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
