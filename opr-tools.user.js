@@ -253,21 +253,21 @@ function init() {
 
 		w.document.getElementById("customPresets").addEventListener("click", clickListener, false);
 
-
 		// make photo filmstrip scrollable
 		const filmstrip = w.document.getElementById("map-filmstrip");
-
+		let lastScrollLeft = filmstrip.scrollLeft;
 		function scrollHorizontally(e) {
 			e = window.event || e;
-			if ("deltaY" in e && e.deltaY !== 0) {
+			if (("deltaY" in e && e.deltaY !== 0 || "wheelDeltaY" in e && e.wheelDeltaY !== 0) && lastScrollLeft === filmstrip.scrollLeft) {
 				e.preventDefault();
-				const delta = Math.max(-1, Math.min(1, (e.wheelDeltaY || -e.detail)));
-				filmstrip.scrollLeft -= (delta * 50); // Multiplied by 50
+				const delta = (e.wheelDeltaY || -e.deltaY*25 || -e.detail);
+				filmstrip.scrollLeft -= (delta);
+				lastScrollLeft = filmstrip.scrollLeft;
 			}
 		}
 
-		filmstrip.addEventListener("wheel ", exportFunction(scrollHorizontally, w), false);
-		filmstrip.addEventListener("mousewheel", exportFunction(scrollHorizontally, w), false);
+		filmstrip.addEventListener("wheel", exportFunction(scrollHorizontally, w), false);
+		filmstrip.addEventListener("DOMMouseScroll", exportFunction(scrollHorizontally, w), false);
 
 		mapMarker(subController.markers);
 
@@ -726,8 +726,8 @@ function init() {
 	// add map buttons
 	function mapButtons(newPortalData, targetElement, where) {
 		// coordinate format conversion
-		const coordUtm33 = proj4('+proj=longlat', '+proj=utm +zone=33', [newPortalData.lng, newPortalData.lat]);
-		const coordUtm35 = proj4('+proj=longlat', '+proj=utm +zone=35', [newPortalData.lng, newPortalData.lat]);
+		const coordUtm33 = proj4("+proj=longlat", "+proj=utm +zone=33", [newPortalData.lng, newPortalData.lat]);
+		const coordUtm35 = proj4("+proj=longlat", "+proj=utm +zone=35", [newPortalData.lng, newPortalData.lat]);
 
 		const mapButtons = `
 <a class='button btn btn-default' target='intel' href='https://www.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=17'>Intel</a>
@@ -954,7 +954,7 @@ ${Math.round(nextBadgeProcess)}%
 		}
 
 		else lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<hr>`);
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<p><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 99%;" type="text" 
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<p><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 99%;" type="text"
 value="Reviewed: ${reviewed} / Processed: ${accepted + rejected } (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(percent)}%"/></p>`);
 
 		let tooltipSpan = `<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder"
