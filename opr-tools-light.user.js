@@ -764,7 +764,7 @@ ${Math.round(nextBadgeProcess)}%
 		}
 
 		else lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<hr>`);
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<p><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 99%;" type="text"
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<p><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 90%;" type="text"
 value="Reviewed: ${reviewed} / Processed: ${accepted + rejected } (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(percent)}%"/></p>`);
 
 		modifyHeader = () => {}; // just run once
