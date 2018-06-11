@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR tools light
-// @version         0.17.2
+// @version         0.18.0
 // @description     light version of OPR tools for mobile browsers or if you don't need all features
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -764,7 +764,8 @@ ${Math.round(nextBadgeProcess)}%
 		}
 
 		else lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<hr>`);
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<p><input readonly onFocus="this.select();" style="width: 99%;" type="text" value="${reviewed} / ${accepted + rejected } (${accepted}/${rejected}) / ${Math.round(percent)}%"/></p>`);
+		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<p><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 99%;" type="text"
+value="Reviewed: ${reviewed} / Processed: ${accepted + rejected } (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(percent)}%"/></p>`);
 
 		modifyHeader = () => {}; // just run once
 	}
