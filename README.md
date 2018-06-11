@@ -8,6 +8,7 @@ Userscript for [Ingress Operation Portal Recon](https://opr.ingress.com/recon)
  OPR-Tools is not compatible with Greasemonkey for Firefox.
 
 ![](./image/opr-tools-1.png)
+![](./image/opr-tools-3.png)
 ![](./image/opr-tools-2.png)
 
 ## Features:
