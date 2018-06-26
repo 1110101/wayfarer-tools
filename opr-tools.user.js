@@ -48,6 +48,7 @@ const OPRT = {
 	FROM_REFRESH        : "oprt_from_refresh",
 	REFRESH_NOTI_SOUND  : "oprt_refresh_noti_sound",
 	REFRESH_NOTI_DESKTOP: "oprt_refresh_noti_desktop",
+	MAP_TYPE            : "oprt_map_type",
 };
 
 
@@ -918,8 +919,15 @@ function init() {
 			}
 		});
 
+		// track current selection for main position map
 		if (isMainMap) {
-			map.setMapTypeId(defaultType);
+			// save selection when changed
+			map.addListener("maptypeid_changed", function() {
+				w.localStorage.setItem(OPRT.MAP_TYPE, map.getMapTypeId());
+			});
+
+			// get map type saved from last use or fall back to default
+			map.setMapTypeId(w.localStorage.getItem(OPRT.MAP_TYPE) || defaultType);
 		}
 	}
 
