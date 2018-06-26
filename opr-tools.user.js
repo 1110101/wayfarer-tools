@@ -872,6 +872,7 @@ function init() {
 	function mapTypes(map, isMainMap) {
 		const PROVIDERS = {
 			GOOGLE    : "google",
+			KARTVERKET: "kartverket",
 		};
 
 		const types = [
@@ -879,6 +880,9 @@ function init() {
 			{ provider: PROVIDERS.GOOGLE,     id: "terrain" },
 			{ provider: PROVIDERS.GOOGLE,     id: "satellite" },
 			{ provider: PROVIDERS.GOOGLE,     id: "hybrid" },
+			{ provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`,   code: "topo4",         label: "NO - Topo" },
+			{ provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: "toporaster3",   label: "NO - Raster" },
+			{ provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`,    code: "sjokartraster", label: "NO - Sjøkart" },
 		];
 
 		const defaultType = "hybrid";
@@ -895,6 +899,24 @@ function init() {
 			}
 		};
 		map.setOptions(cloneInto(mapOptions, w));
+
+		// register custom map types
+		types.forEach(t => {
+			switch (t.provider) {
+				case PROVIDERS.KARTVERKET:
+					map.mapTypes.set(t.id, new google.maps.ImageMapType({
+						layer     : t.code,
+						name      : t.label,
+						alt       : t.label,
+						maxZoom   : 19,
+						tileSize  : new google.maps.Size(256, 256),
+						getTileUrl: function (coord, zoom) {
+							return `//opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=${this.layer}&zoom=${zoom}&x=${coord.x}&y=${coord.y}`;
+						}
+					}));
+					break;
+			}
+		});
 
 		if (isMainMap) {
 			map.setMapTypeId(defaultType);
