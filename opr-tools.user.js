@@ -270,11 +270,8 @@ function init() {
 		filmstrip.addEventListener("DOMMouseScroll", exportFunction(scrollHorizontally, w), false);
 
 		mapMarker(subController.markers);
-
-		// re-enabling map scroll zoom and allow zoom with out holding ctrl
-		const mapOptions = {scrollwheel: true, gestureHandling: "greedy"};
-		subController.map.setOptions(cloneInto(mapOptions, w));
-		subController.map2.setOptions(cloneInto(mapOptions, w));
+		mapTypes(subController.map, false);
+		mapTypes(subController.map2, true);
 
 		// adding a 40m circle around the portal (capture range)
 		// noinspection JSUnusedLocalSymbols
@@ -532,9 +529,7 @@ function init() {
 
 		textButtons();
 
-		// re-enable map scroll zoom and allow zoom with out holding ctrl
-		const mapOptions = {scrollwheel: true, gestureHandling: "greedy"};
-		subController.locationEditsMap.setOptions(cloneInto(mapOptions, w));
+		mapTypes(subController.locationEditsMap, true);
 
 		// add translation links to title and description edits
 		if (newPortalData.titleEdits.length > 1 || newPortalData.descriptionEdits.length > 1) {
@@ -870,6 +865,39 @@ function init() {
 		for (let i = 0; i < markers.length; ++i) {
 			const marker = markers[i];
 			marker.setIcon(PORTAL_MARKER);
+		}
+	}
+
+	// set available map types
+	function mapTypes(map, isMainMap) {
+		const PROVIDERS = {
+			GOOGLE    : "google",
+		};
+
+		const types = [
+			{ provider: PROVIDERS.GOOGLE,     id: "roadmap" },
+			{ provider: PROVIDERS.GOOGLE,     id: "terrain" },
+			{ provider: PROVIDERS.GOOGLE,     id: "satellite" },
+			{ provider: PROVIDERS.GOOGLE,     id: "hybrid" },
+		];
+
+		const defaultType = "hybrid";
+
+		const mapOptions = {
+			// re-enabling map scroll zoom and allow zoom with out holding ctrl
+			scrollwheel: true,
+			gestureHandling: "greedy",
+			// map type selection
+			mapTypeControl: true,
+			mapTypeControlOptions: {
+				mapTypeIds: types.map(t => t.id),
+				style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+			}
+		};
+		map.setOptions(cloneInto(mapOptions, w));
+
+		if (isMainMap) {
+			map.setMapTypeId(defaultType);
 		}
 	}
 
