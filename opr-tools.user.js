@@ -293,11 +293,8 @@ function init() {
 		// move portal rating to the right side. don't move on mobile devices / small width
 		if (screen.availWidth > 768) {
 			const scorePanel = w.document.querySelector("div[class~='pull-right']");
-			let nodesToMove = Array.from(w.document.querySelector("div[class='btn-group']").parentElement.children);
-			nodesToMove.push(w.document.createElement("br"));
-			for (let j = nodesToMove.length - 1; j >= 0; --j) {
-				scorePanel.insertBefore(nodesToMove[j], scorePanel.firstChild);
-			}
+			let nodeToMove = w.document.querySelector("div[class='btn-group']").parentElement;
+			scorePanel.insertBefore(nodeToMove, scorePanel.firstChild);
 		}
 
 		// bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
