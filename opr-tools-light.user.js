@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR tools light
-// @version         0.18.1
+// @version         0.19.1
 // @description     light version of OPR tools for mobile browsers or if you don't need all features
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
