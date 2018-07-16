@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR tools light
-// @version         0.18.0
+// @version         0.18.1
 // @description     light version of OPR tools for mobile browsers or if you don't need all features
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -155,7 +155,6 @@ function init() {
 		if (screen.availWidth > 768) {
 			const scorePanel = w.document.querySelector("div[class~='pull-right']");
 			let nodesToMove = Array.from(w.document.querySelector("div[class='btn-group']").parentElement.children);
-			nodesToMove = nodesToMove.splice(2, 6);
 			nodesToMove.push(w.document.createElement("br"));
 			for (let j = nodesToMove.length - 1; j >= 0; --j) {
 				scorePanel.insertBefore(nodesToMove[j], scorePanel.firstChild);
