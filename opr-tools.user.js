@@ -720,6 +720,7 @@ function init() {
 		// coordinate format conversion
 		const coordUtm33 = proj4("+proj=longlat", "+proj=utm +zone=33", [newPortalData.lng, newPortalData.lat]);
 		const coordUtm35 = proj4("+proj=longlat", "+proj=utm +zone=35", [newPortalData.lng, newPortalData.lat]);
+		const coordPuwg92 = proj4("+proj=longlat", "+proj=tmerc +lat_0=0 +lon_0=19 +k=0.9993 +x_0=500000 +y_0=-5300000 +ellps=GRS80 +units=m +no_defs", [newPortalData.lng, newPortalData.lat]);
 
 		const mapButtons = `
 <a class='button btn btn-default' target='intel' href='https://www.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=17'>Intel</a>
@@ -747,6 +748,7 @@ function init() {
 <li><a target='norgeibilder' href='https://norgeibilder.no/?x=${Math.round(coordUtm33[0])}&y=${Math.round(coordUtm33[1])}&level=16&utm=33'>NO - Norge i Bilder</a></li>
 <li><a target='finnno' href='http://kart.finn.no/?lng=${newPortalData.lng}&lat=${newPortalData.lat}&zoom=17&mapType=normap&markers=${newPortalData.lng},${newPortalData.lat},r,'>NO - Finn Kart</a></li>
 <li><a target='toposvalbard' href='http://toposvalbard.npolar.no/?lat=${newPortalData.lat}&long=${newPortalData.lng}&zoom=17&layer=map'>NO - Polarinstituttet, Svalbard</a></li>
+<li><a target='geoportal_pl' href='http://mapy.geoportal.gov.pl/imap/?actions=acShowWgButtonPanel_kraj_ORTO&bbox=${coordPuwg92.y-127},${coordPuwg92.x-63},${coordPuwg92.y+127},${coordPuwg92.x+63}'>PL - GeoPortal</a></li>
 <li><a target='yandex' href='https://maps.yandex.ru/?text=${newPortalData.lat},${newPortalData.lng}'>RU - Yandex</a></li>
 <li><a target='lantmateriet' href='https://kso.etjanster.lantmateriet.se/?e=${Math.round(coordUtm33[0])}&n=${Math.round(coordUtm33[1])}&z=13'>SE - Läntmateriet</a></li>
 <li><a target='hitta' href='https://www.hitta.se/kartan!~${newPortalData.lat},${newPortalData.lng},18z/tileLayer!l=1'>SE - Hitta.se</a></li>
