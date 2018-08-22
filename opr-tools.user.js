@@ -424,7 +424,11 @@ function init() {
 				w.document.querySelector("[ng-click=\"answerCtrl2.confirmLowQuality()\"]").click();
 				currentSelectable = 0;
 				event.preventDefault();
-
+			} // submit low quality rating alternate
+			else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector("[ng-click=\"answerCtrl2.confirmLowQualityOld()\"]")) {
+				w.document.querySelector("[ng-click=\"answerCtrl2.confirmLowQualityOld()\"]").click();
+				currentSelectable = 0;
+				event.preventDefault();
 			} // click first/selected duplicate (key D)
 			else if ((event.keyCode === 68) && w.document.querySelector("#content > button")) {
 				w.document.querySelector("#content > button").click();
