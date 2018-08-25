@@ -121,7 +121,12 @@ function init() {
 		const el = w.document.querySelector("[ng-app='portalApp']");
 		w.$app = w.angular.element(el);
 		w.$injector = w.$app.injector();
+		w.inject = w.$injector.invoke;
 		w.$rootScope = w.$app.scope();
+
+		w.getService = function getService(serviceName) {
+			w.inject([serviceName, function (s) {w[serviceName] = s;}]);
+		};
 
 		w.$scope = element => w.angular.element(element).scope();
 	}
@@ -298,6 +303,33 @@ function init() {
 			strokeOpacity: 0.8,
 			strokeWeight : 1.5,
 			fillOpacity  : 0,
+		});
+
+		// adding a green 40m circle around the new location marker that updates on dragEnd
+		let draggableMarkerCircle;
+		let _showDraggableMarker = subController.showDraggableMarker;
+		subController.showDraggableMarker = exportFunction(() => {
+			_showDraggableMarker();
+
+			w.getService("NewSubmissionDataService");
+			let newLocMarker = w.NewSubmissionDataService.getNewLocationMarker();
+
+			google.maps.event.addListener(newLocMarker, "dragend", function() {
+
+				if(draggableMarkerCircle == null)
+					draggableMarkerCircle = new google.maps.Circle({
+						map          : subController.map2,
+						center       : newLocMarker.position,
+						radius       : 40,
+						strokeColor  : "#4CAF50", // material green 500
+						strokeOpacity: 1,
+						strokeWeight : 2,
+						fillOpacity  : 0,
+					});
+				else draggableMarkerCircle.setCenter(newLocMarker.position);
+
+			});
+
 		});
 
 		document.querySelector("#street-view + small").insertAdjacentHTML("beforeBegin", "<small class='pull-left'><span style='color:#ebbc4a'>Circle:</span> 40m</small>");
