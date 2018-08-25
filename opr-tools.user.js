@@ -274,6 +274,13 @@ function init() {
 		mapTypes(subController.map, false);
 		mapTypes(subController.map2, true);
 
+		// hook resetStreetView() and re-apply map types and options to first map. not needed for duplicates because resetMap() just resets the position
+		let _resetStreetView = subController.resetStreetView;
+		subController.resetStreetView = exportFunction(() => {
+			_resetStreetView();
+			mapTypes(subController.map2, true);
+		}, w);
+
 		// adding a 40m circle around the portal (capture range)
 		// noinspection JSUnusedLocalSymbols
 		const circle = new google.maps.Circle({
