@@ -270,6 +270,13 @@ function init() {
 		filmstrip.addEventListener("wheel", exportFunction(scrollHorizontally, w), false);
 		filmstrip.addEventListener("DOMMouseScroll", exportFunction(scrollHorizontally, w), false);
 
+		// hotfix for #27 not sure if it works
+		let _initMap = subController.initMap;
+		subController.initMap = exportFunction(() => {
+			_initMap();
+			mapMarker(subController.markers);
+		});
+
 		mapMarker(subController.markers);
 		mapTypes(subController.map, false);
 		mapTypes(subController.map2, true);
