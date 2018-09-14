@@ -282,6 +282,7 @@ function init() {
 			mapMarker(subController.markers);
 		});
 
+		mapOriginCircle(subController.map2)
 		mapMarker(subController.markers);
 		mapTypes(subController.map, false);
 		mapTypes(subController.map2, true);
@@ -290,20 +291,9 @@ function init() {
 		let _resetStreetView = subController.resetStreetView;
 		subController.resetStreetView = exportFunction(() => {
 			_resetStreetView();
+			mapOriginCircle(subController.map2)
 			mapTypes(subController.map2, true);
 		}, w);
-
-		// adding a 40m circle around the portal (capture range)
-		// noinspection JSUnusedLocalSymbols
-		const circle = new google.maps.Circle({
-			map          : subController.map2,
-			center       : subController.map2.center,
-			radius       : 40,
-			strokeColor  : "#ebbc4a",
-			strokeOpacity: 0.8,
-			strokeWeight : 1.5,
-			fillOpacity  : 0,
-		});
 
 		// adding a green 40m circle around the new location marker that updates on dragEnd
 		let draggableMarkerCircle;
@@ -909,6 +899,20 @@ function init() {
 				}, w), false);
 			}
 		}
+	}
+	
+	// adding a 40m circle around the portal (capture range)
+	function mapOriginCircle(map) {
+		// noinspection JSUnusedLocalSymbols
+		const circle = new google.maps.Circle({
+			map          : map,
+			center       : map.center,
+			radius       : 40,
+			strokeColor  : "#ebbc4a",
+			strokeOpacity: 0.8,
+			strokeWeight : 1.5,
+			fillOpacity  : 0,
+		});
 	}
 
 	// replace map markers with a nice circle
