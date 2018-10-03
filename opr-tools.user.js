@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR tools
-// @version         0.24.0
+// @version         0.24.1
 // @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
