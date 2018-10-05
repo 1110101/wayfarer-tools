@@ -13,6 +13,7 @@
 // @supportURL      https://gitlab.com/1110101/opr-tools/issues
 // @require         https://cdn.rawgit.com/alertifyjs/alertify.js/v1.0.10/dist/js/alertify.js
 // @require         https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.4/proj4.js
+// @require         https://raw.githubusercontent.com/hMatoba/piexifjs/aa8bcb748d23a8b8cde15a94cfd84ca9be7318bb/piexif.js
 
 // ==/UserScript==
 
@@ -162,6 +163,8 @@ function init() {
 		} else if (subController.reviewType === "EDIT") {
 			modifyEditPage(ansController, subController, newPortalData);
 		}
+
+		loadExif(subController);
 
 		checkIfAutorefresh();
 
@@ -900,7 +903,7 @@ function init() {
 			}
 		}
 	}
-	
+
 	// adding a 40m circle around the portal (capture range)
 	function mapOriginCircle(map) {
 		// noinspection JSUnusedLocalSymbols
@@ -1367,6 +1370,172 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 		}).reset();
 
 	}
+
+
+	// Loads the full image to extract interesting metadata and the GPS coordinates of the picture
+	function loadExif(subController) {
+		const newPortalData = subController.pageData;
+		let fullImageUrl = (newPortalData.imageUrl + "=s0").replace("http:", "https:");
+		let exifAnchor = getExifAnchor(subController);
+		exifAnchor.insertAdjacentHTML("beforeEnd", `<div><small class="gold">EXIF Data</small><br/><span id="exif">Loading EXIF Data</span></div>`);
+		let exifElement = w.document.getElementById("exif");
+
+		fetch(fullImageUrl).then(function (response) {
+			let reader = response.body.getReader();
+			let fullImageSize = parseInt(response.headers.get("Content-Length"));
+			let binary_buffer = "";
+			let charsReceived = 0;
+			reader.read().then(function processText({done, value}) {
+				if (done) {
+					onImageLoaded(binary_buffer, subController);
+					return;
+				}
+
+				// value for fetch streams is a Uint8Array
+				let i, len = value.length;
+				for (i = 0; i < len; i++) {
+					binary_buffer += String.fromCharCode(value[i]);
+				}
+				charsReceived += value.length;
+				let ratio = Math.round(100 * charsReceived / fullImageSize);
+				exifElement.innerHTML = "Loading EXIF Data: read " + ratio + " %";
+				// Read some more, and call this function again
+				return reader.read().then(processText);
+			});
+		});
+	}
+
+	// Returns the location to append the exif info
+	function getExifAnchor(subController) {
+		let exifAnchor;
+		if (subController.reviewType === "NEW") {
+			exifAnchor = w.document.getElementById("descriptionDiv");
+		} else if (subController.reviewType === "EDIT") {
+			exifAnchor = w.document.querySelector("div[ng-show=\"subCtrl.reviewType==='EDIT'\"]");
+		}
+		return exifAnchor;
+	}
+
+	// Handles the asynchronous picture load
+	function onImageLoaded(binary_buffer, subController) {
+		try {
+			let exifObj = piexif.load(binary_buffer);
+			handleExif(exifObj, subController);
+		} catch (err) {
+			console.log(err);
+			let exifElement = w.document.getElementById("exif");
+			exifElement.innerHTML = "Error during EXIF load: " + err;
+		}
+	}
+
+	// Cleans text from EXIF data for display
+	function safeText(text) {
+		if (null == text) {
+			return "N/A";
+		}
+		return text.replace(/[<>'"]/g, '');
+	}
+
+	// Colored Icons for the markers
+	const MARKER_EXIF_OK = "data:image/png;base64,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";
+	const MARKER_EXIF_CAUTIOUS = "data:image/png;base64,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";
+	const MARKER_EXIF_WARN = "data:image/png;base64,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";
+
+
+	// Uses the EXIF data to update the OPR interface and inject maps markers
+	function handleExif(exifObj, subController) {
+		const newPortalData = subController.pageData;
+		let exifElement = w.document.getElementById("exif");
+		let exifData = "";
+		exifData += "Make: " + safeText(exifObj["0th"][271]) + "<br/>";
+		exifData += "Model: " + safeText(exifObj["0th"][272]) + "<br/>";
+		exifData += "Datetime: " + safeText(exifObj["0th"][306]) + "<br/>";
+		exifData += "Software: " + safeText(exifObj["0th"][305]) + "<br/>";
+
+		var exifGps = exifObj["GPS"];
+		if (null != exifGps[1]) {
+			let markerLatitude = exifToCoordinate(exifGps[1], exifGps[2]);
+			let markerLongitude = exifToCoordinate(exifGps[3], exifGps[4]);
+			let distance = Math.round(haversine(newPortalData.lat, markerLatitude, newPortalData.lng, markerLongitude));
+			let exifIcon;
+			if (distance > 70) {
+				exifData += "<span style='color: darkred'>";
+				exifIcon = MARKER_EXIF_WARN;
+			} else if (distance > 25) {
+				exifData += "<span style='color: orange'>";
+				exifIcon = MARKER_EXIF_CAUTIOUS;
+			} else {
+				exifData += "<span style='color: green'>";
+				exifIcon = MARKER_EXIF_OK;
+			}
+
+			exifData += "Distance between proposal and EXIF data: " + distance + " m</span><br/>";
+			let exifPosition = {lat: markerLatitude, lng: markerLongitude};
+			let exifMarker = newMarker(exifPosition, exifIcon);
+			let exifMarker2 = newMarker(exifPosition, exifIcon);
+			let exifMarkerLocationChange = newMarker(exifPosition, exifIcon);
+			exifMarkerLocationChange.zIndex = -10000;
+
+			// Injects markers into maps
+			function positionMarker() {
+				exifMarker.setMap(subController.map);
+				exifMarker2.setMap(subController.map2);
+				exifMarkerLocationChange.setMap(subController.locationEditsMap);
+			}
+
+			positionMarker();
+			// Make sure we keep the exif icon even after map reset
+			for (let clickable of document.getElementsByClassName('clickable')) {
+				clickable.addEventListener("click", positionMarker);
+			}
+			// TODO: the dynamic reset link is not handled because we have no jquery support
+		} else {
+			exifData += "No GPS info available <br/>";
+		}
+
+		// Update the EXIF info text in the UI
+		exifElement.innerHTML = exifData;
+	}
+
+
+	function newMarker(exifPosition, exifIcon) {
+		return new google.maps.Marker({
+			position: exifPosition,
+			title: 'EXIF Position',
+			icon: exifIcon
+		});
+	}
+
+	// Turns EXIF array coordinates (degrees, minutes, seconds) into a unique decimal degrees value
+	function exifToCoordinate(direction, values) {
+		let multiplier = ("N" == direction || "E" == direction) ? 1 : -1;
+		let degrees = values[0][0] / values[0][1];
+		let minutes = values[1][0] / values[1][1];
+		let seconds = values[2][0] / values[2][1];
+		return multiplier * (degrees + minutes / 60 + seconds / 3600)
+	}
+
+	// Computes distance between two latitude/longitude coordinates
+	function haversine(lat1, lat2, lon1, lon2) {
+		if (typeof (Number.prototype.toRadians) === "undefined") {
+			Number.prototype.toRadians = function () {
+				return this * Math.PI / 180;
+			}
+		}
+		let earthRadius = 6371e3; // metres
+		let φ1 = lat1.toRadians();
+		let φ2 = lat2.toRadians();
+		let Δφ = (lat2 - lat1).toRadians();
+		let Δλ = (lon2 - lon1).toRadians();
+
+		let a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+			Math.cos(φ1) * Math.cos(φ2) *
+			Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+		let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+		let distance = earthRadius * c;
+		return distance;
+	}
+
 
 }
 
