@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR tools
-// @version         0.24.0
+// @version         0.25.0
 // @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -1474,7 +1474,6 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 			let exifMarker = newMarker(exifPosition, exifIcon);
 			let exifMarker2 = newMarker(exifPosition, exifIcon);
 			let exifMarkerLocationChange = newMarker(exifPosition, exifIcon);
-			exifMarkerLocationChange.zIndex = -10000;
 
 			// Injects markers into maps
 			function positionMarker() {
@@ -1502,7 +1501,8 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 		return new google.maps.Marker({
 			position: exifPosition,
 			title: 'EXIF Position',
-			icon: exifIcon
+			icon: exifIcon,
+			zIndex: -10000
 		});
 	}
 
