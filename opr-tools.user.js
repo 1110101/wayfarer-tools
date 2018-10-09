@@ -1086,21 +1086,21 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
 <span style="margin-left: 5px" class="ingress-mid-blue pull-left">Scanner offset:</span>
 <input id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="${oprt_scanner_offset}">
 </p>`);
-		}
 
-		// we have to inject the tooltip to angular
-		w.$injector.invoke(cloneInto(["$compile", ($compile) => {
-			let compiledSubmit = $compile(tooltipSpan)(w.$scope(stats));
-			w.document.getElementById("scannerOffsetContainer").insertAdjacentElement("afterbegin", compiledSubmit[0]);
-		}], w, {cloneFunctions: true}));
+			// we have to inject the tooltip to angular
+			w.$injector.invoke(cloneInto(["$compile", ($compile) => {
+				let compiledSubmit = $compile(tooltipSpan)(w.$scope(stats));
+				w.document.getElementById("scannerOffsetContainer").insertAdjacentElement("afterbegin", compiledSubmit[0]);
+			}], w, {cloneFunctions: true}));
 
 
-		["change", "keyup", "cut", "paste", "input"].forEach(e => {
-			w.document.getElementById("scannerOffset").addEventListener(e, (event) => {
-				w.localStorage.setItem(OPRT.SCANNER_OFFSET, event.target.value);
+			["change", "keyup", "cut", "paste", "input"].forEach(e => {
+				w.document.getElementById("scannerOffset").addEventListener(e, (event) => {
+					w.localStorage.setItem(OPRT.SCANNER_OFFSET, event.target.value);
+				});
 			});
-		});
-		// **
+			// **
+		}
 
 		modifyHeader = () => {}; // just run once
 	}
