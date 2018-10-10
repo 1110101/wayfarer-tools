@@ -539,6 +539,7 @@ function init() {
 			// return to first selection (should this be a portal)
 			else if (event.keyCode === 27 || event.keyCode === 111) {
 				currentSelectable = 0;
+				event.preventDefault();
 			}
 			// skip portal if possible
 			else if (event.keyCode === 106 || event.keyCode === 220) {
