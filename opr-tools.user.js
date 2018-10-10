@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR tools
-// @version         0.24.5
+// @version         0.24.6
 // @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -430,7 +430,12 @@ function init() {
 		})
 
 		// a list of all 6 star button rows, and the two submit buttons
-		let starsAndSubmitButtons = w.document.querySelectorAll(".col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button");
+		let starsAndSubmitButtons
+		if (subController.hasSupportingImageOrStatement) {
+			starsAndSubmitButtons = w.document.querySelectorAll(".col-sm-6 .btn-group, .text-center.hidden-xs:not(.ng-hide) .btn-group, .big-submit-button");
+		} else {
+			starsAndSubmitButtons = w.document.querySelectorAll(".col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button");
+		}
 
 		function highlight() {
 			starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = "none"; }, w));
