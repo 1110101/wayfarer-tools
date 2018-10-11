@@ -251,8 +251,23 @@ function init () {
       highlight()
     })
 
+    // Fix rejectComment width
+    let _showLowQualityModal = ansController.showLowQualityModal
+    ansController.showLowQualityModal = exportFunction(() => {
+      _showLowQualityModal()
+      setTimeout(() => {
+        let rejectReasonTA = w.document.querySelector('textarea[ng-model="answerCtrl2.rejectComment"]')
+        rejectReasonTA.style['max-width'] = '100%'
+      }, 10)
+    })
+
     // a list of all 6 star button rows, and the two submit buttons
-    let starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button')
+    let starsAndSubmitButtons
+    if (subController.hasSupportingImageOrStatement) {
+      starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .text-center.hidden-xs:not(.ng-hide) .btn-group, .big-submit-button')
+    } else {
+      starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button')
+    }
 
     function highlight () {
       starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none' }, w))
