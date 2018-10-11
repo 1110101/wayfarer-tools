@@ -39,6 +39,10 @@ SOFTWARE.
 
 */
 
+/* globals screen, addEventListener, unsafeWindow, exportFunction, cloneInto, angular, google */
+
+/* eslint-disable */
+
 // polyfill for ViolentMonkey
 if (typeof exportFunction !== 'function') {
   exportFunction = (func, scope, options) => {
@@ -56,6 +60,9 @@ function addGlobalStyle (css) {
   GM_addStyle(css)
   addGlobalStyle = () => {} // noop after first run
 }
+
+/* eslint-enable */
+
 function init () {
   const w = typeof unsafeWindow === 'undefined' ? window : unsafeWindow
   let tryNumber = 15
@@ -85,7 +92,7 @@ function init () {
           clearInterval(initWatcher)
         } catch (error) {
           console.log(error)
-          if (error !== 42) {
+          if (error.message !== '42') {
             clearInterval(initWatcher)
           }
         }
@@ -120,12 +127,12 @@ function init () {
 
     if (subController.errorMessage !== '') {
       // no portal analysis data available
-      throw 41 // @todo better error code
+      throw new Error(41) // @todo better error code
     }
 
     if (typeof newPortalData === 'undefined') {
       // no submission data present
-      throw 42 // @todo better error code
+      throw new Error(42) // @todo better error code
     }
 
     // detect portal edit
@@ -241,9 +248,9 @@ function init () {
         starsAndSubmitButtons[currentSelectable].style.border = cloneInto('1px dashed #ebbc4a', w)
         submitAndNext.blur()
         submitButton.blur()
-      } else if (currentSelectable == 6) {
+      } else if (currentSelectable === 6) {
         submitAndNext.focus()
-      } else if (currentSelectable == 7) {
+      } else if (currentSelectable === 7) {
         submitButton.focus()
       }
     }
@@ -268,77 +275,83 @@ function init () {
 
        */
 
-      if (event.keyCode >= 49 && event.keyCode <= 53) { numkey = event.keyCode - 48 } else if (event.keyCode >= 97 && event.keyCode <= 101) { numkey = event.keyCode - 96 } else { numkey = null }
+      let numkey = null
+      if (event.keyCode >= 49 && event.keyCode <= 53) {
+        numkey = event.keyCode - 48
+      } else if (event.keyCode >= 97 && event.keyCode <= 101) {
+        numkey = event.keyCode - 96
+      }
 
       // do not do anything if a text area or a input with type text has focus
       if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
         return
-      }
-      // "analyze next" button
-      else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+        // "analyze next" button
         w.document.location.href = '/recon'
         event.preventDefault()
-      } // submit low quality rating
-      else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+        // submit low quality rating
         w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]').click()
         currentSelectable = 0
         event.preventDefault()
-      } // click first/selected duplicate (key D)
-      else if ((event.keyCode === 68) && w.document.querySelector('#content > button')) {
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQualityOld()"]')) {
+        // submit low quality rating alternate
+        w.document.querySelector('[ng-click="answerCtrl2.confirmLowQualityOld()"]').click()
+        currentSelectable = 0
+        event.preventDefault()
+      } else if ((event.keyCode === 68) && w.document.querySelector('#content > button')) {
+        // click first/selected duplicate (key D)
         w.document.querySelector('#content > button').click()
         currentSelectable = 0
         event.preventDefault()
-      } // click on translate title link (key T)
-      else if (event.keyCode === 84) {
+      } else if (event.keyCode === 84) {
+        // click on translate title link (key T)
         const link = w.document.querySelector('#descriptionDiv > .translate-title')
         if (link) {
           link.click()
           event.preventDefault()
         }
-      } // click on translate description link (key Y)
-      else if (event.keyCode === 89) {
+      } else if (event.keyCode === 89) {
+        // click on translate description link (key Y)
         const link = w.document.querySelector('#descriptionDiv > .translate-description')
         if (link) {
           link.click()
           event.preventDefault()
         }
-      } // submit duplicate
-      else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
+        // submit duplicate
         w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]').click()
         currentSelectable = 0
         event.preventDefault()
-      } // submit normal rating
-      else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+        // submit normal rating
         w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click()
         event.preventDefault()
-      } // close duplicate dialog
-      else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]')) {
+      } else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]')) {
+        // close duplicate dialog
         w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]').click()
         currentSelectable = 0
         event.preventDefault()
-      } // close low quality ration dialog
-      else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]')) {
+      } else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]')) {
+        // close low quality ration dialog
         w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]').click()
         currentSelectable = 0
         event.preventDefault()
-      }
-      // return to first selection (should this be a portal)
-      else if (event.keyCode === 27 || event.keyCode === 111) {
+      } else if (event.keyCode === 27 || event.keyCode === 111) {
+        // return to first selection (should this be a portal)
         currentSelectable = 0
-      }
-      // skip portal if possible
-      else if (event.keyCode === 106 || event.keyCode === 220) {
-        if (newPortalData.canSkip) { ansController.skipToNext() }
-      } else if (event.keyCode === 72) {
-        showHelp() // @todo
-      }
-      // select next rating
-      else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+        event.preventDefault()
+      } else if (event.keyCode === 106 || event.keyCode === 220) {
+        // skip portal if possible
+        if (newPortalData.canSkip) {
+          ansController.skipToNext()
+        }
+      } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+        // select next rating
         currentSelectable++
         event.preventDefault()
-      }
-      // select previous rating
-      else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+      } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+        // select previous rating
         currentSelectable--
         event.preventDefault()
       } else if (numkey === null || currentSelectable > maxItems - 2) {
@@ -349,9 +362,8 @@ function init () {
         } catch (e) {
           // ignore
         }
-      }
-      // rating 1-5
-      else {
+      } else {
+        // rating 1-5
         starsAndSubmitButtons[currentSelectable].querySelectorAll('button.button-star')[numkey - 1].click()
         currentSelectable++
       }
@@ -360,7 +372,7 @@ function init () {
 
     highlight()
 
-    modifyNewPage = () => {} // just run once
+    modifyNewPage = () => {} // eslint-disable-line
   }
 
   function modifyEditPage (ansController, subController, newPortalData) {
@@ -499,38 +511,39 @@ function init () {
       97 - 101: NUMPAD 1-5
        */
 
-      if (event.keyCode >= 49 && event.keyCode <= 53) { numkey = event.keyCode - 48 } else if (event.keyCode >= 97 && event.keyCode <= 101) { numkey = event.keyCode - 96 } else { numkey = null }
+      let numkey = null
+      if (event.keyCode >= 49 && event.keyCode <= 53) {
+        numkey = event.keyCode - 48
+      } else if (event.keyCode >= 97 && event.keyCode <= 101) {
+        numkey = event.keyCode - 96
+      }
 
       // do not do anything if a text area or a input with type text has focus
       if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
         return
-      }
-      // "analyze next" button
-      else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+        // "analyze next" button
         w.document.location.href = '/recon'
         event.preventDefault()
-      } // submit normal rating
-      else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+        // submit normal rating
         w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click()
         event.preventDefault()
-      } // return to first selection (should this be a portal)
-      else if (event.keyCode === 27 || event.keyCode === 111) {
+      } else if (event.keyCode === 27 || event.keyCode === 111) {
+        // return to first selection (should this be a portal)
         currentSelectable = 0
-      }
-      // select next rating
-      else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+      } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+        // select next rating
         currentSelectable++
         event.preventDefault()
-      }
-      // select previous rating
-      else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+      } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+        // select previous rating
         currentSelectable--
         event.preventDefault()
       } else if (numkey === null || currentSelectable > maxItems - 2) {
         return
-      }
-      // rating 1-5
-      else {
+      } else {
+        // rating 1-5
         if (hasLocationEdit && currentSelectable === maxItems - 3 && numkey <= mapMarkers.length) {
           google.maps.event.trigger(angular.element(document.getElementById('NewSubmissionController')).scope().getAllLocationMarkers()[numkey - 1], 'click')
         } else {
@@ -647,7 +660,7 @@ function init () {
           }
 
           textBox.value = text
-          textBox.dispatchEvent(new Event('change'))
+          textBox.dispatchEvent(new Event('change')) // eslint-disable-line no-undef
 
           event.target.blur()
         }, w), false)
@@ -730,7 +743,7 @@ ${Math.round(nextBadgeProcess)}%
     lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `<p><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 90%;" type="text"
 value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(percent)}%"/></p>`)
 
-    modifyHeader = () => {} // just run once
+    modifyHeader = () => {} // eslint-disable-line
   }
 }
 
