@@ -1,4 +1,7 @@
 # OPR-Tools
+
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+
 Userscript for [Ingress Operation Portal Recon](https://opr.ingress.com/recon)
 
 > Userscript manager such as [Tampermonkey](https://tampermonkey.net/) required.
