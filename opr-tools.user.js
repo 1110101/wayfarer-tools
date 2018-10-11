@@ -42,6 +42,8 @@ SOFTWARE.
 
 */
 
+/* globals screen, addEventListener, GM_notification, unsafeWindow, exportFunction, cloneInto, angular, google, alertify, proj4 */
+
 const OPRT = {
   SCANNER_OFFSET: 'oprt_scanner_offset',
   REFRESH: 'oprt_refresh',
@@ -50,6 +52,8 @@ const OPRT = {
   REFRESH_NOTI_DESKTOP: 'oprt_refresh_noti_desktop',
   MAP_TYPE: 'oprt_map_type'
 }
+
+/* eslint-disable */
 
 // polyfill for ViolentMonkey
 if (typeof exportFunction !== 'function') {
@@ -70,11 +74,13 @@ function addGlobalStyle (css) {
   addGlobalStyle = () => {} // noop after first run
 }
 
+/* eslint-enable */
+
 function init () {
   const w = typeof unsafeWindow === 'undefined' ? window : unsafeWindow
   let tryNumber = 15
 
-  let oprt_customPresets
+  let oprtCustomPresets
 
   let browserLocale = window.navigator.languages[0] || window.navigator.language || 'en'
 
@@ -102,10 +108,10 @@ function init () {
           clearInterval(initWatcher)
         } catch (error) {
           console.log(error)
-          if (error === 41) {
+          if (error.message === '41') {
             addRefreshContainer()
           }
-          if (error !== 42) {
+          if (error.message !== '42') {
             clearInterval(initWatcher)
           }
         }
@@ -145,12 +151,12 @@ function init () {
 
     if (subController.errorMessage !== '') {
       // no portal analysis data available
-      throw 41 // @todo better error code
+      throw new Error(41) // @todo better error code
     }
 
     if (typeof newPortalData === 'undefined') {
       // no submission data present
-      throw 42 // @todo better error code
+      throw new Error(42) // @todo better error code
     }
 
     // detect portal edit
@@ -194,7 +200,7 @@ function init () {
       alertify.okBtn('Save').prompt('New preset name:',
         (value, event) => {
           event.preventDefault()
-          if (value == 'undefined' || value == '') {
+          if (value === 'undefined' || value === '') {
             return
           }
           saveCustomPreset(value, ansController, whatController)
@@ -213,7 +219,7 @@ function init () {
         return
       }
 
-      let preset = oprt_customPresets.find(item => item.uid === value)
+      let preset = oprtCustomPresets.find(item => item.uid === value)
 
       if (event.shiftKey) {
         alertify.log(`Deleted preset <i>${preset.label}</i>`)
@@ -236,7 +242,7 @@ function init () {
       whatController.whatInput = preset.nodeName.split(' ')[0]
       let nodes = whatController.getWhatAutocomplete()
       for (let i = 0; i < nodes.length; i++) {
-        if (nodes[i].id == preset.nodeId) {
+        if (nodes[i].id === preset.nodeId) {
           whatController.whatNode = nodes[i]
           break
         }
@@ -257,7 +263,7 @@ function init () {
     let lastScrollLeft = filmstrip.scrollLeft
     function scrollHorizontally (e) {
       e = window.event || e
-      if (('deltaY' in e && e.deltaY !== 0 || 'wheelDeltaY' in e && e.wheelDeltaY !== 0) && lastScrollLeft === filmstrip.scrollLeft) {
+      if ((('deltaY' in e && e.deltaY !== 0) || ('wheelDeltaY' in e && e.wheelDeltaY !== 0)) && lastScrollLeft === filmstrip.scrollLeft) {
         e.preventDefault()
         const delta = (e.wheelDeltaY || -e.deltaY * 25 || -e.detail)
         filmstrip.scrollLeft -= (delta)
@@ -433,9 +439,9 @@ function init () {
         starsAndSubmitButtons[currentSelectable].style.border = cloneInto('1px dashed #ebbc4a', w)
         submitAndNext.blur()
         submitButton.blur()
-      } else if (currentSelectable == 6) {
+      } else if (currentSelectable === 6) {
         submitAndNext.focus()
-      } else if (currentSelectable == 7) {
+      } else if (currentSelectable === 7) {
         submitButton.focus()
       }
     }
@@ -460,7 +466,12 @@ function init () {
 
        */
 
-      if (event.keyCode >= 49 && event.keyCode <= 53) { numkey = event.keyCode - 48 } else if (event.keyCode >= 97 && event.keyCode <= 101) { numkey = event.keyCode - 96 } else { numkey = null }
+      let numkey = null
+      if (event.keyCode >= 49 && event.keyCode <= 53) {
+        numkey = event.keyCode - 48
+      } else if (event.keyCode >= 97 && event.keyCode <= 101) {
+        numkey = event.keyCode - 96
+      }
 
       // 1-7
       let extNumkey = null
@@ -473,83 +484,79 @@ function init () {
       // do not do anything if a text area or a input with type text has focus
       if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
         return
-      }
-      // "analyze next" button
-      else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+        // "analyze next" button
         w.document.location.href = '/recon'
         event.preventDefault()
-      } // submit low quality rating
-      else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+        // submit low quality rating
         w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]').click()
         currentSelectable = 0
         event.preventDefault()
-      } // submit low quality rating alternate
-      else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQualityOld()"]')) {
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQualityOld()"]')) {
+        // submit low quality rating alternate
         w.document.querySelector('[ng-click="answerCtrl2.confirmLowQualityOld()"]').click()
         currentSelectable = 0
         event.preventDefault()
-      } // click first/selected duplicate (key D)
-      else if ((event.keyCode === 68) && w.document.querySelector('#content > button')) {
+      } else if ((event.keyCode === 68) && w.document.querySelector('#content > button')) {
+        // click first/selected duplicate (key D)
         w.document.querySelector('#content > button').click()
         currentSelectable = 0
         event.preventDefault()
-      } // click on translate title link (key T)
-      else if (event.keyCode === 84) {
+      } else if (event.keyCode === 84) {
+        // click on translate title link (key T)
         const link = w.document.querySelector('#descriptionDiv > .translate-title')
         if (link) {
           link.click()
           event.preventDefault()
         }
-      } // click on translate description link (key Y)
-      else if (event.keyCode === 89) {
+      } else if (event.keyCode === 89) {
+        // click on translate description link (key Y)
         const link = w.document.querySelector('#descriptionDiv > .translate-description')
         if (link) {
           link.click()
           event.preventDefault()
         }
-      } // submit duplicate
-      else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
+        // submit duplicate
         w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]').click()
         currentSelectable = 0
         event.preventDefault()
-      } // submit normal rating
-      else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+        // submit normal rating
         w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click()
         event.preventDefault()
-      } // close duplicate dialog
-      else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]')) {
+      } else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]')) {
+        // close duplicate dialog
         w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]').click()
         currentSelectable = 0
         event.preventDefault()
-      } // close low quality ration dialog
-      else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]')) {
+      } else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]')) {
+        // close low quality ration dialog
         w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]').click()
         currentSelectable = 0
         event.preventDefault()
-      }
-      // return to first selection (should this be a portal)
-      else if (event.keyCode === 27 || event.keyCode === 111) {
+      } else if (event.keyCode === 27 || event.keyCode === 111) {
+        // return to first selection (should this be a portal)
         currentSelectable = 0
         event.preventDefault()
-      }
-      // skip portal if possible
-      else if (event.keyCode === 106 || event.keyCode === 220) {
-        if (newPortalData.canSkip) { ansController.skipToNext() }
+      } else if (event.keyCode === 106 || event.keyCode === 220) {
+        // skip portal if possible
+        if (newPortalData.canSkip) {
+          ansController.skipToNext()
+        }
       } else if (event.keyCode === 72) {
         showHelp() // @todo
-      }
-      // select next rating
-      else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+      } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+        // select next rating
         currentSelectable++
         event.preventDefault()
-      }
-      // select previous rating
-      else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+      } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+        // select previous rating
         currentSelectable--
         event.preventDefault()
-      }
-      // Reject reason shortcuts
-      else if (extNumkey !== null && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+      } else if (extNumkey !== null && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+        // Reject reason shortcuts
         if (selectedReasonGroup === -1) {
           try {
             w.document.getElementById('sub-group-' + extNumkey).click()
@@ -576,9 +583,8 @@ function init () {
         } catch (e) {
           // ignore
         }
-      }
-      // rating 1-5
-      else {
+      } else {
+        // rating 1-5
         starsAndSubmitButtons[currentSelectable].querySelectorAll('button.button-star')[numkey - 1].click()
         currentSelectable++
       }
@@ -587,7 +593,7 @@ function init () {
 
     highlight()
 
-    modifyNewPage = () => {} // just run once
+    modifyNewPage = () => {} // eslint-disable-line
   }
 
   function modifyEditPage (ansController, subController, newPortalData) {
@@ -657,7 +663,9 @@ function init () {
     expandWhatIsItBox()
 
     // fix locationEditsMap if only one location edit exists
-    if (newPortalData.locationEdits.length <= 1) { subController.locationEditsMap.setZoom(19) }
+    if (newPortalData.locationEdits.length <= 1) {
+      subController.locationEditsMap.setZoom(19)
+    }
 
     /* EDIT PORTAL */
     // keyboard navigation
@@ -724,38 +732,39 @@ function init () {
       97 - 101: NUMPAD 1-5
        */
 
-      if (event.keyCode >= 49 && event.keyCode <= 53) { numkey = event.keyCode - 48 } else if (event.keyCode >= 97 && event.keyCode <= 101) { numkey = event.keyCode - 96 } else { numkey = null }
+      let numkey = null
+      if (event.keyCode >= 49 && event.keyCode <= 53) {
+        numkey = event.keyCode - 48
+      } else if (event.keyCode >= 97 && event.keyCode <= 101) {
+        numkey = event.keyCode - 96
+      }
 
       // do not do anything if a text area or a input with type text has focus
       if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
         return
-      }
-      // "analyze next" button
-      else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+        // "analyze next" button
         w.document.location.href = '/recon'
         event.preventDefault()
-      } // submit normal rating
-      else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+        // submit normal rating
         w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click()
         event.preventDefault()
-      } // return to first selection (should this be a portal)
-      else if (event.keyCode === 27 || event.keyCode === 111) {
+      } else if (event.keyCode === 27 || event.keyCode === 111) {
+        // return to first selection (should this be a portal)
         currentSelectable = 0
-      }
-      // select next rating
-      else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+      } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+        // select next rating
         currentSelectable++
         event.preventDefault()
-      }
-      // select previous rating
-      else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+      } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+        // select previous rating
         currentSelectable--
         event.preventDefault()
       } else if (numkey === null || currentSelectable > maxItems - 2) {
         return
-      }
-      // rating 1-5
-      else {
+      } else {
+        // rating 1-5
         if (hasLocationEdit && currentSelectable === maxItems - 3 && numkey <= mapMarkers.length) {
           google.maps.event.trigger(angular.element(document.getElementById('NewSubmissionController')).scope().getAllLocationMarkers()[numkey - 1], 'click')
         } else {
@@ -907,7 +916,7 @@ function init () {
           }
 
           textBox.value = text
-          textBox.dispatchEvent(new Event('change'))
+          textBox.dispatchEvent(new Event('change')) // eslint-disable-line no-undef
 
           event.target.blur()
         }, w), false)
@@ -918,7 +927,7 @@ function init () {
   // adding a 40m circle around the portal (capture range)
   function mapOriginCircle (map) {
     // noinspection JSUnusedLocalSymbols
-    const circle = new google.maps.Circle({
+    const circle = new google.maps.Circle({ // eslint-disable-line no-unused-vars
       map: map,
       center: map.center,
       radius: 40,
@@ -1034,7 +1043,7 @@ function init () {
     // stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
 
     // get scanner offset from localStorage
-    let oprt_scanner_offset = parseInt(w.localStorage.getItem(OPRT.SCANNER_OFFSET)) || 0
+    let oprtScannerOffset = parseInt(w.localStorage.getItem(OPRT.SCANNER_OFFSET)) || 0
 
     const lastPlayerStatLine = w.document.querySelector('#player_stats:not(.visible-xs) div')
     const stats = w.document.querySelector('#player_stats').children[2]
@@ -1043,7 +1052,7 @@ function init () {
     const accepted = parseInt(stats.children[5].children[2].innerText)
     const rejected = parseInt(stats.children[7].children[2].innerText)
 
-    const processed = accepted + rejected - oprt_scanner_offset
+    const processed = accepted + rejected - oprtScannerOffset
     const percent = Math.round(processed / reviewed * 1000) / 10
 
     const reconBadge = {100: 'Bronze', 750: 'Silver', 2500: 'Gold', 5000: 'Platin', 10000: 'Black'}
@@ -1087,7 +1096,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
       lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `
 <p id='scannerOffsetContainer'>
 <span style="margin-left: 5px" class="ingress-mid-blue pull-left">Scanner offset:</span>
-<input id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="${oprt_scanner_offset}">
+<input id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="${oprtScannerOffset}">
 </p>`)
 
       // we have to inject the tooltip to angular
@@ -1104,7 +1113,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
       // **
     }
 
-    modifyHeader = () => {} // just run once
+    modifyHeader = () => {} // eslint-disable-line
   }
 
   function addRefreshContainer () {
@@ -1114,15 +1123,15 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
 
     cbxRefresh.id = OPRT.REFRESH
     cbxRefresh.type = 'checkbox'
-    cbxRefresh.checked = (w.localStorage.getItem(cbxRefresh.id) == 'true')
+    cbxRefresh.checked = (w.localStorage.getItem(cbxRefresh.id) === 'true')
 
     cbxRefreshSound.id = OPRT.REFRESH_NOTI_SOUND
     cbxRefreshSound.type = 'checkbox'
-    cbxRefreshSound.checked = (w.localStorage.getItem(cbxRefreshSound.id) == 'true')
+    cbxRefreshSound.checked = (w.localStorage.getItem(cbxRefreshSound.id) === 'true')
 
     cbxRefreshDesktop.id = OPRT.REFRESH_NOTI_DESKTOP
     cbxRefreshDesktop.type = 'checkbox'
-    cbxRefreshDesktop.checked = (w.localStorage.getItem(cbxRefreshDesktop.id) == 'true')
+    cbxRefreshDesktop.checked = (w.localStorage.getItem(cbxRefreshDesktop.id) === 'true')
 
     let refreshPanel = w.document.createElement('div')
     refreshPanel.className = 'panel panel-ingress'
@@ -1166,7 +1175,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
       return div
     }
 
-    addRefreshContainer = () => {} // run only once
+    addRefreshContainer = () => {} // eslint-disable-line
   }
 
   let refreshIntervalID
@@ -1204,12 +1213,12 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
       if (w.document.hidden) { // if tab in background: flash favicon
         let flag = true
 
-        if (w.localStorage.getItem(OPRT.REFRESH_NOTI_SOUND) == 'true') {
+        if (w.localStorage.getItem(OPRT.REFRESH_NOTI_SOUND) === 'true') {
           let audio = document.createElement('audio')
           audio.src = NOTIFICATION_SOUND
           audio.autoplay = true
         }
-        if (w.localStorage.getItem(OPRT.REFRESH_NOTI_DESKTOP) == 'true') {
+        if (w.localStorage.getItem(OPRT.REFRESH_NOTI_DESKTOP) === 'true') {
           GM_notification({
             'title': 'OPR - New Portal Analysis Available',
             'text': 'by OPR-Tools',
@@ -1271,9 +1280,9 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
 
   function addCustomPresetButtons () {
     // add customPreset UI
-    oprt_customPresets = getCustomPresets(w)
+    oprtCustomPresets = getCustomPresets(w)
     let customPresetOptions = ''
-    for (const customPreset of oprt_customPresets) {
+    for (const customPreset of oprtCustomPresets) {
       customPresetOptions += `<button class='button btn btn-default customPresetButton' id='${customPreset.uid}'>${customPreset.label}</button>`
     }
     w.document.getElementById('customPresets').innerHTML = customPresetOptions
@@ -1282,7 +1291,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
   function getCustomPresets (w) {
     // simply to scope the string we don't need after JSON.parse
     let presetsJSON = w.localStorage.getItem('oprt_custom_presets')
-    if (presetsJSON != null && presetsJSON != '') {
+    if (presetsJSON != null && presetsJSON !== '') {
       return JSON.parse(presetsJSON)
     }
     return []
@@ -1302,13 +1311,13 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
       location: ansController.formData.location,
       safety: ansController.formData.safety
     }
-    oprt_customPresets.push(preset)
-    w.localStorage.setItem('oprt_custom_presets', JSON.stringify(oprt_customPresets))
+    oprtCustomPresets.push(preset)
+    w.localStorage.setItem('oprt_custom_presets', JSON.stringify(oprtCustomPresets))
   }
 
   function deleteCustomPreset (preset) {
-    oprt_customPresets = oprt_customPresets.filter(item => item.uid !== preset.uid)
-    w.localStorage.setItem('oprt_custom_presets', JSON.stringify(oprt_customPresets))
+    oprtCustomPresets = oprtCustomPresets.filter(item => item.uid !== preset.uid)
+    w.localStorage.setItem('oprt_custom_presets', JSON.stringify(oprtCustomPresets))
   }
 
   function showHelp () {
