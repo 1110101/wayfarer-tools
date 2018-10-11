@@ -238,6 +238,18 @@ function init () {
 
     let currentSelectable = 0
     let maxItems = 7
+    let selectedReasonGroup = -1
+    let selectedReasonSubGroup = -1
+
+    // Reset when modal is closed
+    let _resetLowQuality = ansController.resetLowQuality
+    ansController.resetLowQuality = exportFunction(() => {
+      _resetLowQuality()
+      selectedReasonGroup = -1
+      selectedReasonSubGroup = -1
+      currentSelectable = 0
+      highlight()
+    })
 
     // a list of all 6 star button rows, and the two submit buttons
     let starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button')
@@ -280,6 +292,14 @@ function init () {
         numkey = event.keyCode - 48
       } else if (event.keyCode >= 97 && event.keyCode <= 101) {
         numkey = event.keyCode - 96
+      }
+
+      // 1-7
+      let extNumkey = null
+      if (event.keyCode >= 49 && event.keyCode <= 55) {
+        extNumkey = event.keyCode - 48
+      } else if (event.keyCode >= 97 && event.keyCode <= 103) {
+        extNumkey = event.keyCode - 96
       }
 
       // do not do anything if a text area or a input with type text has focus
@@ -353,6 +373,26 @@ function init () {
       } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
         // select previous rating
         currentSelectable--
+        event.preventDefault()
+      } else if (extNumkey !== null && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+        // Reject reason shortcuts
+        if (selectedReasonGroup === -1) {
+          try {
+            w.document.getElementById('sub-group-' + extNumkey).click()
+            selectedReasonGroup = extNumkey - 1
+          } catch (err) {}
+        } else {
+          if (selectedReasonSubGroup === -1) {
+            try {
+              w.document.querySelectorAll('#reject-reason ul ul')[selectedReasonGroup].children[extNumkey - 1].children[0].click()
+              selectedReasonSubGroup = extNumkey - 1
+            } catch (err) {}
+          } else {
+            w.document.getElementById('root-label').click()
+            selectedReasonGroup = -1
+            selectedReasonSubGroup = -1
+          }
+        }
         event.preventDefault()
       } else if (numkey === null || currentSelectable > maxItems - 2) {
         return
