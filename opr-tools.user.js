@@ -1271,8 +1271,8 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
         // If the count down is finished, write some text
         clearInterval(counterInterval)
         countdownDisplay.innerText = 'EXPIRED'
-        countdownDisplay.classList.add('blink')
-      } else if (distance < 60) {
+        countdownDisplay.style.color = 'red'
+      } else if (distance < 90000) {
         countdownDisplay.style.color = 'red'
       }
     }, 1000)
@@ -1532,7 +1532,10 @@ color: black;
 }
 
 .btn-xs {
-padding: 1px 5px !important;
+  padding: 0px 7px 1px !important;
+  box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
+  -webkit-box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
+  -moz-box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
 }
 
 `
