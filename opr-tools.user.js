@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR tools
-// @version         0.24.6
+// @version         0.24.7
 // @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -42,796 +42,757 @@ SOFTWARE.
 
 */
 
-const OPRT = {
-	SCANNER_OFFSET      : "oprt_scanner_offset",
-	REFRESH             : "oprt_refresh",
-	FROM_REFRESH        : "oprt_from_refresh",
-	REFRESH_NOTI_SOUND  : "oprt_refresh_noti_sound",
-	REFRESH_NOTI_DESKTOP: "oprt_refresh_noti_desktop",
-	MAP_TYPE            : "oprt_map_type",
-};
+/* globals screen, addEventListener, GM_notification, unsafeWindow, exportFunction, cloneInto, angular, google, alertify, proj4 */
 
+const OPRT = {
+  SCANNER_OFFSET: 'oprt_scanner_offset',
+  REFRESH: 'oprt_refresh',
+  FROM_REFRESH: 'oprt_from_refresh',
+  REFRESH_NOTI_SOUND: 'oprt_refresh_noti_sound',
+  REFRESH_NOTI_DESKTOP: 'oprt_refresh_noti_desktop',
+  MAP_TYPE: 'oprt_map_type'
+}
+
+/* eslint-disable */
 
 // polyfill for ViolentMonkey
-if (typeof exportFunction !== "function") {
-	exportFunction = (func, scope, options) => {
-		if (options && options.defineAs) {
-			scope[options.defineAs] = func;
-		}
-		return func;
-	};
+if (typeof exportFunction !== 'function') {
+  exportFunction = (func, scope, options) => {
+    if (options && options.defineAs) {
+      scope[options.defineAs] = func
+    }
+    return func
+  }
 }
-if (typeof cloneInto !== "function") {
-	cloneInto = obj => obj;
-}
-
-function addGlobalStyle(css) {
-	GM_addStyle(css);
-
-	addGlobalStyle = () => {}; // noop after first run
+if (typeof cloneInto !== 'function') {
+  cloneInto = obj => obj
 }
 
+function addGlobalStyle (css) {
+  GM_addStyle(css)
 
-function init() {
-	const w = typeof unsafeWindow == "undefined" ? window : unsafeWindow;
-	let tryNumber = 15;
+  addGlobalStyle = () => {} // noop after first run
+}
 
-	let oprt_customPresets;
+/* eslint-enable */
 
-	let browserLocale = window.navigator.languages[0] || window.navigator.language || "en";
+function init () {
+  const w = typeof unsafeWindow === 'undefined' ? window : unsafeWindow
+  let tryNumber = 15
 
-	const initWatcher = setInterval(() => {
-		if (tryNumber === 0) {
-			clearInterval(initWatcher);
-			w.document.getElementById("NewSubmissionController")
-			.insertAdjacentHTML("afterBegin", `
+  let oprtCustomPresets
+
+  let browserLocale = window.navigator.languages[0] || window.navigator.language || 'en'
+
+  const initWatcher = setInterval(() => {
+    if (tryNumber === 0) {
+      clearInterval(initWatcher)
+      w.document.getElementById('NewSubmissionController')
+        .insertAdjacentHTML('afterBegin', `
 <div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
-`);
-			addRefreshContainer();
-			return;
-		}
-		if (w.angular) {
-			let err = false;
-			try {
-				initAngular();
-			}
-			catch (error) {
-				err = error;
-				// console.log(error);
-			}
-			if (!err) {
-				try {
-					initScript();
-					clearInterval(initWatcher);
-				} catch (error) {
-					console.log(error);
-					if (error === 41) {
-						addRefreshContainer();
-					}
-					if (error !== 42) {
-						clearInterval(initWatcher);
-					}
-				}
-			}
-		}
-		tryNumber--;
-	}, 1000);
+`)
+      addRefreshContainer()
+      return
+    }
+    if (w.angular) {
+      let err = false
+      try {
+        initAngular()
+      } catch (error) {
+        err = error
+        // console.log(error);
+      }
+      if (!err) {
+        try {
+          initScript()
+          clearInterval(initWatcher)
+        } catch (error) {
+          console.log(error)
+          if (error.message === '41') {
+            addRefreshContainer()
+          }
+          if (error.message !== '42') {
+            clearInterval(initWatcher)
+          }
+        }
+      }
+    }
+    tryNumber--
+  }, 1000)
 
-	function initAngular() {
-		const el = w.document.querySelector("[ng-app='portalApp']");
-		w.$app = w.angular.element(el);
-		w.$injector = w.$app.injector();
-		w.inject = w.$injector.invoke;
-		w.$rootScope = w.$app.scope();
+  function initAngular () {
+    const el = w.document.querySelector("[ng-app='portalApp']")
+    w.$app = w.angular.element(el)
+    w.$injector = w.$app.injector()
+    w.inject = w.$injector.invoke
+    w.$rootScope = w.$app.scope()
 
-		w.getService = function getService(serviceName) {
-			w.inject([serviceName, function (s) {w[serviceName] = s;}]);
-		};
+    w.getService = function getService (serviceName) {
+      w.inject([serviceName, function (s) { w[serviceName] = s }])
+    }
 
-		w.$scope = element => w.angular.element(element).scope();
-	}
+    w.$scope = element => w.angular.element(element).scope()
+  }
 
-	function initScript() {
-		const subMissionDiv = w.document.getElementById("NewSubmissionController");
-		const subController = w.$scope(subMissionDiv).subCtrl;
-		const newPortalData = subController.pageData;
+  function initScript () {
+    const subMissionDiv = w.document.getElementById('NewSubmissionController')
+    const subController = w.$scope(subMissionDiv).subCtrl
+    const newPortalData = subController.pageData
 
-		const whatController = w.$scope(w.document.getElementById("WhatIsItController")).whatCtrl;
+    const whatController = w.$scope(w.document.getElementById('WhatIsItController')).whatCtrl
 
-		const answerDiv = w.document.getElementById("AnswersController");
-		const ansController = w.$scope(answerDiv).answerCtrl;
+    const answerDiv = w.document.getElementById('AnswersController')
+    const ansController = w.$scope(answerDiv).answerCtrl
 
-		// adding CSS
-		addGlobalStyle(GLOBAL_CSS);
+    // adding CSS
+    addGlobalStyle(GLOBAL_CSS)
 
-		modifyHeader();
+    modifyHeader()
 
-		if (subController.errorMessage !== "") {
-			// no portal analysis data available
-			throw 41; // @todo better error code
-		}
+    if (subController.errorMessage !== '') {
+      // no portal analysis data available
+      throw new Error(41) // @todo better error code
+    }
 
-		if (typeof newPortalData === "undefined") {
-			// no submission data present
-			throw 42; // @todo better error code
-		}
+    if (typeof newPortalData === 'undefined') {
+      // no submission data present
+      throw new Error(42) // @todo better error code
+    }
 
-		// detect portal edit
-		if (subController.reviewType === "NEW") {
-			modifyNewPage(ansController, subController, whatController, newPortalData);
-		} else if (subController.reviewType === "EDIT") {
-			modifyEditPage(ansController, subController, newPortalData);
-		}
+    // detect portal edit
+    if (subController.reviewType === 'NEW') {
+      modifyNewPage(ansController, subController, whatController, newPortalData)
+    } else if (subController.reviewType === 'EDIT') {
+      modifyEditPage(ansController, subController, newPortalData)
+    }
 
-		checkIfAutorefresh();
+    checkIfAutorefresh()
 
-		startExpirationTimer(subController);
+    startExpirationTimer(subController)
+  }
 
-	}
+  function modifyNewPage (ansController, subController, whatController, newPortalData) {
+    mapButtons(newPortalData, w.document.getElementById('descriptionDiv'), 'beforeEnd')
 
-	function modifyNewPage(ansController, subController, whatController, newPortalData) {
+    let newSubmitDiv = moveSubmitButton()
+    let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController)
 
-		mapButtons(newPortalData, w.document.getElementById("descriptionDiv"), "beforeEnd");
+    textButtons()
 
-		let newSubmitDiv = moveSubmitButton();
-		let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController);
-
-		textButtons();
-
-		const customPresetUI = `
+    const customPresetUI = `
 <div class="row" id="presets"><div class="col-xs-12">
-	<div>Presets&nbsp;<button class="button btn btn-default btn-xs" id="addPreset">+</button></div>
-	<div class='btn-group' id="customPresets"></div>
-</div></div>`;
-
-		w.document.querySelector("form[name='answers'] div.row").insertAdjacentHTML("afterend", customPresetUI);
-
-		addCustomPresetButtons();
-
-		// we have to inject the tooltip to angular
-		w.$injector.invoke(cloneInto(["$compile", ($compile) => {
-			let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById("descriptionDiv")));
-			w.document.getElementById("addPreset").insertAdjacentElement("beforebegin", compiledSubmit[0]);
-		}], w, {cloneFunctions: true}));
-
-		// click listener for +preset button
-		w.document.getElementById("addPreset").addEventListener("click", exportFunction(event => {
-			alertify.okBtn("Save").prompt("New preset name:",
-					(value, event) => {
-						event.preventDefault();
-						if (value == "undefined" || value == "") {
-							return;
-						}
-						saveCustomPreset(value, ansController, whatController);
-						alertify.success(`✔ Created preset <i>${value}</i>`);
-						addCustomPresetButtons();
-
-					}, event => {
-						event.preventDefault();
-					}
-			);
-		}), w, false);
-
-		let clickListener = exportFunction(event => {
-			const source = event.target || event.srcElement;
-			let value = source.id;
-			if (value === "" || event.target.nodeName !== "BUTTON") {
-				return;
-			}
-
-			let preset = oprt_customPresets.find(item => item.uid === value);
-
-			if (event.shiftKey) {
-				alertify.log(`Deleted preset <i>${preset.label}</i>`);
-				w.document.getElementById(preset.uid).remove();
-				deleteCustomPreset(preset);
-				return;
-			}
-
-			ansController.formData.quality = preset.quality;
-			ansController.formData.description = preset.description;
-			ansController.formData.cultural = preset.cultural;
-			ansController.formData.uniqueness = preset.uniqueness;
-			ansController.formData.location = preset.location;
-			ansController.formData.safety = preset.safety;
-
-			// the controller's set by ID function doesn't work
-			// and autocomplete breaks if there are any spaces
-			// so set the field to the first word from name and match autocomplete by ID
-			// at the very least, I know this will set it and leave the UI looking like it was manually set.
-			whatController.whatInput = preset.nodeName.split(" ")[0];
-			let nodes = whatController.getWhatAutocomplete();
-			for (let i = 0; i < nodes.length; i++) {
-				if (nodes[i].id == preset.nodeId) {
-					whatController.whatNode = nodes[i];
-					break;
-				}
-			}
-			whatController.whatInput = "";
-
-			// update ui
-			event.target.blur();
-			w.$rootScope.$apply();
-
-			alertify.success(`✔ Applied <i>${preset.label}</i>`);
-
-		}, w);
-
-		w.document.getElementById("customPresets").addEventListener("click", clickListener, false);
-
-		// make photo filmstrip scrollable
-		const filmstrip = w.document.getElementById("map-filmstrip");
-		let lastScrollLeft = filmstrip.scrollLeft;
-		function scrollHorizontally(e) {
-			e = window.event || e;
-			if (("deltaY" in e && e.deltaY !== 0 || "wheelDeltaY" in e && e.wheelDeltaY !== 0) && lastScrollLeft === filmstrip.scrollLeft) {
-				e.preventDefault();
-				const delta = (e.wheelDeltaY || -e.deltaY*25 || -e.detail);
-				filmstrip.scrollLeft -= (delta);
-				lastScrollLeft = filmstrip.scrollLeft;
-			}
-		}
-
-		filmstrip.addEventListener("wheel", exportFunction(scrollHorizontally, w), false);
-		filmstrip.addEventListener("DOMMouseScroll", exportFunction(scrollHorizontally, w), false);
-
-		// hotfix for #27 not sure if it works
-		let _initMap = subController.initMap;
-		subController.initMap = exportFunction(() => {
-			_initMap();
-			mapMarker(subController.markers);
-		});
-
-		mapOriginCircle(subController.map2)
-		mapMarker(subController.markers);
-		mapTypes(subController.map, false);
-		mapTypes(subController.map2, true);
-
-		// hook resetStreetView() and re-apply map types and options to first map. not needed for duplicates because resetMap() just resets the position
-		let _resetStreetView = subController.resetStreetView;
-		subController.resetStreetView = exportFunction(() => {
-			_resetStreetView();
-			mapOriginCircle(subController.map2)
-			mapTypes(subController.map2, true);
-		}, w);
-
-		// adding a green 40m circle around the new location marker that updates on dragEnd
-		let draggableMarkerCircle;
-		let _showDraggableMarker = subController.showDraggableMarker;
-		subController.showDraggableMarker = exportFunction(() => {
-			_showDraggableMarker();
-
-			w.getService("NewSubmissionDataService");
-			let newLocMarker = w.NewSubmissionDataService.getNewLocationMarker();
-
-			google.maps.event.addListener(newLocMarker, "dragend", function() {
-
-				if(draggableMarkerCircle == null)
-					draggableMarkerCircle = new google.maps.Circle({
-						map          : subController.map2,
-						center       : newLocMarker.position,
-						radius       : 40,
-						strokeColor  : "#4CAF50", // material green 500
-						strokeOpacity: 1,
-						strokeWeight : 2,
-						fillOpacity  : 0,
-					});
-				else draggableMarkerCircle.setCenter(newLocMarker.position);
-
-			});
-
-		});
-
-		document.querySelector("#street-view + small").insertAdjacentHTML("beforeBegin", "<small class='pull-left'><span style='color:#ebbc4a'>Circle:</span> 40m</small>");
-
-		// move portal rating to the right side. don't move on mobile devices / small width
-		if (screen.availWidth > 768) {
-			let nodeToMove = w.document.querySelector("div[class='btn-group']").parentElement;
-			if (subController.hasSupportingImageOrStatement) {
-				const descDiv = w.document.getElementById("descriptionDiv");
-				const scorePanel = descDiv.querySelector("div.text-center.hidden-xs");
-				scorePanel.insertBefore(nodeToMove, scorePanel.firstChild);
-			} else {
-				const scorePanel = w.document.querySelector("div[class~='pull-right']");
-				scorePanel.insertBefore(nodeToMove, scorePanel.firstChild);
-			}
-		}
-
-		// bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
-		const imgDups = w.document.querySelectorAll("#map-filmstrip > ul > li > img");
-		const openFullImage = function () {
-			w.open(`${this.src}=s0`, "fulldupimage");
-		};
-		for (let imgSep in imgDups) {
-			if (imgDups.hasOwnProperty(imgSep)) {
-				imgDups[imgSep].addEventListener("click", () => {
-					const imgDup = w.document.querySelector("#content > img");
-					if (imgDup !== null) {
-						imgDup.removeEventListener("click", openFullImage);
-						imgDup.addEventListener("click", openFullImage);
-						imgDup.setAttribute("style", "cursor: pointer;");
-					}
-				});
-			}
-		}
-
-		// add translate buttons to title and description (if existing)
-		let lang = "en";
-		try { lang = browserLocale.split("-")[0]; } catch (e) {}
-		const link = w.document.querySelector("#descriptionDiv a");
-		const content = link.innerText.trim();
-		let a = w.document.createElement("a");
-		let span = w.document.createElement("span");
-		span.className = "glyphicon glyphicon-book";
-		span.innerHTML = " ";
-		a.appendChild(span);
-		a.className = "translate-title button btn btn-default pull-right";
-		a.target = "translate";
-		a.style.padding = "0px 4px";
-		a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(content)}`;
-		link.insertAdjacentElement("afterend", a);
-
-		const description = w.document.querySelector("#descriptionDiv").innerHTML.split("<br>")[3].trim();
-		if (description !== "&lt;No description&gt;" && description !== "") {
-			a = w.document.createElement("a");
-			span = w.document.createElement("span");
-			span.className = "glyphicon glyphicon-book";
-			span.innerHTML = " ";
-			a.appendChild(span);
-			a.className = "translate-description button btn btn-default pull-right";
-			a.target = "translate";
-			a.style.padding = "0px 4px";
-			a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(description)}`;
-			const br = w.document.querySelectorAll("#descriptionDiv br")[2];
-			br.insertAdjacentElement("afterend", a);
-		}
-
-		// automatically open the first listed possible duplicate
-		try {
-			const e = w.document.querySelector("#map-filmstrip > ul > li:nth-child(1) > img");
-			if (e !== null) {
-				setTimeout(() => {
-					e.click();
-				}, 500);
-			}
-		} catch (err) {}
-
-		expandWhatIsItBox();
-
-		// keyboard navigation
-		// keys 1-5 to vote
-		// space/enter to confirm dialogs
-		// esc or numpad "/" to reset selector
-		// Numpad + - to navigate
-
-		let currentSelectable = 0;
-		let maxItems = 7;
-		let selectedReasonGroup = -1;
-		let selectedReasonSubGroup = -1;
-
-		// Reset when modal is closed
-		let _resetLowQuality = ansController.resetLowQuality
-		ansController.resetLowQuality = exportFunction(() => {
-			_resetLowQuality();
-			selectedReasonGroup = -1;
-			selectedReasonSubGroup = -1;
-			currentSelectable = 0;
-			highlight();
-		})
-
-		// Fix rejectComment width
-		let _showLowQualityModal = ansController.showLowQualityModal
-		ansController.showLowQualityModal = exportFunction(() => {
-			_showLowQualityModal()
-			setTimeout(() => {
-				let rejectReasonTA = w.document.querySelector('textarea[ng-model="answerCtrl2.rejectComment"]');
-				rejectReasonTA.style['max-width'] = '100%';
-			}, 10)
-		})
-
-		// a list of all 6 star button rows, and the two submit buttons
-		let starsAndSubmitButtons
-		if (subController.hasSupportingImageOrStatement) {
-			starsAndSubmitButtons = w.document.querySelectorAll(".col-sm-6 .btn-group, .text-center.hidden-xs:not(.ng-hide) .btn-group, .big-submit-button");
-		} else {
-			starsAndSubmitButtons = w.document.querySelectorAll(".col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button");
-		}
-
-		function highlight() {
-			starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = "none"; }, w));
-			if (currentSelectable <= maxItems - 2) {
-				starsAndSubmitButtons[currentSelectable].style.border = cloneInto("1px dashed #ebbc4a", w);
-				submitAndNext.blur();
-				submitButton.blur();
-			} else if (currentSelectable == 6) {
-				submitAndNext.focus();
-			}
-			else if (currentSelectable == 7) {
-				submitButton.focus();
-			}
-
-		}
-
-		addEventListener("keydown", (event) => {
-
-			/*
-			keycodes:
-
-			8: Backspace
-			9: TAB
-			13: Enter
-			16: Shift
-			27: Escape
-			32: Space
-			68: D
-			107: NUMPAD +
-			109: NUMPAD -
-			111: NUMPAD /
-
-			49 - 53:  Keys 1-5
-			97 - 101: NUMPAD 1-5
-
-			 */
-
-			if (event.keyCode >= 49 && event.keyCode <= 53)
-				numkey = event.keyCode - 48;
-			else if (event.keyCode >= 97 && event.keyCode <= 101)
-				numkey = event.keyCode - 96;
-			else
-				numkey = null;
-
-			// 1-7
-			let extNumkey = null
-			if (event.keyCode >= 49 && event.keyCode <= 55) {
-				extNumkey = event.keyCode - 48;
-			} else if (event.keyCode >= 97 && event.keyCode <= 103){
-				extNumkey = event.keyCode - 96;
-			}
-
-			// do not do anything if a text area or a input with type text has focus
-			if (w.document.querySelector("input[type=text]:focus") || w.document.querySelector("textarea:focus")) {
-				return;
-			}
-			// "analyze next" button
-			else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector("a.button[href=\"/recon\"]")) {
-				w.document.location.href = "/recon";
-				event.preventDefault();
-			} // submit low quality rating
-			else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector("[ng-click=\"answerCtrl2.confirmLowQuality()\"]")) {
-				w.document.querySelector("[ng-click=\"answerCtrl2.confirmLowQuality()\"]").click();
-				currentSelectable = 0;
-				event.preventDefault();
-			} // submit low quality rating alternate
-			else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector("[ng-click=\"answerCtrl2.confirmLowQualityOld()\"]")) {
-				w.document.querySelector("[ng-click=\"answerCtrl2.confirmLowQualityOld()\"]").click();
-				currentSelectable = 0;
-				event.preventDefault();
-			} // click first/selected duplicate (key D)
-			else if ((event.keyCode === 68) && w.document.querySelector("#content > button")) {
-				w.document.querySelector("#content > button").click();
-				currentSelectable = 0;
-				event.preventDefault();
-
-			} // click on translate title link (key T)
-			else if (event.keyCode === 84) {
-				const link = w.document.querySelector("#descriptionDiv > .translate-title");
-				if (link) {
-					link.click();
-					event.preventDefault();
-				}
-
-			} // click on translate description link (key Y)
-			else if (event.keyCode === 89) {
-				const link = w.document.querySelector("#descriptionDiv > .translate-description");
-				if (link) {
-					link.click();
-					event.preventDefault();
-				}
-
-			} // submit duplicate
-			else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector("[ng-click=\"answerCtrl2.confirmDuplicate()\"]")) {
-				w.document.querySelector("[ng-click=\"answerCtrl2.confirmDuplicate()\"]").click();
-				currentSelectable = 0;
-				event.preventDefault();
-
-			} // submit normal rating
-			else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
-				w.document.querySelector("[ng-click=\"answerCtrl.submitForm()\"]").click();
-				event.preventDefault();
-
-			} // close duplicate dialog
-			else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector("[ng-click=\"answerCtrl2.resetDuplicate()\"]")) {
-				w.document.querySelector("[ng-click=\"answerCtrl2.resetDuplicate()\"]").click();
-				currentSelectable = 0;
-				event.preventDefault();
-
-			} // close low quality ration dialog
-			else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector("[ng-click=\"answerCtrl2.resetLowQuality()\"]")) {
-				w.document.querySelector("[ng-click=\"answerCtrl2.resetLowQuality()\"]").click();
-				currentSelectable = 0;
-				event.preventDefault();
-			}
-			// return to first selection (should this be a portal)
-			else if (event.keyCode === 27 || event.keyCode === 111) {
-				currentSelectable = 0;
-				event.preventDefault();
-			}
-			// skip portal if possible
-			else if (event.keyCode === 106 || event.keyCode === 220) {
-				if (newPortalData.canSkip)
-					ansController.skipToNext();
-			}
-			else if (event.keyCode === 72) {
-				showHelp(); // @todo
-			}
-			// select next rating
-			else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
-				currentSelectable++;
-				event.preventDefault();
-			}
-			// select previous rating
-			else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
-				currentSelectable--;
-				event.preventDefault();
-			}
-			// Reject reason shortcuts
-			else if(extNumkey !== null && w.document.querySelector("[ng-click=\"answerCtrl2.confirmLowQuality()\"]")) {
-				if (selectedReasonGroup === -1) {
-					try {
-						w.document.getElementById('sub-group-' + extNumkey).click();
-						selectedReasonGroup = extNumkey - 1;
-					} catch (err) {}
-				} else {
-					if (selectedReasonSubGroup === -1) {
-						try {
-							w.document.querySelectorAll('#reject-reason ul ul')[selectedReasonGroup].children[extNumkey - 1].children[0].click();
-							selectedReasonSubGroup = extNumkey - 1;
-						} catch (err) {}
-					} else {
-						w.document.getElementById('root-label').click();
-						selectedReasonGroup = -1;
-						selectedReasonSubGroup = -1;
-					}
-				}
-				event.preventDefault();
-			}
-			else if (numkey === null || currentSelectable > maxItems - 2) {
-				return;
-			}
-			else if (numkey !== null && event.shiftKey) {
-				try {
-					w.document.getElementsByClassName("customPresetButton")[numkey - 1].click();
-				} catch (e) {
-					// ignore
-				}
-			}
-			// rating 1-5
-			else {
-				starsAndSubmitButtons[currentSelectable].querySelectorAll("button.button-star")[numkey - 1].click();
-				currentSelectable++;
-			}
-			highlight();
-		});
-
-		highlight();
-
-		modifyNewPage = () => {}; // just run once
-
-	}
-
-	function modifyEditPage(ansController, subController, newPortalData) {
-		let editDiv = w.document.querySelector("div[ng-show=\"subCtrl.reviewType==='EDIT'\"]");
-
-		mapButtons(newPortalData, editDiv, "afterEnd");
-
-		let newSubmitDiv = moveSubmitButton();
-		let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController);
-
-		textButtons();
-
-		mapTypes(subController.locationEditsMap, true);
-
-		// add translation links to title and description edits
-		if (newPortalData.titleEdits.length > 1 || newPortalData.descriptionEdits.length > 1) {
-			for (const titleEditBox of editDiv.querySelectorAll(".titleEditBox")) {
-				const content = titleEditBox.innerText.trim();
-				let a = w.document.createElement("a");
-				let span = w.document.createElement("span");
-				span.className = "glyphicon glyphicon-book";
-				span.innerHTML = " ";
-				a.appendChild(span);
-				a.className = "translate-title button btn btn-default pull-right";
-				a.target = "translate";
-				a.style.padding = "0px 4px";
-				a.href = `https://translate.google.com/#auto/${browserLocale.split("-")[0]}/${encodeURIComponent(content)}`;
-				titleEditBox.querySelector("p").style.display = "inline-block";
-				titleEditBox.insertAdjacentElement("beforeEnd", a);
-			}
-		}
-
-		if (newPortalData.titleEdits.length <= 1) {
-			let titleDiv = editDiv.querySelector("div[ng-show=\"subCtrl.pageData.titleEdits.length <= 1\"] h3");
-			const content = titleDiv.innerText.trim();
-			let a = w.document.createElement("a");
-			let span = w.document.createElement("span");
-			span.className = "glyphicon glyphicon-book";
-			span.innerHTML = " ";
-			a.appendChild(span);
-			a.className = "translate-title button btn btn-default";
-			a.target = "translate";
-			a.style.padding = "0px 4px";
-			a.style.marginLeft = "14px";
-			a.href = `https://translate.google.com/#auto/${browserLocale.split("-")[0]}/${encodeURIComponent(content)}`;
-			titleDiv.insertAdjacentElement("beforeend", a);
-		}
-
-		if (newPortalData.descriptionEdits.length <= 1) {
-			let titleDiv = editDiv.querySelector("div[ng-show=\"subCtrl.pageData.descriptionEdits.length <= 1\"] p");
-			const content = titleDiv.innerText.trim() || "";
-			if (content !== "<No description>" && content !== "") {
-				let a = w.document.createElement("a");
-				let span = w.document.createElement("span");
-				span.className = "glyphicon glyphicon-book";
-				span.innerHTML = " ";
-				a.appendChild(span);
-				a.className = "translate-title button btn btn-default";
-				a.target = "translate";
-				a.style.padding = "0px 4px";
-				a.style.marginLeft = "14px";
-				a.href = `https://translate.google.com/#auto/${browserLocale.split("-")[0]}/${encodeURIComponent(content)}`;
-				titleDiv.insertAdjacentElement("beforeEnd", a);
-			}
-		}
-
-		expandWhatIsItBox();
-
-		// fix locationEditsMap if only one location edit exists
-		if (newPortalData.locationEdits.length <= 1)
-			subController.locationEditsMap.setZoom(19);
-
-
-		/* EDIT PORTAL */
-		// keyboard navigation
-
-		let currentSelectable = 0;
-		let hasLocationEdit = (newPortalData.locationEdits.length > 1);
-		// counting *true*, please don't shoot me
-		let maxItems = (newPortalData.descriptionEdits.length > 1) + (newPortalData.titleEdits.length > 1) + (hasLocationEdit) + 2;
-
-		let mapMarkers;
-		if (hasLocationEdit) mapMarkers = subController.allLocationMarkers;
-		else mapMarkers = [];
-
-		// a list of all 6 star button rows, and the two submit buttons
-		let starsAndSubmitButtons = w.document.querySelectorAll(
-				"div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.titleEdits.length > 1\"]:not(.ng-hide)," +
-				"div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.descriptionEdits.length > 1\"]:not(.ng-hide)," +
-				"div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.locationEdits.length > 1\"]:not(.ng-hide)," +
-				".big-submit-button");
-
-
-		/* EDIT PORTAL */
-		function highlight() {
-			let el = editDiv.querySelector("h3[ng-show=\"subCtrl.pageData.locationEdits.length > 1\"]");
-			el.style.border = "none";
-
-			starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = "none"; }, w));
-			if (hasLocationEdit && currentSelectable === maxItems - 3) {
-				el.style.borderLeft = cloneInto("4px dashed #ebbc4a", w);
-				el.style.borderTop = cloneInto("4px dashed #ebbc4a", w);
-				el.style.borderRight = cloneInto("4px dashed #ebbc4a", w);
-				el.style.padding = cloneInto("16px", w);
-				el.style.marginBottom = cloneInto("0", w);
-				submitAndNext.blur();
-				submitButton.blur();
-			}
-			else if (currentSelectable < maxItems - 2) {
-				starsAndSubmitButtons[currentSelectable].style.borderLeft = cloneInto("4px dashed #ebbc4a", w);
-				starsAndSubmitButtons[currentSelectable].style.paddingLeft = cloneInto("16px", w);
-				submitAndNext.blur();
-				submitButton.blur();
-			} else if (currentSelectable === maxItems - 2) {
-				submitAndNext.focus();
-			}
-			else if (currentSelectable === maxItems) {
-				submitButton.focus();
-			}
-
-		}
-
-		/* EDIT PORTAL */
-		addEventListener("keydown", (event) => {
-
-			/*
-			Keycodes:
-
-			8: Backspace
-			9: TAB
-			13: Enter
-			16: Shift
-			27: Escape
-			32: Space
-			68: D
-			107: NUMPAD +
-			109: NUMPAD -
-			111: NUMPAD /
-
-			49 - 53:  Keys 1-5
-			97 - 101: NUMPAD 1-5
-			 */
-
-			if (event.keyCode >= 49 && event.keyCode <= 53)
-				numkey = event.keyCode - 48;
-			else if (event.keyCode >= 97 && event.keyCode <= 101)
-				numkey = event.keyCode - 96;
-			else
-				numkey = null;
-
-			// do not do anything if a text area or a input with type text has focus
-			if (w.document.querySelector("input[type=text]:focus") || w.document.querySelector("textarea:focus")) {
-				return;
-			}
-			// "analyze next" button
-			else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector("a.button[href=\"/recon\"]")) {
-				w.document.location.href = "/recon";
-				event.preventDefault();
-			}  // submit normal rating
-			else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
-				w.document.querySelector("[ng-click=\"answerCtrl.submitForm()\"]").click();
-				event.preventDefault();
-
-			} // return to first selection (should this be a portal)
-			else if (event.keyCode === 27 || event.keyCode === 111) {
-				currentSelectable = 0;
-			}
-			// select next rating
-			else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
-				currentSelectable++;
-				event.preventDefault();
-			}
-			// select previous rating
-			else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
-				currentSelectable--;
-				event.preventDefault();
-
-			}
-			else if (numkey === null || currentSelectable > maxItems - 2) {
-				return;
-			}
-			// rating 1-5
-			else {
-
-				if (hasLocationEdit && currentSelectable === maxItems - 3 && numkey <= mapMarkers.length) {
-					google.maps.event.trigger(angular.element(document.getElementById("NewSubmissionController")).scope().getAllLocationMarkers()[numkey - 1], "click");
-				}
-				else {
-					if (hasLocationEdit) numkey = 1;
-					starsAndSubmitButtons[currentSelectable].querySelectorAll(".titleEditBox, input[type='checkbox']")[numkey - 1].click();
-					currentSelectable++;
-				}
-
-			}
-			highlight();
-		});
-
-		highlight();
-
-	}
-
-	// add map buttons
-	function mapButtons(newPortalData, targetElement, where) {
-		// coordinate format conversion
-		const coordUtm33 = proj4("+proj=longlat", "+proj=utm +zone=33", [newPortalData.lng, newPortalData.lat]);
-		const coordUtm35 = proj4("+proj=longlat", "+proj=utm +zone=35", [newPortalData.lng, newPortalData.lat]);
-		const coordPuwg92 = proj4("+proj=longlat", "+proj=tmerc +lat_0=0 +lon_0=19 +k=0.9993 +x_0=500000 +y_0=-5300000 +ellps=GRS80 +units=m +no_defs", [newPortalData.lng, newPortalData.lat]);
-
-		const mapButtons = `
+  <div>Presets&nbsp;<button class="button btn btn-default btn-xs" id="addPreset">+</button></div>
+  <div class='btn-group' id="customPresets"></div>
+</div></div>`
+
+    w.document.querySelector("form[name='answers'] div.row").insertAdjacentHTML('afterend', customPresetUI)
+
+    addCustomPresetButtons()
+
+    // we have to inject the tooltip to angular
+    w.$injector.invoke(cloneInto(['$compile', ($compile) => {
+      let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById('descriptionDiv')))
+      w.document.getElementById('addPreset').insertAdjacentElement('beforebegin', compiledSubmit[0])
+    }], w, {cloneFunctions: true}))
+
+    // click listener for +preset button
+    w.document.getElementById('addPreset').addEventListener('click', exportFunction(event => {
+      alertify.okBtn('Save').prompt('New preset name:',
+        (value, event) => {
+          event.preventDefault()
+          if (value === 'undefined' || value === '') {
+            return
+          }
+          saveCustomPreset(value, ansController, whatController)
+          alertify.success(`✔ Created preset <i>${value}</i>`)
+          addCustomPresetButtons()
+        }, event => {
+          event.preventDefault()
+        }
+      )
+    }), w, false)
+
+    let clickListener = exportFunction(event => {
+      const source = event.target || event.srcElement
+      let value = source.id
+      if (value === '' || event.target.nodeName !== 'BUTTON') {
+        return
+      }
+
+      let preset = oprtCustomPresets.find(item => item.uid === value)
+
+      if (event.shiftKey) {
+        alertify.log(`Deleted preset <i>${preset.label}</i>`)
+        w.document.getElementById(preset.uid).remove()
+        deleteCustomPreset(preset)
+        return
+      }
+
+      ansController.formData.quality = preset.quality
+      ansController.formData.description = preset.description
+      ansController.formData.cultural = preset.cultural
+      ansController.formData.uniqueness = preset.uniqueness
+      ansController.formData.location = preset.location
+      ansController.formData.safety = preset.safety
+
+      // the controller's set by ID function doesn't work
+      // and autocomplete breaks if there are any spaces
+      // so set the field to the first word from name and match autocomplete by ID
+      // at the very least, I know this will set it and leave the UI looking like it was manually set.
+      whatController.whatInput = preset.nodeName.split(' ')[0]
+      let nodes = whatController.getWhatAutocomplete()
+      for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].id === preset.nodeId) {
+          whatController.whatNode = nodes[i]
+          break
+        }
+      }
+      whatController.whatInput = ''
+
+      // update ui
+      event.target.blur()
+      w.$rootScope.$apply()
+
+      alertify.success(`✔ Applied <i>${preset.label}</i>`)
+    }, w)
+
+    w.document.getElementById('customPresets').addEventListener('click', clickListener, false)
+
+    // make photo filmstrip scrollable
+    const filmstrip = w.document.getElementById('map-filmstrip')
+    let lastScrollLeft = filmstrip.scrollLeft
+    function scrollHorizontally (e) {
+      e = window.event || e
+      if ((('deltaY' in e && e.deltaY !== 0) || ('wheelDeltaY' in e && e.wheelDeltaY !== 0)) && lastScrollLeft === filmstrip.scrollLeft) {
+        e.preventDefault()
+        const delta = (e.wheelDeltaY || -e.deltaY * 25 || -e.detail)
+        filmstrip.scrollLeft -= (delta)
+        lastScrollLeft = filmstrip.scrollLeft
+      }
+    }
+
+    filmstrip.addEventListener('wheel', exportFunction(scrollHorizontally, w), false)
+    filmstrip.addEventListener('DOMMouseScroll', exportFunction(scrollHorizontally, w), false)
+
+    // hotfix for #27 not sure if it works
+    let _initMap = subController.initMap
+    subController.initMap = exportFunction(() => {
+      _initMap()
+      mapMarker(subController.markers)
+    })
+
+    mapOriginCircle(subController.map2)
+    mapMarker(subController.markers)
+    mapTypes(subController.map, false)
+    mapTypes(subController.map2, true)
+
+    // hook resetStreetView() and re-apply map types and options to first map. not needed for duplicates because resetMap() just resets the position
+    let _resetStreetView = subController.resetStreetView
+    subController.resetStreetView = exportFunction(() => {
+      _resetStreetView()
+      mapOriginCircle(subController.map2)
+      mapTypes(subController.map2, true)
+    }, w)
+
+    // adding a green 40m circle around the new location marker that updates on dragEnd
+    let draggableMarkerCircle
+    let _showDraggableMarker = subController.showDraggableMarker
+    subController.showDraggableMarker = exportFunction(() => {
+      _showDraggableMarker()
+
+      w.getService('NewSubmissionDataService')
+      let newLocMarker = w.NewSubmissionDataService.getNewLocationMarker()
+
+      google.maps.event.addListener(newLocMarker, 'dragend', function () {
+        if (draggableMarkerCircle == null) {
+          draggableMarkerCircle = new google.maps.Circle({
+            map: subController.map2,
+            center: newLocMarker.position,
+            radius: 40,
+            strokeColor: '#4CAF50', // material green 500
+            strokeOpacity: 1,
+            strokeWeight: 2,
+            fillOpacity: 0
+          })
+        } else draggableMarkerCircle.setCenter(newLocMarker.position)
+      })
+    })
+
+    document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin', "<small class='pull-left'><span style='color:#ebbc4a'>Circle:</span> 40m</small>")
+
+    // move portal rating to the right side. don't move on mobile devices / small width
+    if (screen.availWidth > 768) {
+      let nodeToMove = w.document.querySelector("div[class='btn-group']").parentElement
+      if (subController.hasSupportingImageOrStatement) {
+        const descDiv = w.document.getElementById('descriptionDiv')
+        const scorePanel = descDiv.querySelector('div.text-center.hidden-xs')
+        scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
+      } else {
+        const scorePanel = w.document.querySelector("div[class~='pull-right']")
+        scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
+      }
+    }
+
+    // bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
+    const imgDups = w.document.querySelectorAll('#map-filmstrip > ul > li > img')
+    const openFullImage = function () {
+      w.open(`${this.src}=s0`, 'fulldupimage')
+    }
+    for (let imgSep in imgDups) {
+      if (imgDups.hasOwnProperty(imgSep)) {
+        imgDups[imgSep].addEventListener('click', () => {
+          const imgDup = w.document.querySelector('#content > img')
+          if (imgDup !== null) {
+            imgDup.removeEventListener('click', openFullImage)
+            imgDup.addEventListener('click', openFullImage)
+            imgDup.setAttribute('style', 'cursor: pointer;')
+          }
+        })
+      }
+    }
+
+    // add translate buttons to title and description (if existing)
+    let lang = 'en'
+    try { lang = browserLocale.split('-')[0] } catch (e) {}
+    const link = w.document.querySelector('#descriptionDiv a')
+    const content = link.innerText.trim()
+    let a = w.document.createElement('a')
+    let span = w.document.createElement('span')
+    span.className = 'glyphicon glyphicon-book'
+    span.innerHTML = ' '
+    a.appendChild(span)
+    a.className = 'translate-title button btn btn-default pull-right'
+    a.target = 'translate'
+    a.style.padding = '0px 4px'
+    a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(content)}`
+    link.insertAdjacentElement('afterend', a)
+
+    const description = w.document.querySelector('#descriptionDiv').innerHTML.split('<br>')[3].trim()
+    if (description !== '&lt;No description&gt;' && description !== '') {
+      a = w.document.createElement('a')
+      span = w.document.createElement('span')
+      span.className = 'glyphicon glyphicon-book'
+      span.innerHTML = ' '
+      a.appendChild(span)
+      a.className = 'translate-description button btn btn-default pull-right'
+      a.target = 'translate'
+      a.style.padding = '0px 4px'
+      a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(description)}`
+      const br = w.document.querySelectorAll('#descriptionDiv br')[2]
+      br.insertAdjacentElement('afterend', a)
+    }
+
+    // automatically open the first listed possible duplicate
+    try {
+      const e = w.document.querySelector('#map-filmstrip > ul > li:nth-child(1) > img')
+      if (e !== null) {
+        setTimeout(() => {
+          e.click()
+        }, 500)
+      }
+    } catch (err) {}
+
+    expandWhatIsItBox()
+
+    // keyboard navigation
+    // keys 1-5 to vote
+    // space/enter to confirm dialogs
+    // esc or numpad "/" to reset selector
+    // Numpad + - to navigate
+
+    let currentSelectable = 0
+    let maxItems = 7
+    let selectedReasonGroup = -1
+    let selectedReasonSubGroup = -1
+
+    // Reset when modal is closed
+    let _resetLowQuality = ansController.resetLowQuality
+    ansController.resetLowQuality = exportFunction(() => {
+      _resetLowQuality()
+      selectedReasonGroup = -1
+      selectedReasonSubGroup = -1
+      currentSelectable = 0
+      highlight()
+    })
+
+    // Fix rejectComment width
+    let _showLowQualityModal = ansController.showLowQualityModal
+    ansController.showLowQualityModal = exportFunction(() => {
+      _showLowQualityModal()
+      setTimeout(() => {
+        let rejectReasonTA = w.document.querySelector('textarea[ng-model="answerCtrl2.rejectComment"]')
+        rejectReasonTA.style['max-width'] = '100%'
+      }, 10)
+    })
+
+    // a list of all 6 star button rows, and the two submit buttons
+    let starsAndSubmitButtons
+    if (subController.hasSupportingImageOrStatement) {
+      starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .text-center.hidden-xs:not(.ng-hide) .btn-group, .big-submit-button')
+    } else {
+      starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button')
+    }
+
+    function highlight () {
+      starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none' }, w))
+      if (currentSelectable <= maxItems - 2) {
+        starsAndSubmitButtons[currentSelectable].style.border = cloneInto('1px dashed #ebbc4a', w)
+        submitAndNext.blur()
+        submitButton.blur()
+      } else if (currentSelectable === 6) {
+        submitAndNext.focus()
+      } else if (currentSelectable === 7) {
+        submitButton.focus()
+      }
+    }
+
+    addEventListener('keydown', (event) => {
+      /*
+      keycodes:
+
+      8: Backspace
+      9: TAB
+      13: Enter
+      16: Shift
+      27: Escape
+      32: Space
+      68: D
+      107: NUMPAD +
+      109: NUMPAD -
+      111: NUMPAD /
+
+      49 - 53:  Keys 1-5
+      97 - 101: NUMPAD 1-5
+
+       */
+
+      let numkey = null
+      if (event.keyCode >= 49 && event.keyCode <= 53) {
+        numkey = event.keyCode - 48
+      } else if (event.keyCode >= 97 && event.keyCode <= 101) {
+        numkey = event.keyCode - 96
+      }
+
+      // 1-7
+      let extNumkey = null
+      if (event.keyCode >= 49 && event.keyCode <= 55) {
+        extNumkey = event.keyCode - 48
+      } else if (event.keyCode >= 97 && event.keyCode <= 103) {
+        extNumkey = event.keyCode - 96
+      }
+
+      // do not do anything if a text area or a input with type text has focus
+      if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
+        return
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+        // "analyze next" button
+        w.document.location.href = '/recon'
+        event.preventDefault()
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+        // submit low quality rating
+        w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]').click()
+        currentSelectable = 0
+        event.preventDefault()
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQualityOld()"]')) {
+        // submit low quality rating alternate
+        w.document.querySelector('[ng-click="answerCtrl2.confirmLowQualityOld()"]').click()
+        currentSelectable = 0
+        event.preventDefault()
+      } else if ((event.keyCode === 68) && w.document.querySelector('#content > button')) {
+        // click first/selected duplicate (key D)
+        w.document.querySelector('#content > button').click()
+        currentSelectable = 0
+        event.preventDefault()
+      } else if (event.keyCode === 84) {
+        // click on translate title link (key T)
+        const link = w.document.querySelector('#descriptionDiv > .translate-title')
+        if (link) {
+          link.click()
+          event.preventDefault()
+        }
+      } else if (event.keyCode === 89) {
+        // click on translate description link (key Y)
+        const link = w.document.querySelector('#descriptionDiv > .translate-description')
+        if (link) {
+          link.click()
+          event.preventDefault()
+        }
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
+        // submit duplicate
+        w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]').click()
+        currentSelectable = 0
+        event.preventDefault()
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+        // submit normal rating
+        w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click()
+        event.preventDefault()
+      } else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]')) {
+        // close duplicate dialog
+        w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]').click()
+        currentSelectable = 0
+        event.preventDefault()
+      } else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]')) {
+        // close low quality ration dialog
+        w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]').click()
+        currentSelectable = 0
+        event.preventDefault()
+      } else if (event.keyCode === 27 || event.keyCode === 111) {
+        // return to first selection (should this be a portal)
+        currentSelectable = 0
+        event.preventDefault()
+      } else if (event.keyCode === 106 || event.keyCode === 220) {
+        // skip portal if possible
+        if (newPortalData.canSkip) {
+          ansController.skipToNext()
+        }
+      } else if (event.keyCode === 72) {
+        showHelp() // @todo
+      } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+        // select next rating
+        currentSelectable++
+        event.preventDefault()
+      } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+        // select previous rating
+        currentSelectable--
+        event.preventDefault()
+      } else if (extNumkey !== null && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+        // Reject reason shortcuts
+        if (selectedReasonGroup === -1) {
+          try {
+            w.document.getElementById('sub-group-' + extNumkey).click()
+            selectedReasonGroup = extNumkey - 1
+          } catch (err) {}
+        } else {
+          if (selectedReasonSubGroup === -1) {
+            try {
+              w.document.querySelectorAll('#reject-reason ul ul')[selectedReasonGroup].children[extNumkey - 1].children[0].click()
+              selectedReasonSubGroup = extNumkey - 1
+            } catch (err) {}
+          } else {
+            w.document.getElementById('root-label').click()
+            selectedReasonGroup = -1
+            selectedReasonSubGroup = -1
+          }
+        }
+        event.preventDefault()
+      } else if (numkey === null || currentSelectable > maxItems - 2) {
+        return
+      } else if (numkey !== null && event.shiftKey) {
+        try {
+          w.document.getElementsByClassName('customPresetButton')[numkey - 1].click()
+        } catch (e) {
+          // ignore
+        }
+      } else {
+        // rating 1-5
+        starsAndSubmitButtons[currentSelectable].querySelectorAll('button.button-star')[numkey - 1].click()
+        currentSelectable++
+      }
+      highlight()
+    })
+
+    highlight()
+
+    modifyNewPage = () => {} // eslint-disable-line
+  }
+
+  function modifyEditPage (ansController, subController, newPortalData) {
+    let editDiv = w.document.querySelector("div[ng-show=\"subCtrl.reviewType==='EDIT'\"]")
+
+    mapButtons(newPortalData, editDiv, 'afterEnd')
+
+    let newSubmitDiv = moveSubmitButton()
+    let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController)
+
+    textButtons()
+
+    mapTypes(subController.locationEditsMap, true)
+
+    // add translation links to title and description edits
+    if (newPortalData.titleEdits.length > 1 || newPortalData.descriptionEdits.length > 1) {
+      for (const titleEditBox of editDiv.querySelectorAll('.titleEditBox')) {
+        const content = titleEditBox.innerText.trim()
+        let a = w.document.createElement('a')
+        let span = w.document.createElement('span')
+        span.className = 'glyphicon glyphicon-book'
+        span.innerHTML = ' '
+        a.appendChild(span)
+        a.className = 'translate-title button btn btn-default pull-right'
+        a.target = 'translate'
+        a.style.padding = '0px 4px'
+        a.href = `https://translate.google.com/#auto/${browserLocale.split('-')[0]}/${encodeURIComponent(content)}`
+        titleEditBox.querySelector('p').style.display = 'inline-block'
+        titleEditBox.insertAdjacentElement('beforeEnd', a)
+      }
+    }
+
+    if (newPortalData.titleEdits.length <= 1) {
+      let titleDiv = editDiv.querySelector('div[ng-show="subCtrl.pageData.titleEdits.length <= 1"] h3')
+      const content = titleDiv.innerText.trim()
+      let a = w.document.createElement('a')
+      let span = w.document.createElement('span')
+      span.className = 'glyphicon glyphicon-book'
+      span.innerHTML = ' '
+      a.appendChild(span)
+      a.className = 'translate-title button btn btn-default'
+      a.target = 'translate'
+      a.style.padding = '0px 4px'
+      a.style.marginLeft = '14px'
+      a.href = `https://translate.google.com/#auto/${browserLocale.split('-')[0]}/${encodeURIComponent(content)}`
+      titleDiv.insertAdjacentElement('beforeend', a)
+    }
+
+    if (newPortalData.descriptionEdits.length <= 1) {
+      let titleDiv = editDiv.querySelector('div[ng-show="subCtrl.pageData.descriptionEdits.length <= 1"] p')
+      const content = titleDiv.innerText.trim() || ''
+      if (content !== '<No description>' && content !== '') {
+        let a = w.document.createElement('a')
+        let span = w.document.createElement('span')
+        span.className = 'glyphicon glyphicon-book'
+        span.innerHTML = ' '
+        a.appendChild(span)
+        a.className = 'translate-title button btn btn-default'
+        a.target = 'translate'
+        a.style.padding = '0px 4px'
+        a.style.marginLeft = '14px'
+        a.href = `https://translate.google.com/#auto/${browserLocale.split('-')[0]}/${encodeURIComponent(content)}`
+        titleDiv.insertAdjacentElement('beforeEnd', a)
+      }
+    }
+
+    expandWhatIsItBox()
+
+    // fix locationEditsMap if only one location edit exists
+    if (newPortalData.locationEdits.length <= 1) {
+      subController.locationEditsMap.setZoom(19)
+    }
+
+    /* EDIT PORTAL */
+    // keyboard navigation
+
+    let currentSelectable = 0
+    let hasLocationEdit = (newPortalData.locationEdits.length > 1)
+    // counting *true*, please don't shoot me
+    let maxItems = (newPortalData.descriptionEdits.length > 1) + (newPortalData.titleEdits.length > 1) + (hasLocationEdit) + 2
+
+    let mapMarkers
+    if (hasLocationEdit) mapMarkers = subController.allLocationMarkers
+    else mapMarkers = []
+
+    // a list of all 6 star button rows, and the two submit buttons
+    let starsAndSubmitButtons = w.document.querySelectorAll(
+      "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.titleEdits.length > 1\"]:not(.ng-hide)," +
+        "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.descriptionEdits.length > 1\"]:not(.ng-hide)," +
+        "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.locationEdits.length > 1\"]:not(.ng-hide)," +
+        '.big-submit-button')
+
+    /* EDIT PORTAL */
+    function highlight () {
+      let el = editDiv.querySelector('h3[ng-show="subCtrl.pageData.locationEdits.length > 1"]')
+      el.style.border = 'none'
+
+      starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none' }, w))
+      if (hasLocationEdit && currentSelectable === maxItems - 3) {
+        el.style.borderLeft = cloneInto('4px dashed #ebbc4a', w)
+        el.style.borderTop = cloneInto('4px dashed #ebbc4a', w)
+        el.style.borderRight = cloneInto('4px dashed #ebbc4a', w)
+        el.style.padding = cloneInto('16px', w)
+        el.style.marginBottom = cloneInto('0', w)
+        submitAndNext.blur()
+        submitButton.blur()
+      } else if (currentSelectable < maxItems - 2) {
+        starsAndSubmitButtons[currentSelectable].style.borderLeft = cloneInto('4px dashed #ebbc4a', w)
+        starsAndSubmitButtons[currentSelectable].style.paddingLeft = cloneInto('16px', w)
+        submitAndNext.blur()
+        submitButton.blur()
+      } else if (currentSelectable === maxItems - 2) {
+        submitAndNext.focus()
+      } else if (currentSelectable === maxItems) {
+        submitButton.focus()
+      }
+    }
+
+    /* EDIT PORTAL */
+    addEventListener('keydown', (event) => {
+      /*
+      Keycodes:
+
+      8: Backspace
+      9: TAB
+      13: Enter
+      16: Shift
+      27: Escape
+      32: Space
+      68: D
+      107: NUMPAD +
+      109: NUMPAD -
+      111: NUMPAD /
+
+      49 - 53:  Keys 1-5
+      97 - 101: NUMPAD 1-5
+       */
+
+      let numkey = null
+      if (event.keyCode >= 49 && event.keyCode <= 53) {
+        numkey = event.keyCode - 48
+      } else if (event.keyCode >= 97 && event.keyCode <= 101) {
+        numkey = event.keyCode - 96
+      }
+
+      // do not do anything if a text area or a input with type text has focus
+      if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
+        return
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+        // "analyze next" button
+        w.document.location.href = '/recon'
+        event.preventDefault()
+      } else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+        // submit normal rating
+        w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click()
+        event.preventDefault()
+      } else if (event.keyCode === 27 || event.keyCode === 111) {
+        // return to first selection (should this be a portal)
+        currentSelectable = 0
+      } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+        // select next rating
+        currentSelectable++
+        event.preventDefault()
+      } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+        // select previous rating
+        currentSelectable--
+        event.preventDefault()
+      } else if (numkey === null || currentSelectable > maxItems - 2) {
+        return
+      } else {
+        // rating 1-5
+        if (hasLocationEdit && currentSelectable === maxItems - 3 && numkey <= mapMarkers.length) {
+          google.maps.event.trigger(angular.element(document.getElementById('NewSubmissionController')).scope().getAllLocationMarkers()[numkey - 1], 'click')
+        } else {
+          if (hasLocationEdit) numkey = 1
+          starsAndSubmitButtons[currentSelectable].querySelectorAll(".titleEditBox, input[type='checkbox']")[numkey - 1].click()
+          currentSelectable++
+        }
+      }
+      highlight()
+    })
+
+    highlight()
+  }
+
+  // add map buttons
+  function mapButtons (newPortalData, targetElement, where) {
+    // coordinate format conversion
+    const coordUtm33 = proj4('+proj=longlat', '+proj=utm +zone=33', [newPortalData.lng, newPortalData.lat])
+    const coordUtm35 = proj4('+proj=longlat', '+proj=utm +zone=35', [newPortalData.lng, newPortalData.lat])
+    const coordPuwg92 = proj4('+proj=longlat', '+proj=tmerc +lat_0=0 +lon_0=19 +k=0.9993 +x_0=500000 +y_0=-5300000 +ellps=GRS80 +units=m +no_defs', [newPortalData.lng, newPortalData.lat])
+
+    const mapButtons = `
 <a class='button btn btn-default' target='intel' href='https://www.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=17'>Intel</a>
 <a class='button btn btn-default' target='wikimapia' href='http://wikimapia.org/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=16'>Wikimapia</a>
-`;
+`
 
-		// more map buttons in a dropdown menu
-		const mapDropdown = `
+    // more map buttons in a dropdown menu
+    const mapDropdown = `
 <li><a target='osm' href='https://www.openstreetmap.org/?mlat=${newPortalData.lat}&mlon=${newPortalData.lng}&zoom=16'>OSM</a></li>
 <li><a target='bing' href='https://bing.com/maps/default.aspx?cp=${newPortalData.lat}~${newPortalData.lng}&lvl=16&style=a'>bing</a></li>
 <li><a target='heremaps' href='https://wego.here.com/?map=${newPortalData.lat},${newPortalData.lng},17,satellite'>HERE maps</a></li>
@@ -852,269 +813,282 @@ function init() {
 <li><a target='norgeibilder' href='https://norgeibilder.no/?x=${Math.round(coordUtm33[0])}&y=${Math.round(coordUtm33[1])}&level=16&utm=33'>NO - Norge i Bilder</a></li>
 <li><a target='finnno' href='http://kart.finn.no/?lng=${newPortalData.lng}&lat=${newPortalData.lat}&zoom=17&mapType=normap&markers=${newPortalData.lng},${newPortalData.lat},r,'>NO - Finn Kart</a></li>
 <li><a target='toposvalbard' href='http://toposvalbard.npolar.no/?lat=${newPortalData.lat}&long=${newPortalData.lng}&zoom=17&layer=map'>NO - Polarinstituttet, Svalbard</a></li>
-<li><a target='geoportal_pl' href='http://mapy.geoportal.gov.pl/imap/?actions=acShowWgButtonPanel_kraj_ORTO&bbox=${coordPuwg92[0]-127},${coordPuwg92[1]-63},${coordPuwg92[0]+127},${coordPuwg92[1]+63}'>PL - GeoPortal</a></li>
+<li><a target='geoportal_pl' href='http://mapy.geoportal.gov.pl/imap/?actions=acShowWgButtonPanel_kraj_ORTO&bbox=${coordPuwg92[0] - 127},${coordPuwg92[1] - 63},${coordPuwg92[0] + 127},${coordPuwg92[1] + 63}'>PL - GeoPortal</a></li>
 <li><a target='yandex' href='https://maps.yandex.ru/?text=${newPortalData.lat},${newPortalData.lng}'>RU - Yandex</a></li>
 <li><a target='2GIS' href='https://2gis.ru/geo/${newPortalData.lng},${newPortalData.lat}?queryState=center/${newPortalData.lng},${newPortalData.lat}/zoom/13'>RU - 2GIS</a></li>
 <li><a target='lantmateriet' href='https://kso.etjanster.lantmateriet.se/?e=${Math.round(coordUtm33[0])}&n=${Math.round(coordUtm33[1])}&z=13'>SE - Läntmateriet</a></li>
 <li><a target='hitta' href='https://www.hitta.se/kartan!~${newPortalData.lat},${newPortalData.lng},18z/tileLayer!l=1'>SE - Hitta.se</a></li>
 <li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=17&l=nautical'>SE - Eniro Sjökort</a></li>
-`;
+`
 
-		targetElement.insertAdjacentHTML(where, `<div><div class='btn-group'>${mapButtons}<div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${mapDropdown}</div>`);
-	}
+    targetElement.insertAdjacentHTML(where, `<div><div class='btn-group'>${mapButtons}<div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${mapDropdown}</div>`)
+  }
 
-	// add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
-	function quickSubmitButton(submitDiv, ansController) {
-		let submitButton = submitDiv.querySelector("button");
-		submitButton.classList.add("btn", "btn-warning");
-		let submitAndNext = submitButton.cloneNode(false);
-		submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`;
-		submitAndNext.title = "Submit and go to next review";
-		submitAndNext.addEventListener("click", exportFunction(() => {
-			exportFunction(() => {
-				window.location.assign("/recon");
-			}, ansController, {defineAs: "openSubmissionCompleteModal"});
-		}, w));
+  // add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
+  function quickSubmitButton (submitDiv, ansController) {
+    let submitButton = submitDiv.querySelector('button')
+    submitButton.classList.add('btn', 'btn-warning')
+    let submitAndNext = submitButton.cloneNode(false)
+    submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`
+    submitAndNext.title = 'Submit and go to next review'
+    submitAndNext.addEventListener('click', exportFunction(() => {
+      exportFunction(() => {
+        window.location.assign('/recon')
+      }, ansController, {defineAs: 'openSubmissionCompleteModal'})
+    }, w))
 
-		w.$injector.invoke(cloneInto(["$compile", ($compile) => {
-			let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv));
-			submitDiv.querySelector("button").insertAdjacentElement("beforeBegin", compiledSubmit[0]);
-		}], w, {cloneFunctions: true}));
-		return {submitButton, submitAndNext};
-	}
+    w.$injector.invoke(cloneInto(['$compile', ($compile) => {
+      let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv))
+      submitDiv.querySelector('button').insertAdjacentElement('beforeBegin', compiledSubmit[0])
+    }], w, {cloneFunctions: true}))
+    return {submitButton, submitAndNext}
+  }
 
-	function textButtons() {
+  function textButtons () {
+    let emergencyWay = ''
+    if (browserLocale.includes('de')) {
+      emergencyWay = 'RETTUNGSWEG!1'
+    } else {
+      emergencyWay = 'Emergency Way'
+    }
 
-		let emergencyWay = "";
-		if (browserLocale.includes("de")) {
-			emergencyWay = "RETTUNGSWEG!1";
-		} else {
-			emergencyWay = "Emergency Way";
-		}
-
-		// add text buttons
-		const textButtons = `
+    // add text buttons
+    const textButtons = `
 <button id='photo' class='button btn btn-default textButton' data-tooltip='Indicates a low quality photo'>Photo</button>
-<button id='private' class='button btn btn-default textButton' data-tooltip='Located on private residential property'>Private</button>`;
-		const textDropdown = `
+<button id='private' class='button btn btn-default textButton' data-tooltip='Located on private residential property'>Private</button>`
+    const textDropdown = `
 <li><a class='textButton' id='school' data-tooltip='Located on school property'>School</a></li>
 <li><a class='textButton' id='person' data-tooltip='Photo contains 1 or more people'>Person</a></li>
 <li><a class='textButton' id='perm' data-tooltip='Seasonal or temporary display or item'>Temporary</a></li>
 <li><a class='textButton' id='location' data-tooltip='Location wrong'>Location</a></li>
 <li><a class='textButton' id='natural' data-tooltip='Candidate is a natural feature'>Natural</a></li>
 <li><a class='textButton' id='emergencyway' data-tooltip='Obstructing emergency way'>${emergencyWay}</a></li>
-`;
+`
 
-		const textBox = w.document.querySelector("#submitDiv + .text-center > textarea");
+    const textBox = w.document.querySelector('#submitDiv + .text-center > textarea')
 
-		w.document.querySelector("#submitDiv + .text-center").insertAdjacentHTML("beforeend", `
+    w.document.querySelector('#submitDiv + .text-center').insertAdjacentHTML('beforeend', `
 <div class='btn-group dropup'>${textButtons}
 <div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${textDropdown}</ul>
 </div></div><div class="hidden-xs"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></div>
-`);
+`)
 
-		const buttons = w.document.getElementsByClassName("textButton");
-		for (let b in buttons) {
-			if (buttons.hasOwnProperty(b)) {
-				buttons[b].addEventListener("click", exportFunction(event => {
-					const source = event.target || event.srcElement;
-					let text = textBox.value;
-					if (text.length > 0) {
-						text += ",\n";
-					}
-					switch (source.id) {
-						case "photo":
-							text += "Low quality photo";
-							break;
-						case "private":
-							text += "Private residential property";
-							break;
-						case "duplicate":
-							text += "Duplicate of previously reviewed portal candidate";
-							break;
-						case "school":
-							text += "Located on primary or secondary school grounds";
-							break;
-						case "person":
-							text += "Picture contains one or more people";
-							break;
-						case "perm":
-							text += "Portal candidate is seasonal or temporary";
-							break;
-						case "location":
-							text += "Portal candidate's location is not on object";
-							break;
-						case "emergencyway":
-							text += "Portal candidate is obstructing the path of emergency vehicles";
-							break;
-						case "natural":
-							text += "Portal candidate is a natural feature";
-							break;
-						case "clear":
-							text = "";
-							break;
-					}
+    const buttons = w.document.getElementsByClassName('textButton')
+    for (let b in buttons) {
+      if (buttons.hasOwnProperty(b)) {
+        buttons[b].addEventListener('click', exportFunction(event => {
+          const source = event.target || event.srcElement
+          let text = textBox.value
+          if (text.length > 0) {
+            text += ',\n'
+          }
+          switch (source.id) {
+            case 'photo':
+              text += 'Low quality photo'
+              break
+            case 'private':
+              text += 'Private residential property'
+              break
+            case 'duplicate':
+              text += 'Duplicate of previously reviewed portal candidate'
+              break
+            case 'school':
+              text += 'Located on primary or secondary school grounds'
+              break
+            case 'person':
+              text += 'Picture contains one or more people'
+              break
+            case 'perm':
+              text += 'Portal candidate is seasonal or temporary'
+              break
+            case 'location':
+              text += "Portal candidate's location is not on object"
+              break
+            case 'emergencyway':
+              text += 'Portal candidate is obstructing the path of emergency vehicles'
+              break
+            case 'natural':
+              text += 'Portal candidate is a natural feature'
+              break
+            case 'clear':
+              text = ''
+              break
+          }
 
-					textBox.value = text;
-					textBox.dispatchEvent(new Event("change"));
+          textBox.value = text
+          textBox.dispatchEvent(new Event('change')) // eslint-disable-line no-undef
 
-					event.target.blur();
+          event.target.blur()
+        }, w), false)
+      }
+    }
+  }
 
-				}, w), false);
-			}
-		}
-	}
-	
-	// adding a 40m circle around the portal (capture range)
-	function mapOriginCircle(map) {
-		// noinspection JSUnusedLocalSymbols
-		const circle = new google.maps.Circle({
-			map          : map,
-			center       : map.center,
-			radius       : 40,
-			strokeColor  : "#ebbc4a",
-			strokeOpacity: 0.8,
-			strokeWeight : 1.5,
-			fillOpacity  : 0,
-		});
-	}
+  // adding a 40m circle around the portal (capture range)
+  function mapOriginCircle (map) {
+    // noinspection JSUnusedLocalSymbols
+    const circle = new google.maps.Circle({ // eslint-disable-line no-unused-vars
+      map: map,
+      center: map.center,
+      radius: 40,
+      strokeColor: '#ebbc4a',
+      strokeOpacity: 0.8,
+      strokeWeight: 1.5,
+      fillOpacity: 0
+    })
+  }
 
-	// replace map markers with a nice circle
-	function mapMarker(markers) {
-		for (let i = 0; i < markers.length; ++i) {
-			const marker = markers[i];
-			marker.setIcon(PORTAL_MARKER);
-		}
-	}
+  // replace map markers with a nice circle
+  function mapMarker (markers) {
+    for (let i = 0; i < markers.length; ++i) {
+      const marker = markers[i]
+      marker.setIcon(PORTAL_MARKER)
+    }
+  }
 
-	// set available map types
-	function mapTypes(map, isMainMap) {
-		const PROVIDERS = {
-			GOOGLE    : "google",
-			KARTVERKET: "kartverket",
-		};
+  // set available map types
+  function mapTypes (map, isMainMap) {
+    const PROVIDERS = {
+      GOOGLE: 'google',
+      KARTVERKET: 'kartverket'
+    }
 
-		const types = [
-			{ provider: PROVIDERS.GOOGLE,     id: "roadmap" },
-			{ provider: PROVIDERS.GOOGLE,     id: "terrain" },
-			{ provider: PROVIDERS.GOOGLE,     id: "satellite" },
-			{ provider: PROVIDERS.GOOGLE,     id: "hybrid" },
-			{ provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`,   code: "topo4",         label: "NO - Topo" },
-			{ provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: "toporaster3",   label: "NO - Raster" },
-			{ provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`,    code: "sjokartraster", label: "NO - Sjøkart" },
-		];
+    const types = [
+      { provider: PROVIDERS.GOOGLE, id: 'roadmap' },
+      { provider: PROVIDERS.GOOGLE, id: 'terrain' },
+      { provider: PROVIDERS.GOOGLE, id: 'satellite' },
+      { provider: PROVIDERS.GOOGLE, id: 'hybrid' },
+      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`, code: 'topo4', label: 'NO - Topo' },
+      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster' },
+      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart' }
+    ]
 
-		const defaultType = "hybrid";
+    const defaultType = 'hybrid'
 
-		const mapOptions = {
-			// re-enabling map scroll zoom and allow zoom with out holding ctrl
-			scrollwheel: true,
-			gestureHandling: "greedy",
-			// map type selection
-			mapTypeControl: true,
-			mapTypeControlOptions: {
-				mapTypeIds: types.map(t => t.id),
-				style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
-			}
-		};
-		map.setOptions(cloneInto(mapOptions, w));
+    const mapOptions = {
+      // re-enabling map scroll zoom and allow zoom with out holding ctrl
+      scrollwheel: true,
+      gestureHandling: 'greedy',
+      // map type selection
+      mapTypeControl: true,
+      mapTypeControlOptions: {
+        mapTypeIds: types.map(t => t.id),
+        style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+      }
+    }
+    map.setOptions(cloneInto(mapOptions, w))
 
-		// register custom map types
-		types.forEach(t => {
-			switch (t.provider) {
-				case PROVIDERS.KARTVERKET:
-					map.mapTypes.set(t.id, new google.maps.ImageMapType({
-						layer     : t.code,
-						name      : t.label,
-						alt       : t.label,
-						maxZoom   : 19,
-						tileSize  : new google.maps.Size(256, 256),
-						getTileUrl: function (coord, zoom) {
-							return `//opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=${this.layer}&zoom=${zoom}&x=${coord.x}&y=${coord.y}`;
-						}
-					}));
-					break;
-			}
-		});
+    // register custom map types
+    types.forEach(t => {
+      switch (t.provider) {
+        case PROVIDERS.KARTVERKET:
+          map.mapTypes.set(t.id, new google.maps.ImageMapType({
+            layer: t.code,
+            name: t.label,
+            alt: t.label,
+            maxZoom: 19,
+            tileSize: new google.maps.Size(256, 256),
+            getTileUrl: function (coord, zoom) {
+              return `//opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=${this.layer}&zoom=${zoom}&x=${coord.x}&y=${coord.y}`
+            }
+          }))
+          break
+      }
+    })
 
-		// track current selection for main position map
-		if (isMainMap) {
-			// save selection when changed
-			map.addListener("maptypeid_changed", function() {
-				w.localStorage.setItem(OPRT.MAP_TYPE, map.getMapTypeId());
-			});
+    // track current selection for main position map
+    if (isMainMap) {
+      // save selection when changed
+      map.addListener('maptypeid_changed', function () {
+        w.localStorage.setItem(OPRT.MAP_TYPE, map.getMapTypeId())
+      })
 
-			// get map type saved from last use or fall back to default
-			map.setMapTypeId(w.localStorage.getItem(OPRT.MAP_TYPE) || defaultType);
-		}
-	}
+      // get map type saved from last use or fall back to default
+      map.setMapTypeId(w.localStorage.getItem(OPRT.MAP_TYPE) || defaultType)
+    }
+  }
 
-	// move submit button to right side of classification-div. don't move on mobile devices / small width
-	function moveSubmitButton() {
-		const submitDiv = w.document.querySelectorAll("#submitDiv, #submitDiv + .text-center");
+  // move submit button to right side of classification-div. don't move on mobile devices / small width
+  function moveSubmitButton () {
+    const submitDiv = w.document.querySelectorAll('#submitDiv, #submitDiv + .text-center')
 
-		if (screen.availWidth > 768) {
-			let newSubmitDiv = w.document.createElement("div");
-			const classificationRow = w.document.querySelector(".classification-row");
-			newSubmitDiv.className = "col-xs-12 col-sm-6";
-			submitDiv[0].style.marginTop = 16;
-			newSubmitDiv.appendChild(submitDiv[0]);
-			newSubmitDiv.appendChild(submitDiv[1]);
-			classificationRow.insertAdjacentElement("afterend", newSubmitDiv);
+    if (screen.availWidth > 768) {
+      let newSubmitDiv = w.document.createElement('div')
+      const classificationRow = w.document.querySelector('.classification-row')
+      newSubmitDiv.className = 'col-xs-12 col-sm-6'
+      submitDiv[0].style.marginTop = 16
+      newSubmitDiv.appendChild(submitDiv[0])
+      newSubmitDiv.appendChild(submitDiv[1])
+      classificationRow.insertAdjacentElement('afterend', newSubmitDiv)
 
-			// edit-page - remove .col-sm-offset-3 from .classification-row (why did you add this, niantic?
-			classificationRow.classList.remove("col-sm-offset-3");
-			return newSubmitDiv;
-		} else {
-			return submitDiv[0];
-		}
-	}
+      // edit-page - remove .col-sm-offset-3 from .classification-row (why did you add this, niantic?
+      classificationRow.classList.remove('col-sm-offset-3')
+      return newSubmitDiv
+    } else {
+      return submitDiv[0]
+    }
+  }
 
-	// expand automatically the "What is it?" filter text box
-	function expandWhatIsItBox() {
-		try {
-			const f = w.document.querySelector("#WhatIsItController > div > p > span.ingress-mid-blue.text-center");
-			setTimeout(() => {
-				f.click();
-			}, 250);
-		} catch (err) {}
-	}
+  // expand automatically the "What is it?" filter text box
+  function expandWhatIsItBox () {
+    try {
+      const f = w.document.querySelector('#WhatIsItController > div > p > span.ingress-mid-blue.text-center')
+      setTimeout(() => {
+        f.click()
+      }, 250)
+    } catch (err) {}
+  }
 
+  function modifyHeader () {
+    // stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
 
-	function modifyHeader() {
-		// stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
+    // get scanner offset from localStorage
+    let oprtScannerOffset = parseInt(w.localStorage.getItem(OPRT.SCANNER_OFFSET)) || 0
 
-		// get scanner offset from localStorage
-		let oprt_scanner_offset = parseInt(w.localStorage.getItem(OPRT.SCANNER_OFFSET)) || 0;
+    const lastPlayerStatLine = w.document.querySelector('#player_stats:not(.visible-xs) div')
+    const stats = w.document.querySelector('#player_stats:not(.visible-xs) div')
 
-		const lastPlayerStatLine = w.document.querySelector("#player_stats:not(.visible-xs) div");
-		const stats = w.document.querySelector("#player_stats").children[2];
+    let perfBadge = null
+    const imgSrc = stats.children[1].src
 
-		const reviewed = parseInt(stats.children[3].children[2].innerText);
-		const accepted = parseInt(stats.children[5].children[2].innerText);
-		const rejected = parseInt(stats.children[7].children[2].innerText);
+    if (imgSrc.indexOf('great.png') !== -1) {
+      perfBadge = PERF_GREAT
+    } else if (imgSrc.indexOf('good.png') !== -1) {
+      perfBadge = PERF_GOOD
+    } else if (imgSrc.indexOf('poor.png') !== -1) {
+      perfBadge = PERF_POOR
+    }
 
-		const processed = accepted + rejected - oprt_scanner_offset;
-		const percent = Math.round(processed / reviewed * 1000) / 10;
+    if (perfBadge != null) {
+      stats.removeChild(stats.children[1])
+      stats.children[1].insertAdjacentHTML('beforeBegin', '<img style="float: right !important; margin-top: -2px;" src="' + perfBadge + '">')
+      stats.children[2].setAttribute('style', 'clear: both; margin-bottom: 10px;')
+    }
 
-		const reconBadge = {100: "Bronze", 750: "Silver", 2500: "Gold", 5000: "Platin", 10000: "Black"};
-		let nextBadgeName, nextBadgeCount;
+    const reviewed = parseInt(stats.children[3].children[2].innerText)
+    const accepted = parseInt(stats.children[5].children[2].innerText)
+    const rejected = parseInt(stats.children[7].children[2].innerText)
 
-		for (const key in reconBadge) {
-			if (processed <= key) {
-				nextBadgeCount = key;
-				nextBadgeName = reconBadge[key];
-				break;
-			}
-		}
-		const nextBadgeProcess = processed / nextBadgeCount * 100;
+    const processed = accepted + rejected - oprtScannerOffset
+    const percent = Math.round(processed / reviewed * 1000) / 10
 
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<br>
-<p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses:</span> <span class="gold pull-right">${processed} (${percent}%) </span></p>`);
+    const reconBadge = {100: 'Bronze', 750: 'Silver', 2500: 'Gold', 5000: 'Platin', 10000: 'Black'}
+    let nextBadgeName, nextBadgeCount
 
-		if (accepted < 10000) {
+    for (const key in reconBadge) {
+      if (processed <= key) {
+        nextBadgeCount = key
+        nextBadgeName = reconBadge[key]
+        break
+      }
+    }
+    const nextBadgeProcess = processed / nextBadgeCount * 100
 
-			lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `
+    lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `<br>
+<p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses:</span> <span class="gold pull-right">${processed} (${percent}%) </span></p>`)
+
+    if (accepted < 10000) {
+      lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `
 <br><div>Next recon badge tier: <b>${nextBadgeName} (${nextBadgeCount})</b><span class='pull-right'></span>
 <div class='progress'>
 <div class='progress-bar progress-bar-warning'
@@ -1126,320 +1100,308 @@ style='width: ${Math.round(nextBadgeProcess)}%;'
 title='${nextBadgeCount - processed} to go'>
 ${Math.round(nextBadgeProcess)}%
 </div></div></div>
-`);
-		}
+`)
+    } else lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `<hr>`)
+    lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `<p><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 90%;" type="text"
+value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(percent)}%"/></p>`)
 
-		else lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<hr>`);
-		lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `<p><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 90%;" type="text"
-value="Reviewed: ${reviewed} / Processed: ${accepted + rejected } (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(percent)}%"/></p>`);
+    let tooltipSpan = `<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder"
+uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
 
-		let tooltipSpan = `<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder"
-uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`;
-
-		// ** opr-scanner offset
-		if (accepted < 10000) {
-			lastPlayerStatLine.insertAdjacentHTML("beforeEnd", `
+    // ** opr-scanner offset
+    if (accepted < 10000) {
+      lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `
 <p id='scannerOffsetContainer'>
 <span style="margin-left: 5px" class="ingress-mid-blue pull-left">Scanner offset:</span>
-<input id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="${oprt_scanner_offset}">
-</p>`);
+<input id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="${oprtScannerOffset}">
+</p>`)
 
-			// we have to inject the tooltip to angular
-			w.$injector.invoke(cloneInto(["$compile", ($compile) => {
-				let compiledSubmit = $compile(tooltipSpan)(w.$scope(stats));
-				w.document.getElementById("scannerOffsetContainer").insertAdjacentElement("afterbegin", compiledSubmit[0]);
-			}], w, {cloneFunctions: true}));
+      // we have to inject the tooltip to angular
+      w.$injector.invoke(cloneInto(['$compile', ($compile) => {
+        let compiledSubmit = $compile(tooltipSpan)(w.$scope(stats))
+        w.document.getElementById('scannerOffsetContainer').insertAdjacentElement('afterbegin', compiledSubmit[0])
+      }], w, {cloneFunctions: true}));
 
+      ['change', 'keyup', 'cut', 'paste', 'input'].forEach(e => {
+        w.document.getElementById('scannerOffset').addEventListener(e, (event) => {
+          w.localStorage.setItem(OPRT.SCANNER_OFFSET, event.target.value)
+        })
+      })
+      // **
+    }
 
-			["change", "keyup", "cut", "paste", "input"].forEach(e => {
-				w.document.getElementById("scannerOffset").addEventListener(e, (event) => {
-					w.localStorage.setItem(OPRT.SCANNER_OFFSET, event.target.value);
-				});
-			});
-			// **
-		}
+    modifyHeader = () => {} // eslint-disable-line
+  }
 
-		modifyHeader = () => {}; // just run once
-	}
+  function addRefreshContainer () {
+    let cbxRefresh = w.document.createElement('input')
+    let cbxRefreshSound = w.document.createElement('input')
+    let cbxRefreshDesktop = w.document.createElement('input')
 
-	function addRefreshContainer() {
+    cbxRefresh.id = OPRT.REFRESH
+    cbxRefresh.type = 'checkbox'
+    cbxRefresh.checked = (w.localStorage.getItem(cbxRefresh.id) === 'true')
 
-		let cbxRefresh = w.document.createElement("input");
-		let cbxRefreshSound = w.document.createElement("input");
-		let cbxRefreshDesktop = w.document.createElement("input");
+    cbxRefreshSound.id = OPRT.REFRESH_NOTI_SOUND
+    cbxRefreshSound.type = 'checkbox'
+    cbxRefreshSound.checked = (w.localStorage.getItem(cbxRefreshSound.id) === 'true')
 
-		cbxRefresh.id = OPRT.REFRESH;
-		cbxRefresh.type = "checkbox";
-		cbxRefresh.checked = (w.localStorage.getItem(cbxRefresh.id) == "true");
+    cbxRefreshDesktop.id = OPRT.REFRESH_NOTI_DESKTOP
+    cbxRefreshDesktop.type = 'checkbox'
+    cbxRefreshDesktop.checked = (w.localStorage.getItem(cbxRefreshDesktop.id) === 'true')
 
-		cbxRefreshSound.id = OPRT.REFRESH_NOTI_SOUND;
-		cbxRefreshSound.type = "checkbox";
-		cbxRefreshSound.checked = (w.localStorage.getItem(cbxRefreshSound.id) == "true");
+    let refreshPanel = w.document.createElement('div')
+    refreshPanel.className = 'panel panel-ingress'
 
-		cbxRefreshDesktop.id = OPRT.REFRESH_NOTI_DESKTOP;
-		cbxRefreshDesktop.type = "checkbox";
-		cbxRefreshDesktop.checked = (w.localStorage.getItem(cbxRefreshDesktop.id) == "true");
+    refreshPanel.addEventListener('change', (event) => {
+      w.localStorage.setItem(event.target.id, event.target.checked) // i'm lazy
+      if (event.target.checked) {
+        startRefresh()
+      } else {
+        stopRefresh()
+      }
+    })
 
-		let refreshPanel = w.document.createElement("div");
-		refreshPanel.className = "panel panel-ingress";
-
-		refreshPanel.addEventListener("change", (event) => {
-			w.localStorage.setItem(event.target.id, event.target.checked); // i'm lazy
-			if (event.target.checked) {
-				startRefresh();
-			} else {
-				stopRefresh();
-			}
-		});
-
-		refreshPanel.innerHTML = `
+    refreshPanel.innerHTML = `
 <div class='panel-heading'><span class='glyphicon glyphicon-refresh'></span> Refresh <sup>beta</sup> <a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success pull-right'>OPR-Tools</span></a></div>
-<div id='cbxDiv' class='panel-body bg-primary' style='background:black;'></div>`;
+<div id='cbxDiv' class='panel-body bg-primary' style='background:black;'></div>`
 
-		refreshPanel.querySelector("#cbxDiv").insertAdjacentElement("afterbegin", appendCheckbox(cbxRefreshSound, "Notification sound"));
-		refreshPanel.querySelector("#cbxDiv").insertAdjacentElement("afterbegin", appendCheckbox(cbxRefreshDesktop, "Desktop notification"));
-		refreshPanel.querySelector("#cbxDiv").insertAdjacentElement("afterbegin", appendCheckbox(cbxRefresh, "Refresh every 5-10 minutes"));
+    refreshPanel.querySelector('#cbxDiv').insertAdjacentElement('afterbegin', appendCheckbox(cbxRefreshSound, 'Notification sound'))
+    refreshPanel.querySelector('#cbxDiv').insertAdjacentElement('afterbegin', appendCheckbox(cbxRefreshDesktop, 'Desktop notification'))
+    refreshPanel.querySelector('#cbxDiv').insertAdjacentElement('afterbegin', appendCheckbox(cbxRefresh, 'Refresh every 5-10 minutes'))
 
-		let colDiv = w.document.createElement("div");
-		colDiv.className = "col-md-4 col-md-offset-4";
-		colDiv.appendChild(refreshPanel);
+    let colDiv = w.document.createElement('div')
+    colDiv.className = 'col-md-4 col-md-offset-4'
+    colDiv.appendChild(refreshPanel)
 
-		let rowDiv = w.document.createElement("div");
-		rowDiv.className = "row";
-		rowDiv.appendChild(colDiv);
+    let rowDiv = w.document.createElement('div')
+    rowDiv.className = 'row'
+    rowDiv.appendChild(colDiv)
 
-		w.document.getElementById("NewSubmissionController").insertAdjacentElement("beforeend", rowDiv);
+    w.document.getElementById('NewSubmissionController').insertAdjacentElement('beforeend', rowDiv)
 
-		cbxRefresh.checked === true ? startRefresh() : stopRefresh();
+    cbxRefresh.checked === true ? startRefresh() : stopRefresh()
 
-		function appendCheckbox(checkbox, text) {
-			let label = w.document.createElement("label");
-			let div = w.document.createElement("div");
-			div.className = "checkbox";
-			label.appendChild(checkbox);
-			label.appendChild(w.document.createTextNode(text));
-			div.appendChild(label);
-			return div;
-		}
+    function appendCheckbox (checkbox, text) {
+      let label = w.document.createElement('label')
+      let div = w.document.createElement('div')
+      div.className = 'checkbox'
+      label.appendChild(checkbox)
+      label.appendChild(w.document.createTextNode(text))
+      div.appendChild(label)
+      return div
+    }
 
-		addRefreshContainer = () => {}; // run only once
-	}
+    addRefreshContainer = () => {} // eslint-disable-line
+  }
 
-	let refreshIntervalID;
+  let refreshIntervalID
 
-	function startRefresh() {
-		let time = getRandomIntInclusive(5, 10) * 60000;
+  function startRefresh () {
+    let time = getRandomIntInclusive(5, 10) * 60000
 
-		refreshIntervalID = setInterval(() => {
-			reloadOPR();
-		}, time);
+    refreshIntervalID = setInterval(() => {
+      reloadOPR()
+    }, time)
 
-		function reloadOPR() {
-			clearInterval(refreshIntervalID);
-			w.sessionStorage.setItem(OPRT.FROM_REFRESH, "true");
-			w.document.location.reload();
-		}
+    function reloadOPR () {
+      clearInterval(refreshIntervalID)
+      w.sessionStorage.setItem(OPRT.FROM_REFRESH, 'true')
+      w.document.location.reload()
+    }
 
-		// source https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
-		function getRandomIntInclusive(min, max) {
-			min = Math.ceil(min);
-			max = Math.floor(max);
-			return Math.floor(Math.random() * (max - min + 1)) + min;
-		}
-	}
+    // source https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+    function getRandomIntInclusive (min, max) {
+      min = Math.ceil(min)
+      max = Math.floor(max)
+      return Math.floor(Math.random() * (max - min + 1)) + min
+    }
+  }
 
-	function stopRefresh() {
-		clearInterval(refreshIntervalID);
-	}
+  function stopRefresh () {
+    clearInterval(refreshIntervalID)
+  }
 
-	function checkIfAutorefresh() {
-		if (w.sessionStorage.getItem(OPRT.FROM_REFRESH)) {
-			// reset flag
-			w.sessionStorage.removeItem(OPRT.FROM_REFRESH);
+  function checkIfAutorefresh () {
+    if (w.sessionStorage.getItem(OPRT.FROM_REFRESH)) {
+      // reset flag
+      w.sessionStorage.removeItem(OPRT.FROM_REFRESH)
 
-			if (w.document.hidden) { // if tab in background: flash favicon
-				let flag = true;
+      if (w.document.hidden) { // if tab in background: flash favicon
+        let flag = true
 
-				if (w.localStorage.getItem(OPRT.REFRESH_NOTI_SOUND) == "true") {
-					let audio = document.createElement("audio");
-					audio.src = NOTIFICATION_SOUND;
-					audio.autoplay = true;
-				}
-				if (w.localStorage.getItem(OPRT.REFRESH_NOTI_DESKTOP) == "true") {
-					GM_notification({
-						"title": "OPR - New Portal Analysis Available",
-						"text" : "by OPR-Tools",
-						"image": "https://gitlab.com/uploads/-/system/project/avatar/3311015/opr-tools.png",
-					});
-				}
+        if (w.localStorage.getItem(OPRT.REFRESH_NOTI_SOUND) === 'true') {
+          let audio = document.createElement('audio')
+          audio.src = NOTIFICATION_SOUND
+          audio.autoplay = true
+        }
+        if (w.localStorage.getItem(OPRT.REFRESH_NOTI_DESKTOP) === 'true') {
+          GM_notification({
+            'title': 'OPR - New Portal Analysis Available',
+            'text': 'by OPR-Tools',
+            'image': 'https://gitlab.com/uploads/-/system/project/avatar/3311015/opr-tools.png'
+          })
+        }
 
-				let flashId = setInterval(() => {
-					flag = !flag;
-					changeFavicon(`${flag ? PORTAL_MARKER : "/imgpub/favicon.ico"}`);
-				}, 1000);
+        let flashId = setInterval(() => {
+          flag = !flag
+          changeFavicon(`${flag ? PORTAL_MARKER : '/imgpub/favicon.ico'}`)
+        }, 1000)
 
-				// stop flashing if tab in foreground
-				addEventListener("visibilitychange", () => {
-					if (!w.document.hidden) {
-						changeFavicon("/imgpub/favicon.ico");
-						clearInterval(flashId);
-					}
-				});
-			}
-		}
-	}
+        // stop flashing if tab in foreground
+        addEventListener('visibilitychange', () => {
+          if (!w.document.hidden) {
+            changeFavicon('/imgpub/favicon.ico')
+            clearInterval(flashId)
+          }
+        })
+      }
+    }
+  }
 
-	function changeFavicon(src) {
-		let link = w.document.querySelector("link[rel='shortcut icon']");
-		link.href = src;
-	}
+  function changeFavicon (src) {
+    let link = w.document.querySelector("link[rel='shortcut icon']")
+    link.href = src
+  }
 
-	function startExpirationTimer(subController) {
+  function startExpirationTimer (subController) {
+    w.document.querySelector('ul.nav.navbar-nav > li:nth-child(7)').insertAdjacentHTML('afterbegin', '<a><span id="countdownDisplay"></span></a>')
 
-		w.document.querySelector("ul.nav.navbar-nav > li:nth-child(7)").insertAdjacentHTML("afterbegin", "<a><span id=\"countdownDisplay\"></span></a>");
+    let countdownEnd = subController.countdownDate
+    let countdownDisplay = document.getElementById('countdownDisplay')
+    countdownDisplay.style.color = 'white'
 
-		let countdownEnd = subController.countdownDate;
-		let countdownDisplay = document.getElementById("countdownDisplay");
-		countdownDisplay.style.color = "white";
+    // Update the count down every 1 second
+    let counterInterval = setInterval(function () {
+      // Get todays date and time
+      let now = new Date().getTime()
+      // Find the distance between now an the count down date
+      let distance = countdownEnd - now
+      // Time calculations for minutes and seconds
+      let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+      let seconds = Math.floor((distance % (1000 * 60)) / 1000)
 
-		// Update the count down every 1 second
-		let counterInterval = setInterval(function () {
-			// Get todays date and time
-			let now = new Date().getTime();
-			// Find the distance between now an the count down date
-			let distance = countdownEnd - now;
-			// Time calculations for minutes and seconds
-			let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-			let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      // Display the result in the element
+      countdownDisplay.innerText = `${minutes}m ${seconds}s `
 
-			// Display the result in the element
-			countdownDisplay.innerText = `${minutes}m ${seconds}s `;
+      if (distance < 0) {
+        // If the count down is finished, write some text
+        clearInterval(counterInterval)
+        countdownDisplay.innerText = 'EXPIRED'
+        countdownDisplay.style.color = 'red'
+      } else if (distance < 90000) {
+        countdownDisplay.style.color = 'red'
+      }
+    }, 1000)
+  }
 
-			if (distance < 0) {
-				// If the count down is finished, write some text
-				clearInterval(counterInterval);
-				countdownDisplay.innerText = "EXPIRED";
-				countdownDisplay.classList.add("blink");
+  function addCustomPresetButtons () {
+    // add customPreset UI
+    oprtCustomPresets = getCustomPresets(w)
+    let customPresetOptions = ''
+    for (const customPreset of oprtCustomPresets) {
+      customPresetOptions += `<button class='button btn btn-default customPresetButton' id='${customPreset.uid}'>${customPreset.label}</button>`
+    }
+    w.document.getElementById('customPresets').innerHTML = customPresetOptions
+  }
 
+  function getCustomPresets (w) {
+    // simply to scope the string we don't need after JSON.parse
+    let presetsJSON = w.localStorage.getItem('oprt_custom_presets')
+    if (presetsJSON != null && presetsJSON !== '') {
+      return JSON.parse(presetsJSON)
+    }
+    return []
+  }
 
-			} else if (distance < 60) {
-				countdownDisplay.style.color = "red";
-			}
-		}, 1000);
-	}
+  function saveCustomPreset (label, ansController, whatController) {
+    // uid snippet from https://stackoverflow.com/a/47496558/6447397
+    let preset = {
+      uid: [...Array(5)].map(() => Math.random().toString(36)[3]).join(''),
+      label: label,
+      nodeName: whatController.whatNode.name,
+      nodeId: whatController.whatNode.id,
+      quality: ansController.formData.quality,
+      description: ansController.formData.description,
+      cultural: ansController.formData.cultural,
+      uniqueness: ansController.formData.uniqueness,
+      location: ansController.formData.location,
+      safety: ansController.formData.safety
+    }
+    oprtCustomPresets.push(preset)
+    w.localStorage.setItem('oprt_custom_presets', JSON.stringify(oprtCustomPresets))
+  }
 
+  function deleteCustomPreset (preset) {
+    oprtCustomPresets = oprtCustomPresets.filter(item => item.uid !== preset.uid)
+    w.localStorage.setItem('oprt_custom_presets', JSON.stringify(oprtCustomPresets))
+  }
 
-	function addCustomPresetButtons() {
-		// add customPreset UI
-		oprt_customPresets = getCustomPresets(w);
-		let customPresetOptions = "";
-		for (const customPreset of oprt_customPresets) {
-			customPresetOptions += `<button class='button btn btn-default customPresetButton' id='${customPreset.uid}'>${customPreset.label}</button>`;
-		}
-		w.document.getElementById("customPresets").innerHTML = customPresetOptions;
-	}
+  function showHelp () {
+    let helpString = `<a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success'>OPR-Tools</span></a> Key shortcuts
+    <table class="table table-condensed ">
+    <thead>
+    <tr>
+      <th>Key(s)</th>
+      <th>Function</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+      <td>Keys 1-5, Numpad 1-5</td>
+      <td>Valuate current selected field (the yellow highlighted one)</td>
+    </tr>
+    <tr>
+      <td><i>Shift</i> + Keys 1-5</td>
+      <td>Apply custom preset (if exists)</td>
+    </tr>
+    <tr>
+      <td>D</td>
+      <td>Mark current candidate as a duplicate of the opened portal in "duplicates"</td>
+    </tr>
+    <tr>
+      <td>T</td>
+      <td>Open title translation</td>
+    </tr>
+    <tr>
+      <td>Y</td>
+      <td>Open description translation</td>
+    </tr>
+    <tr>
+      <td>Space, Enter, Numpad Enter</td>
+      <td>Confirm dialog / Send valuation</td>
+    </tr>
+    <tr>
+      <td>Tab, Numpad +</td>
+      <td>Next field</td>
+    </tr>
+    <tr>
+      <td>Shift, Backspace, Numpad -</td>
+      <td>Previous field</td>
+    </tr>
+    <tr>
+      <td>Esc, Numpad /</td>
+      <td>First field</td>
+    </tr>
+    <tr>
+      <td>^, Numpad *</td>
+      <td>Skip Portal (if possible)</td>
+    </tr>
+    </tbody>
+    </table>`
 
-	function getCustomPresets(w) {
-		// simply to scope the string we don't need after JSON.parse
-		let presetsJSON = w.localStorage.getItem("oprt_custom_presets");
-		if (presetsJSON != null && presetsJSON != "") {
-			return JSON.parse(presetsJSON);
-		}
-		return [];
-	}
-
-	function saveCustomPreset(label, ansController, whatController) {
-		// uid snippet from https://stackoverflow.com/a/47496558/6447397
-		let preset = {
-			uid        : [...Array(5)].map(() => Math.random().toString(36)[3]).join(""),
-			label      : label,
-			nodeName   : whatController.whatNode.name,
-			nodeId     : whatController.whatNode.id,
-			quality    : ansController.formData.quality,
-			description: ansController.formData.description,
-			cultural   : ansController.formData.cultural,
-			uniqueness : ansController.formData.uniqueness,
-			location   : ansController.formData.location,
-			safety     : ansController.formData.safety
-		};
-		oprt_customPresets.push(preset);
-		w.localStorage.setItem("oprt_custom_presets", JSON.stringify(oprt_customPresets));
-	}
-
-	function deleteCustomPreset(preset) {
-		oprt_customPresets = oprt_customPresets.filter(item => item.uid !== preset.uid);
-		w.localStorage.setItem("oprt_custom_presets", JSON.stringify(oprt_customPresets));
-	}
-
-	function showHelp() {
-		let helpString = `<a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success'>OPR-Tools</span></a> Key shortcuts
-<table class="table table-condensed ">
-	<thead>
-	<tr>
-		<th>Key(s)</th>
-		<th>Function</th>
-	</tr>
-	</thead>
-	<tbody>
-	<tr>
-		<td>Keys 1-5, Numpad 1-5</td>
-		<td>Valuate current selected field (the yellow highlighted one)</td>
-	</tr>
-	<tr>
-		<td><i>Shift</i> + Keys 1-5</td>
-		<td>Apply custom preset (if exists)</td>
-	</tr>
-	<tr>
-		<td>D</td>
-		<td>Mark current candidate as a duplicate of the opened portal in "duplicates"</td>
-	</tr>
-	<tr>
-		<td>T</td>
-		<td>Open title translation</td>
-	</tr>
-	<tr>
-		<td>Y</td>
-		<td>Open description translation</td>
-	</tr>
-	<tr>
-		<td>Space, Enter, Numpad Enter</td>
-		<td>Confirm dialog / Send valuation</td>
-	</tr>
-	<tr>
-		<td>Tab, Numpad +</td>
-		<td>Next field</td>
-	</tr>
-	<tr>
-		<td>Shift, Backspace, Numpad -</td>
-		<td>Previous field</td>
-	</tr>
-	<tr>
-		<td>Esc, Numpad /</td>
-		<td>First field</td>
-	</tr>
-	<tr>
-		<td>^, Numpad *</td>
-		<td>Skip Portal (if possible)</td>
-	</tr>
-	</tbody>
-</table>`;
-
-		alertify.closeLogOnClick(false).logPosition("bottom right").delay(0).log(helpString, (ev) => {
-			ev.preventDefault();
-			ev.target.closest("div.default.show").remove();
-
-		}).reset();
-
-	}
-
+    alertify.closeLogOnClick(false).logPosition('bottom right').delay(0).log(helpString, (ev) => {
+      ev.preventDefault()
+      ev.target.closest('div.default.show').remove()
+    }).reset()
+  }
 }
 
 setTimeout(() => {
-	init();
-}, 500);
+  init()
+}, 500)
 
-
-//region const
+// region const
 
 const GLOBAL_CSS = `
 .dropdown {
@@ -1572,11 +1534,11 @@ animation: blink 2s step-end infinite;
 }
 
 .titleEditBox:hover {
-	box-shadow: inset 0 0 20px #ebbc4a;
+  box-shadow: inset 0 0 20px #ebbc4a;
 }
 
 .titleEditBox:active {
-	box-shadow: inset 0 0 15px 2px white;
+  box-shadow: inset 0 0 15px 2px white;
 }
 
 .alertify .dialog .msg {
@@ -1587,10 +1549,13 @@ color: black;
 }
 
 .btn-xs {
-padding: 1px 5px !important;
+  padding: 0px 7px 1px !important;
+  box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
+  -webkit-box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
+  -moz-box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
 }
 
-`;
+`
 
 const PORTAL_MARKER = `data:image/png;base64,
 iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
@@ -1599,7 +1564,97 @@ OWwzfk4AAADlSURBVDhPY/j//z8CTw3U/V8lcvx/MfPX/2Xcd//XyWwDYxAbJAaS63c2Q9aD0Nyg
 UPS/hPXt/3bD5f93LI7DwFvnJILlSlg//K+XrUc1AKS5jOvx/wU55Vg1I2OQmlKOpzBDIM4G2UyM
 ZhgGqQW5BOgdBrC/cDkbHwbpAeplAAcONgWEMChMgHoZwCGMTQExGKiXARxN2CSJwUC9VDCAYi9Q
 HIhVQicpi0ZQ2gYlCrITEigpg5IlqUm5VrILkRdghoBMxeUd5MwE1YxqAAiDvAMKE1DAgmIHFMUg
-DGKDxDCy838GAPWFoAEBs2EvAAAAAElFTkSuQmCC`;
+DGKDxDCy838GAPWFoAEBs2EvAAAAAElFTkSuQmCC`
+
+const PERF_GREAT = `data:image/png;base64,
+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
+WH1hTgAAAABJRU5ErkJggg==`
+
+const PERF_GOOD = `data:image/png;base64,
+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
+YII=`
+
+const PERF_POOR = `data:image/png;base64,
+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
+AAAAAElFTkSuQmCC`
 
 const NOTIFICATION_SOUND = `data:audio/ogg;base64,
 T2dnUwACAAAAAAAAAADTDo1xAAAAAK2IIcABHgF2b3JiaXMAAAAAAoC7AAAAAAAAAGsDAAAAAAC4
@@ -2635,5 +2690,5 @@ pb4eOhLUnbAxgo8+uEC5f0B/tExze9I9fdHx7hYLch9znuxmSpVHyLjen72qyL3OD2fLqc8H7zzn
 cmpOhteWb0GerliV95pFO7r/eksZO5TZMUNy/yYb1jsG6B5GVgwNu+bEEyD2p7KV/I9KSvVtjOIJ
 QwFpfvsHImY87nM5QYDp3EIAUBp+mon7ttgAPjXc/Gx8cABfqClODTc/Gy8cwBdqiiAgIGBmgZgE
 AZgAAAAAAAAAQLlP3m4FuPEX/PJU307uLFBu9T3V5/VwZNaRVxW4lheOAABIK28KlgTgA+DNkzew
-HAE=`;
-//endregion
+HAE=`
+// endregion
