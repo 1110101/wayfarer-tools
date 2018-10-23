@@ -1542,13 +1542,20 @@ animation: blink 2s step-end infinite;
 }
 
 .group-list li label:hover, ul.sub-group-list a:hover, #root-label:hover {
-    box-shadow: inset 0 0 5px #ffffff;
+    box-shadow: inset 0 0 5px #ffffff !important;
 }
 
 .group-list li label:active, ul.sub-group-list a:active, #root-label:active {
-    box-shadow: inset 0 0 10px 2px #ffffff;
+    box-shadow: inset 0 0 10px 2px #ffffff !important;
 }
 
+.modal-body .button:focus, .modal-body textarea:focus {
+  outline: 2px dashed #ebbc4a;
+}
+
+.modal-body .button:hover, .gm-style-iw button.button:hover {
+  filter: brightness(150%);
+}
 
 .alertify .dialog .msg {
 color: black;
