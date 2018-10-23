@@ -1510,29 +1510,6 @@ filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=100);
 opacity: 1;
 }
 
-blink, .blink {
--webkit-animation: blink 2s step-end infinite;
--moz-animation: blink 2s step-end infinite;
--o-animation: blink 2s step-end infinite;
-animation: blink 2s step-end infinite;
-}
-
-@-webkit-keyframes blink {
-67% { opacity: 0 }
-}
-
-@-moz-keyframes blink {
-67% { opacity: 0 }
-}
-
-@-o-keyframes blink {
-67% { opacity: 0 }
-}
-
-@keyframes blink {
-67% { opacity: 0 }
-}
-
 .titleEditBox:hover {
   box-shadow: inset 0 0 20px #ebbc4a;
 }
