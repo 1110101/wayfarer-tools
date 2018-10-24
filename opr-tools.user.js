@@ -1529,6 +1529,15 @@ opacity: 1;
   box-shadow: inset 0 0 15px 2px white;
 }
 
+.group-list li label:hover, ul.sub-group-list a:hover, #root-label:hover {
+    box-shadow: inset 0 0 5px #ffffff;
+}
+
+.group-list li label:active, ul.sub-group-list a:active, #root-label:active {
+    box-shadow: inset 0 0 10px 2px #ffffff;
+}
+
+
 .alertify .dialog .msg {
 color: black;
 }
