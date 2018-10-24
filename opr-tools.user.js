@@ -406,10 +406,7 @@ function init () {
     expandWhatIsItBox()
 
     // keyboard navigation
-    // keys 1-5 to vote
-    // space/enter to confirm dialogs
-    // esc or numpad "/" to reset selector
-    // Numpad + - to navigate
+    // documentation: https://gitlab.com/1110101/opr-tools#keyboard-navigation
 
     let currentSelectable = 0
     let maxItems = 7
@@ -478,18 +475,10 @@ function init () {
        */
 
       let numkey = null
-      if (event.keyCode >= 49 && event.keyCode <= 53) {
-        numkey = event.keyCode - 48
-      } else if (event.keyCode >= 97 && event.keyCode <= 101) {
-        numkey = event.keyCode - 96
-      }
-
-      // 1-7
-      let extNumkey = null
       if (event.keyCode >= 49 && event.keyCode <= 55) {
-        extNumkey = event.keyCode - 48
+        numkey = event.keyCode - 48
       } else if (event.keyCode >= 97 && event.keyCode <= 103) {
-        extNumkey = event.keyCode - 96
+        numkey = event.keyCode - 96
       }
 
       // do not do anything if a text area or a input with type text has focus
@@ -558,6 +547,30 @@ function init () {
         }
       } else if (event.keyCode === 72) {
         showHelp() // @todo
+      } else if (w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+        // Reject reason shortcuts
+        if (numkey != null) {
+          if (selectedReasonGroup === -1) {
+            try {
+              w.document.getElementById('sub-group-' + numkey).click()
+              selectedReasonGroup = numkey - 1
+            } catch (err) {}
+          } else {
+            if (selectedReasonSubGroup === -1) {
+              try {
+                w.document.querySelectorAll('#reject-reason ul ul')[selectedReasonGroup].children[numkey - 1].children[0].click()
+                selectedReasonSubGroup = numkey - 1
+              } catch (err) {}
+            } else {
+              w.document.getElementById('root-label').click()
+              selectedReasonGroup = -1
+              selectedReasonSubGroup = -1
+            }
+          }
+        event.preventDefault()
+        }
+
+
       } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
         // select next rating
         currentSelectable++
@@ -566,27 +579,8 @@ function init () {
         // select previous rating
         currentSelectable--
         event.preventDefault()
-      } else if (extNumkey !== null && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
-        // Reject reason shortcuts
-        if (selectedReasonGroup === -1) {
-          try {
-            w.document.getElementById('sub-group-' + extNumkey).click()
-            selectedReasonGroup = extNumkey - 1
-          } catch (err) {}
-        } else {
-          if (selectedReasonSubGroup === -1) {
-            try {
-              w.document.querySelectorAll('#reject-reason ul ul')[selectedReasonGroup].children[extNumkey - 1].children[0].click()
-              selectedReasonSubGroup = extNumkey - 1
-            } catch (err) {}
-          } else {
-            w.document.getElementById('root-label').click()
-            selectedReasonGroup = -1
-            selectedReasonSubGroup = -1
-          }
-        }
-        event.preventDefault()
-      } else if (numkey === null || currentSelectable > maxItems - 2) {
+      }
+      else if (numkey === null || currentSelectable > maxItems - 2) {
         return
       } else if (numkey !== null && event.shiftKey) {
         try {
@@ -1530,13 +1524,20 @@ opacity: 1;
 }
 
 .group-list li label:hover, ul.sub-group-list a:hover, #root-label:hover {
-    box-shadow: inset 0 0 5px #ffffff;
+    box-shadow: inset 0 0 5px #ffffff !important;
 }
 
 .group-list li label:active, ul.sub-group-list a:active, #root-label:active {
-    box-shadow: inset 0 0 10px 2px #ffffff;
+    box-shadow: inset 0 0 10px 2px #ffffff !important;
 }
 
+.modal-body .button:focus, .modal-body textarea:focus {
+  outline: 2px dashed #ebbc4a;
+}
+
+.modal-body .button:hover, .gm-style-iw button.button:hover {
+  filter: brightness(150%);
+}
 
 .alertify .dialog .msg {
 color: black;
