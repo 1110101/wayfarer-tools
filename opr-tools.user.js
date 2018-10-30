@@ -49,7 +49,7 @@ SOFTWARE.
 
 */
 
-/* globals screen, addEventListener, GM_notification, unsafeWindow, exportFunction, cloneInto, angular, google, alertify, proj4 */
+/* globals screen, fetch, addEventListener, GM_notification, unsafeWindow, exportFunction, cloneInto, angular, google, alertify, proj4, piexif */
 
 const OPRT = {
   SCANNER_OFFSET: 'oprt_scanner_offset',
@@ -1412,18 +1412,19 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
     fetch(fullImageUrl).then(function (response) {
       let reader = response.body.getReader()
       let fullImageSize = parseInt(response.headers.get('Content-Length'))
-      let binary_buffer = ''
+      let binaryBuffer = ''
       let charsReceived = 0
       reader.read().then(function processText ({done, value}) {
         if (done) {
-          onImageLoaded(binary_buffer, subController)
+          onImageLoaded(binaryBuffer, subController)
           return
         }
 
         // value for fetch streams is a Uint8Array
-        let i, len = value.length
+        let i
+        let len = value.length
         for (i = 0; i < len; i++) {
-          binary_buffer += String.fromCharCode(value[i])
+          binaryBuffer += String.fromCharCode(value[i])
         }
         charsReceived += value.length
         let ratio = Math.round(100 * charsReceived / fullImageSize)
@@ -1446,9 +1447,9 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
   }
 
   // Handles the asynchronous picture load
-  function onImageLoaded (binary_buffer, subController) {
+  function onImageLoaded (binaryBuffer, subController) {
     try {
-      let exifObj = piexif.load(binary_buffer)
+      let exifObj = piexif.load(binaryBuffer)
       handleExif(exifObj, subController)
     } catch (err) {
       console.log(err)
@@ -1459,7 +1460,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
 
   // Cleans text from EXIF data for display
   function safeText (text) {
-    if (null == text) {
+    if (text == null) {
       return 'N/A'
     }
     return text.replace(/[<>'"]/g, '')
@@ -1481,7 +1482,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
     exifData += 'Software: ' + safeText(exifObj['0th'][305]) + '<br/>'
 
     var exifGps = exifObj['GPS']
-    if (null != exifGps[1]) {
+    if (exifGps[1] != null) {
       let markerLatitude = exifToCoordinate(exifGps[1], exifGps[2])
       let markerLongitude = exifToCoordinate(exifGps[3], exifGps[4])
       let distance = Math.round(haversine(newPortalData.lat, markerLatitude, newPortalData.lng, markerLongitude))
@@ -1535,7 +1536,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
 
   // Turns EXIF array coordinates (degrees, minutes, seconds) into a unique decimal degrees value
   function exifToCoordinate (direction, values) {
-    let multiplier = ('N' == direction || 'E' == direction) ? 1 : -1
+    let multiplier = (direction === 'N' || direction === 'E') ? 1 : -1
     let degrees = values[0][0] / values[0][1]
     let minutes = values[1][0] / values[1][1]
     let seconds = values[2][0] / values[2][1]
@@ -1562,7 +1563,6 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
     let distance = earthRadius * c
     return distance
   }
-
 }
 
 setTimeout(() => {
