@@ -1340,53 +1340,57 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
   }
 
   function showHelp () {
-    let helpString = `<a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success'>OPR-Tools</span></a> Key shortcuts
+    let helpString = `<a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success'>OPR-Tools</span></a> Key shortcuts<br>
     <table class="table table-condensed ">
     <thead>
     <tr>
-      <th>Key(s)</th>
+      <th>Keys</th>
       <th>Function</th>
     </tr>
     </thead>
     <tbody>
     <tr>
-      <td>Keys 1-5, Numpad 1-5</td>
+      <td><kbd>Keys 1-5</kbd> / <kbd>Numpad 1-5</kbd></td>
       <td>Valuate current selected field (the yellow highlighted one)</td>
     </tr>
     <tr>
-      <td><i>Shift</i> + Keys 1-5</td>
+      <td><kbd>Shift</kbd> + <kbd>Keys 1-5</kbd></td>
       <td>Apply custom preset (if exists)</td>
     </tr>
     <tr>
-      <td>D</td>
+      <td><kbd>Keys 1-7</kbd> / <kbd>Numpad 1-7</kbd></td>
+      <td>Rejection popup: Select list element</td>
+    </tr>
+    <tr>
+      <td><kbd>D</kbd></td>
       <td>Mark current candidate as a duplicate of the opened portal in "duplicates"</td>
     </tr>
     <tr>
-      <td>T</td>
+      <td><kbd>T</kbd></td>
       <td>Open title translation</td>
     </tr>
     <tr>
-      <td>Y</td>
+      <td><kbd>Y</kbd></td>
       <td>Open description translation</td>
     </tr>
     <tr>
-      <td>Space, Enter, Numpad Enter</td>
+      <td><kbd>Space</kbd> / <kbd>Enter</kbd> / <kbd>Numpad Enter</kbd></td>
       <td>Confirm dialog / Send valuation</td>
     </tr>
     <tr>
-      <td>Tab, Numpad +</td>
+      <td><kbd>Tab</kbd> / <kbd>Numpad +</kbd></td>
       <td>Next field</td>
     </tr>
     <tr>
-      <td>Shift, Backspace, Numpad -</td>
+      <td><kbd>Shift</kbd> / <kbd>Backspace</kbd> / <kbd>Numpad -</kbd></td>
       <td>Previous field</td>
     </tr>
     <tr>
-      <td>Esc, Numpad /</td>
+      <td><kbd>Esc</kbd> / <kbd>Numpad /</kbd></td>
       <td>First field</td>
     </tr>
     <tr>
-      <td>^, Numpad *</td>
+      <td><kbd>^</kbd> / <kbd>Numpad *</kbd></td>
       <td>Skip Portal (if possible)</td>
     </tr>
     </tbody>
@@ -1548,6 +1552,20 @@ color: black;
   box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
   -webkit-box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
   -moz-box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
+}
+
+kbd {
+    display: inline-block;
+    padding: 3px 5px;
+    font: 11px SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace;
+    line-height: 10px;
+    color: #444d56;
+    vertical-align: middle;
+    background-color: #fafbfc;
+    border: 1px solid #d1d5da;
+    border-bottom-color: #c6cbd1;
+    border-radius: 3px;
+    box-shadow: inset 0 -1px 0 #c6cbd1;
 }
 
 `
