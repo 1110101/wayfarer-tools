@@ -82,8 +82,73 @@ function addGlobalStyle (css) {
 
 /* eslint-enable */
 
+function injectable () {
+  function API () {
+    this.loadDelays = 0
+    this.loadStarted = false
+    this.loadFinished = false
+    this.exifDisabled = false
+  }
+
+  API.prototype = {
+    constructor: API,
+    delayLoad: function () {
+      this.loadDelays++
+    },
+    releaseLoad: function () {
+      if (this.loadDelays > 0) {
+        this.loadDelays--
+      }
+      // Continue load when all API users are ready
+      if (this.loadDelays === 0 && !this.loadStarted) {
+        setTimeout(() => {
+          window.oprtInit()
+        }, 1)
+        return true
+      } else {
+        return false
+      }
+    },
+    disableExif: function () {
+      this.exifDisabled = true
+    },
+    isLoading: function () {
+      return this.loadStarted
+    },
+    isLoaded: function () {
+      return this.loadFinished
+    }
+  }
+  window.OPRToolsAPI = new API()
+}
+
+function preInit () {
+  const w = typeof unsafeWindow === 'undefined' ? window : unsafeWindow
+  // injectable()
+  w.oprtInit = exportFunction(init, w)
+  let inject = '(' + injectable + ')()'
+  // console.log(inject)
+  let script = unsafeWindow.document.createElement('script')
+  script.textContent = inject;
+  (unsafeWindow.document.head || unsafeWindow.document.documentElement).appendChild(script)
+  script.remove()
+  console.log(w.OPRToolsAPI)
+  // w.OPRToolsAPI.delayLoad()
+  setTimeout(() => {
+    if (w.OPRToolsAPI.loadDelays === 0 && !w.OPRToolsAPI.loadStarted) {
+      console.log(w.OPRToolsAPI)
+      init()
+    }
+  }, 500)
+}
+
+setTimeout(() => {
+  preInit()
+}, 1)
+
 function init () {
   const w = typeof unsafeWindow === 'undefined' ? window : unsafeWindow
+  w.OPRToolsAPI.loadStarted = true
   let tryNumber = 15
 
   let oprtCustomPresets
@@ -112,6 +177,7 @@ function init () {
         try {
           initScript()
           clearInterval(initWatcher)
+          w.OPRToolsAPI.loadFinished = true
         } catch (error) {
           console.log(error)
           if (error.message === '41') {
@@ -1398,10 +1464,6 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
     }).reset()
   }
 }
-
-setTimeout(() => {
-  init()
-}, 500)
 
 // region const
 
