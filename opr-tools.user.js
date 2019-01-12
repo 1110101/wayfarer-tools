@@ -1072,7 +1072,10 @@ function init () {
     const rejected = parseInt(stats.children[7].children[2].innerText)
 
     const processed = accepted + rejected - oprtScannerOffset
-    const percent = Math.round(processed / reviewed * 1000) / 10
+    const processedPercent = roundToPrecision(processed / reviewed * 100, 1)
+
+    const acceptedPercent = roundToPrecision(accepted / (reviewed) * 100, 1)
+    const rejectedPercent = roundToPrecision(rejected / (reviewed) * 100, 1)
 
     const reconBadge = {100: 'Bronze', 750: 'Silver', 2500: 'Gold', 5000: 'Platin', 10000: 'Black'}
     let nextBadgeName, nextBadgeCount
@@ -1086,8 +1089,14 @@ function init () {
     }
     const nextBadgeProcess = processed / nextBadgeCount * 100
 
-    lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `<br>
-<p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses:</span> <span class="gold pull-right">${processed} (${percent}%) </span></p>`)
+    const numberSpans = stats.querySelectorAll("p span.gold")
+
+    numberSpans[0].insertAdjacentHTML('beforeend', `, <span class='ingress-gray'>100%</span>`)
+    numberSpans[1].insertAdjacentHTML('beforeend', `, <span class='opr-yellow'>${acceptedPercent}%</span>`)
+    numberSpans[2].insertAdjacentHTML('beforeend', `, <span class='opr-yellow'>${rejectedPercent}%</span>`)
+
+    stats.querySelectorAll("p")[1].insertAdjacentHTML('afterend', `<br>
+<p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses:</span> <span class="gold pull-right">${processed}, <span class="ingress-gray">${processedPercent}%</span></span></p>`)
 
     if (accepted < 10000) {
       lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `
@@ -1105,7 +1114,7 @@ ${Math.round(nextBadgeProcess)}%
 `)
     } else lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `<hr>`)
     lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `<p><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 90%;" type="text"
-value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(percent)}%"/></p>`)
+value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(processedPercent)}%"/></p>`)
 
     let tooltipSpan = `<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder"
 uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
@@ -1401,6 +1410,14 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
       ev.target.closest('div.default.show').remove()
     }).reset()
   }
+
+  function roundToPrecision (num, precision) {
+    let shifter
+    precision = Number(precision || 0)
+    if (precision % 1 !== 0) throw new RangeError("precision must be an integer")
+    shifter = Math.pow(10, precision)
+    return Math.round(num * shifter) / shifter
+  }
 }
 
 setTimeout(() => {
@@ -1566,6 +1583,10 @@ kbd {
     border-bottom-color: #c6cbd1;
     border-radius: 3px;
     box-shadow: inset 0 -1px 0 #c6cbd1;
+}
+
+.opr-yellow {
+    color: #F3EADA;
 }
 
 `
