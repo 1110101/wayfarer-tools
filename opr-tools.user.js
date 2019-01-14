@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR tools
-// @version         0.27.0
+// @version         0.27.1
 // @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -51,12 +51,12 @@ SOFTWARE.
 /* globals screen, addEventListener, GM_notification, unsafeWindow, exportFunction, cloneInto, angular, google, alertify, proj4 */
 
 const OPRT = {
-  SCANNER_OFFSET: 'oprt_scanner_offset',
-  REFRESH: 'oprt_refresh',
-  FROM_REFRESH: 'oprt_from_refresh',
-  REFRESH_NOTI_SOUND: 'oprt_refresh_noti_sound',
+  SCANNER_OFFSET      : 'oprt_scanner_offset',
+  REFRESH             : 'oprt_refresh',
+  FROM_REFRESH        : 'oprt_from_refresh',
+  REFRESH_NOTI_SOUND  : 'oprt_refresh_noti_sound',
   REFRESH_NOTI_DESKTOP: 'oprt_refresh_noti_desktop',
-  MAP_TYPE: 'oprt_map_type'
+  MAP_TYPE            : 'oprt_map_type'
 }
 
 /* eslint-disable */
@@ -94,7 +94,7 @@ function init () {
     if (tryNumber === 0) {
       clearInterval(initWatcher)
       w.document.getElementById('NewSubmissionController')
-        .insertAdjacentHTML('afterBegin', `
+      .insertAdjacentHTML('afterBegin', `
 <div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
 `)
       addRefreshContainer()
@@ -317,13 +317,13 @@ function init () {
       google.maps.event.addListener(newLocMarker, 'dragend', function () {
         if (draggableMarkerCircle == null) {
           draggableMarkerCircle = new google.maps.Circle({
-            map: subController.map2,
-            center: newLocMarker.position,
-            radius: 40,
-            strokeColor: '#4CAF50', // material green 500
+            map          : subController.map2,
+            center       : newLocMarker.position,
+            radius       : 40,
+            strokeColor  : '#4CAF50', // material green 500
             strokeOpacity: 1,
-            strokeWeight: 2,
-            fillOpacity: 0
+            strokeWeight : 2,
+            fillOpacity  : 0
           })
         } else draggableMarkerCircle.setCenter(newLocMarker.position)
       })
@@ -931,13 +931,13 @@ function init () {
   function mapOriginCircle (map) {
     // noinspection JSUnusedLocalSymbols
     const circle = new google.maps.Circle({ // eslint-disable-line no-unused-vars
-      map: map,
-      center: map.center,
-      radius: 40,
-      strokeColor: '#ebbc4a',
+      map          : map,
+      center       : map.center,
+      radius       : 40,
+      strokeColor  : '#ebbc4a',
       strokeOpacity: 0.8,
-      strokeWeight: 1.5,
-      fillOpacity: 0
+      strokeWeight : 1.5,
+      fillOpacity  : 0
     })
   }
 
@@ -952,7 +952,7 @@ function init () {
   // set available map types
   function mapTypes (map, isMainMap) {
     const PROVIDERS = {
-      GOOGLE: 'google',
+      GOOGLE    : 'google',
       KARTVERKET: 'kartverket'
     }
 
@@ -970,13 +970,13 @@ function init () {
 
     const mapOptions = {
       // re-enabling map scroll zoom and allow zoom with out holding ctrl
-      scrollwheel: true,
-      gestureHandling: 'greedy',
+      scrollwheel          : true,
+      gestureHandling      : 'greedy',
       // map type selection
-      mapTypeControl: true,
+      mapTypeControl       : true,
       mapTypeControlOptions: {
         mapTypeIds: types.map(t => t.id),
-        style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+        style     : google.maps.MapTypeControlStyle.DROPDOWN_MENU
       }
     }
     map.setOptions(cloneInto(mapOptions, w))
@@ -986,11 +986,11 @@ function init () {
       switch (t.provider) {
         case PROVIDERS.KARTVERKET:
           map.mapTypes.set(t.id, new google.maps.ImageMapType({
-            layer: t.code,
-            name: t.label,
-            alt: t.label,
-            maxZoom: 19,
-            tileSize: new google.maps.Size(256, 256),
+            layer     : t.code,
+            name      : t.label,
+            alt       : t.label,
+            maxZoom   : 19,
+            tileSize  : new google.maps.Size(256, 256),
             getTileUrl: function (coord, zoom) {
               return `//opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=${this.layer}&zoom=${zoom}&x=${coord.x}&y=${coord.y}`
             }
@@ -1050,6 +1050,21 @@ function init () {
 
     const lastPlayerStatLine = w.document.querySelector('#player_stats:not(.visible-xs) div')
     const stats = w.document.querySelector('#player_stats:not(.visible-xs) div')
+
+    // add opr-tools options button
+
+    let profile_button_row = w.document.querySelector(".navbar-form")
+    let oprt_settings_button = w.document.createElement("button")
+    oprt_settings_button.classList.add("btn", "btn-sm" ,"btn-success")
+    oprt_settings_button.style.setProperty("margin-right", "10px")
+    oprt_settings_button.addEventListener("click", () => showOptions())
+    oprt_settings_button.title = "OPR-Tools Settings"
+
+    const settings_cog = w.document.createElement("span");
+    settings_cog.classList.add("glyphicon", "glyphicon-cog")
+    oprt_settings_button.appendChild(settings_cog)
+
+    profile_button_row.insertAdjacentElement('afterbegin', oprt_settings_button)
 
     let perfBadge = null
     const imgSrc = stats.children[1].src
@@ -1250,7 +1265,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
         if (w.localStorage.getItem(OPRT.REFRESH_NOTI_DESKTOP) === 'true') {
           GM_notification({
             'title': 'OPR - New Portal Analysis Available',
-            'text': 'by OPR-Tools',
+            'text' : 'by OPR-Tools',
             'image': 'https://gitlab.com/uploads/-/system/project/avatar/3311015/opr-tools.png'
           })
         }
@@ -1329,16 +1344,16 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
   function saveCustomPreset (label, ansController, whatController) {
     // uid snippet from https://stackoverflow.com/a/47496558/6447397
     let preset = {
-      uid: [...Array(5)].map(() => Math.random().toString(36)[3]).join(''),
-      label: label,
-      nodeName: whatController.whatNode.name,
-      nodeId: whatController.whatNode.id,
-      quality: ansController.formData.quality,
+      uid        : [...Array(5)].map(() => Math.random().toString(36)[3]).join(''),
+      label      : label,
+      nodeName   : whatController.whatNode.name,
+      nodeId     : whatController.whatNode.id,
+      quality    : ansController.formData.quality,
       description: ansController.formData.description,
-      cultural: ansController.formData.cultural,
-      uniqueness: ansController.formData.uniqueness,
-      location: ansController.formData.location,
-      safety: ansController.formData.safety
+      cultural   : ansController.formData.cultural,
+      uniqueness : ansController.formData.uniqueness,
+      location   : ansController.formData.location,
+      safety     : ansController.formData.safety
     }
     oprtCustomPresets.push(preset)
     w.localStorage.setItem('oprt_custom_presets', JSON.stringify(oprtCustomPresets))
@@ -1419,6 +1434,11 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
     shifter = Math.pow(10, precision)
     return Math.round(num * shifter) / shifter
   }
+
+  function showOptions () {
+
+  }
+
 }
 
 setTimeout(() => {
