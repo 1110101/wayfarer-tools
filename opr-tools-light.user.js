@@ -1,10 +1,16 @@
 // ==UserScript==
 // @name            OPR tools light
-// @version         0.20.0
-// @description     light version of OPR tools for mobile browsers or if you don't need all features
+// @version         0.21.0
+// @description     Light version of OPR tools for mobile browsers or if you don't need all features
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
+// @match           https://opr.ingress.com/
+// @match           https://opr.ingress.com/?login=true
 // @match           https://opr.ingress.com/recon
+// @match           https://opr.ingress.com/help
+// @match           https://opr.ingress.com/faq
+// @match           https://opr.ingress.com/guide
+// @match           https://opr.ingress.com/settings
 // @grant           unsafeWindow
 // @grant           GM_addStyle
 // @downloadURL     https://gitlab.com/1110101/opr-tools/raw/master/opr-tools-light.user.js
@@ -58,6 +64,7 @@ if (typeof cloneInto !== 'function') {
 
 function addGlobalStyle (css) {
   GM_addStyle(css)
+
   addGlobalStyle = () => {} // noop after first run
 }
 
@@ -83,7 +90,6 @@ function init () {
       try {
         initAngular()
       } catch (error) {
-        console.log(error)
         err = error
       }
       if (!err) {
@@ -111,35 +117,40 @@ function init () {
   }
 
   function initScript () {
-    const subMissionDiv = w.document.getElementById('NewSubmissionController')
-    const subController = w.$scope(subMissionDiv).subCtrl
-    const newPortalData = subController.pageData
-
-    const whatController = w.$scope(w.document.getElementById('WhatIsItController')).whatCtrl
-
-    const answerDiv = w.document.getElementById('AnswersController')
-    const ansController = w.$scope(answerDiv).answerCtrl
-
     // adding CSS
     addGlobalStyle(GLOBAL_CSS)
 
     modifyHeader()
 
-    if (subController.errorMessage !== '') {
-      // no portal analysis data available
-      throw new Error(41) // @todo better error code
-    }
+    const subMissionDiv = w.document.getElementById('NewSubmissionController')
 
-    if (typeof newPortalData === 'undefined') {
-      // no submission data present
-      throw new Error(42) // @todo better error code
-    }
+    // check if subCtrl exists (should exists if we're on /recon)
+    if (subMissionDiv !== null && w.$scope(subMissionDiv).subCtrl !== null) {
+      const subController = w.$scope(subMissionDiv).subCtrl
+      const newPortalData = subController.pageData
 
-    // detect portal edit
-    if (subController.reviewType === 'NEW') {
-      modifyNewPage(ansController, subController, whatController, newPortalData)
-    } else if (subController.reviewType === 'EDIT') {
-      modifyEditPage(ansController, subController, newPortalData)
+      const whatController = w.$scope(w.document.getElementById('WhatIsItController')).whatCtrl
+
+      const answerDiv = w.document.getElementById('AnswersController')
+      const ansController = w.$scope(answerDiv).answerCtrl
+
+      if (subController.errorMessage !== '') {
+        // no portal analysis data available
+        throw new Error(41) // @todo better error code
+      }
+
+      if (typeof newPortalData === 'undefined') {
+        // no submission data present
+        throw new Error(42) // @todo better error code
+      }
+
+      // detect portal edit
+      if (subController.reviewType === 'NEW') {
+        modifyNewPage(ansController, subController, whatController, newPortalData)
+      } else if (subController.reviewType === 'EDIT') {
+        modifyEditPage(ansController, subController, newPortalData)
+      }
+
     }
   }
 
@@ -147,12 +158,12 @@ function init () {
     mapButtons(newPortalData, w.document.getElementById('descriptionDiv'), 'beforeEnd')
 
     let newSubmitDiv = moveSubmitButton()
-    let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController)
+    let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController)
 
     textButtons()
 
     // re-enabling map scroll zoom and allow zoom with out holding ctrl
-    const mapOptions = {scrollwheel: true, gestureHandling: 'greedy'}
+    const mapOptions = { scrollwheel: true, gestureHandling: 'greedy' }
     subController.map.setOptions(cloneInto(mapOptions, w))
     subController.map2.setOptions(cloneInto(mapOptions, w))
 
@@ -231,10 +242,7 @@ function init () {
     expandWhatIsItBox()
 
     // keyboard navigation
-    // keys 1-5 to vote
-    // space/enter to confirm dialogs
-    // esc or numpad "/" to reset selector
-    // Numpad + - to navigate
+    // documentation: https://gitlab.com/1110101/opr-tools#keyboard-navigation
 
     let currentSelectable = 0
     let maxItems = 7
@@ -303,18 +311,10 @@ function init () {
        */
 
       let numkey = null
-      if (event.keyCode >= 49 && event.keyCode <= 53) {
-        numkey = event.keyCode - 48
-      } else if (event.keyCode >= 97 && event.keyCode <= 101) {
-        numkey = event.keyCode - 96
-      }
-
-      // 1-7
-      let extNumkey = null
       if (event.keyCode >= 49 && event.keyCode <= 55) {
-        extNumkey = event.keyCode - 48
+        numkey = event.keyCode - 48
       } else if (event.keyCode >= 97 && event.keyCode <= 103) {
-        extNumkey = event.keyCode - 96
+        numkey = event.keyCode - 96
       }
 
       // do not do anything if a text area or a input with type text has focus
@@ -381,6 +381,28 @@ function init () {
         if (newPortalData.canSkip) {
           ansController.skipToNext()
         }
+      } else if (w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+        // Reject reason shortcuts
+        if (numkey != null) {
+          if (selectedReasonGroup === -1) {
+            try {
+              w.document.getElementById('sub-group-' + numkey).click()
+              selectedReasonGroup = numkey - 1
+            } catch (err) {}
+          } else {
+            if (selectedReasonSubGroup === -1) {
+              try {
+                w.document.querySelectorAll('#reject-reason ul ul')[selectedReasonGroup].children[numkey - 1].children[0].click()
+                selectedReasonSubGroup = numkey - 1
+              } catch (err) {}
+            } else {
+              w.document.getElementById('root-label').click()
+              selectedReasonGroup = -1
+              selectedReasonSubGroup = -1
+            }
+          }
+          event.preventDefault()
+        }
       } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
         // select next rating
         currentSelectable++
@@ -388,26 +410,6 @@ function init () {
       } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
         // select previous rating
         currentSelectable--
-        event.preventDefault()
-      } else if (extNumkey !== null && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
-        // Reject reason shortcuts
-        if (selectedReasonGroup === -1) {
-          try {
-            w.document.getElementById('sub-group-' + extNumkey).click()
-            selectedReasonGroup = extNumkey - 1
-          } catch (err) {}
-        } else {
-          if (selectedReasonSubGroup === -1) {
-            try {
-              w.document.querySelectorAll('#reject-reason ul ul')[selectedReasonGroup].children[extNumkey - 1].children[0].click()
-              selectedReasonSubGroup = extNumkey - 1
-            } catch (err) {}
-          } else {
-            w.document.getElementById('root-label').click()
-            selectedReasonGroup = -1
-            selectedReasonSubGroup = -1
-          }
-        }
         event.preventDefault()
       } else if (numkey === null || currentSelectable > maxItems - 2) {
         return
@@ -436,12 +438,12 @@ function init () {
     mapButtons(newPortalData, editDiv, 'afterEnd')
 
     let newSubmitDiv = moveSubmitButton()
-    let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController)
+    let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController)
 
     textButtons()
 
     // re-enable map scroll zoom and allow zoom with out holding ctrl
-    const mapOptions = {scrollwheel: true, gestureHandling: 'greedy'}
+    const mapOptions = { scrollwheel: true, gestureHandling: 'greedy' }
     subController.locationEditsMap.setOptions(cloneInto(mapOptions, w))
 
     // add translation links to title and description edits
@@ -516,9 +518,9 @@ function init () {
     // a list of all 6 star button rows, and the two submit buttons
     let starsAndSubmitButtons = w.document.querySelectorAll(
       "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.titleEdits.length > 1\"]:not(.ng-hide)," +
-        "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.descriptionEdits.length > 1\"]:not(.ng-hide)," +
-        "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.locationEdits.length > 1\"]:not(.ng-hide)," +
-        '.big-submit-button')
+      "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.descriptionEdits.length > 1\"]:not(.ng-hide)," +
+      "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.locationEdits.length > 1\"]:not(.ng-hide)," +
+      '.big-submit-button')
 
     /* EDIT PORTAL */
     function highlight () {
@@ -633,15 +635,15 @@ function init () {
     submitAndNext.addEventListener('click', exportFunction(() => {
       exportFunction(() => {
         window.location.assign('/recon')
-      }, ansController, {defineAs: 'openSubmissionCompleteModal'})
+      }, ansController, { defineAs: 'openSubmissionCompleteModal' })
     }, w))
 
     w.$injector.invoke(cloneInto(['$compile', ($compile) => {
       let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv))
       submitDiv.querySelector('button').insertAdjacentElement('beforeBegin', compiledSubmit[0])
-    }], w, {cloneFunctions: true}))
+    }], w, { cloneFunctions: true }))
 
-    return {submitButton, submitAndNext}
+    return { submitButton, submitAndNext }
   }
 
   function textButtons () {
@@ -666,10 +668,10 @@ function init () {
 
     const textBox = w.document.querySelector('#submitDiv + .text-center > textarea')
 
-    w.document.querySelector('#submitDiv + .text-center').insertAdjacentHTML('beforebegin', `
+    w.document.querySelector('#submitDiv + .text-center').insertAdjacentHTML('beforeend', `
 <div class='btn-group dropup'>${textButtons}
 <div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${textDropdown}</ul>
-</div></div><div class="pull-right hidden-xs"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></div>
+</div></div><div class="hidden-xs"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></div>
 `)
 
     const buttons = w.document.getElementsByClassName('textButton')
@@ -743,6 +745,7 @@ function init () {
       return submitDiv[0]
     }
   }
+
   // expand automatically the "What is it?" filter text box
   function expandWhatIsItBox () {
     try {
@@ -756,16 +759,19 @@ function init () {
   function modifyHeader () {
     // stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
     const lastPlayerStatLine = w.document.querySelector('#player_stats:not(.visible-xs) div')
-    const stats = w.document.querySelector('#player_stats').children[2]
+    const stats = w.document.querySelector('#player_stats:not(.visible-xs) div')
 
     const reviewed = parseInt(stats.children[3].children[2].innerText)
     const accepted = parseInt(stats.children[5].children[2].innerText)
     const rejected = parseInt(stats.children[7].children[2].innerText)
 
     const processed = accepted + rejected
-    const percent = Math.round(processed / reviewed * 1000) / 10
+    const processedPercent = roundToPrecision(processed / reviewed * 100, 1)
 
-    const reconBadge = {100: 'Bronze', 750: 'Silver', 2500: 'Gold', 5000: 'Platin', 10000: 'Black'}
+    const acceptedPercent = roundToPrecision(accepted / (reviewed) * 100, 1)
+    const rejectedPercent = roundToPrecision(rejected / (reviewed) * 100, 1)
+
+    const reconBadge = { 100: 'Bronze', 750: 'Silver', 2500: 'Gold', 5000: 'Platin', 10000: 'Black' }
     let nextBadgeName, nextBadgeCount
 
     for (const key in reconBadge) {
@@ -777,8 +783,14 @@ function init () {
     }
     const nextBadgeProcess = processed / nextBadgeCount * 100
 
-    lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `<br>
-<p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses:</span> <span class="gold pull-right">${processed} (${percent}%) </span></p>`)
+    const numberSpans = stats.querySelectorAll("p span.gold")
+
+    numberSpans[0].insertAdjacentHTML('beforeend', `, <span class='ingress-gray'>100%</span>`)
+    numberSpans[1].insertAdjacentHTML('beforeend', `, <span class='opr-yellow'>${acceptedPercent}%</span>`)
+    numberSpans[2].insertAdjacentHTML('beforeend', `, <span class='opr-yellow'>${rejectedPercent}%</span>`)
+
+    stats.querySelectorAll("p")[1].insertAdjacentHTML('afterend', `<br>
+<p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses:</span> <span class="gold pull-right">${processed}, <span class="ingress-gray">${processedPercent}%</span></span></p>`)
 
     if (accepted < 10000) {
       lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `
@@ -796,9 +808,18 @@ ${Math.round(nextBadgeProcess)}%
 `)
     } else lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `<hr>`)
     lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `<p><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 90%;" type="text"
-value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(percent)}%"/></p>`)
+value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(processedPercent)}%"/></p>`)
+
 
     modifyHeader = () => {} // eslint-disable-line
+  }
+
+  function roundToPrecision (num, precision) {
+    let shifter
+    precision = Number(precision || 0)
+    if (precision % 1 !== 0) throw new RangeError("precision must be an integer")
+    shifter = Math.pow(10, precision)
+    return Math.round(num * shifter) / shifter
   }
 }
 
@@ -833,6 +854,11 @@ background-color: #008780;
 .modal-sm {
 width: 350px !important;
 }
+
+/**
+* Ingress Panel Style
+*/
+
 .panel-ingress {
 background-color: #004746;
 border: 1px solid #0ff;
@@ -840,10 +866,19 @@ border-radius: 1px;
 box-shadow: inset 0 0 6px rgba(255, 255, 255, 1);
 color: #0ff;
 }
+
+/**
+* Tooltip Styles
+*/
+
+/* Add this attribute to the element that needs a tooltip */
 [data-tooltip] {
 position: relative;
 cursor: pointer;
 }
+
+/* Hide the tooltip content by default */
+
 [data-tooltip]:before,
 [data-tooltip]:after {
 visibility: hidden;
@@ -852,6 +887,8 @@ filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=0);
 opacity: 0;
 pointer-events: none;
 }
+
+/* Position tooltip above the element */
 [data-tooltip]:before {
 position: absolute;
 top: 150%;
@@ -872,6 +909,8 @@ font-size: 14px;
 line-height: 1.2;
 z-index: 100;
 }
+
+/* Triangle hack to make tooltip look like a speech bubble */
 [data-tooltip]:after {
 position: absolute;
 top: 132%;
@@ -885,6 +924,8 @@ content: " ";
 font-size: 0;
 line-height: 0;
 }
+
+/* Show tooltip content on hover */
 [data-tooltip]:hover:before,
 [data-tooltip]:hover:after {
 visibility: visible;
@@ -897,5 +938,29 @@ opacity: 1;
 }
 .titleEditBox:active {
   box-shadow: inset 0 0 15px 2px white;
+}
+.group-list li label:hover, ul.sub-group-list a:hover, #root-label:hover {
+    box-shadow: inset 0 0 5px #ffffff !important;
+}
+
+.group-list li label:active, ul.sub-group-list a:active, #root-label:active {
+    box-shadow: inset 0 0 10px 2px #ffffff !important;
+}
+
+.modal-body .button:focus, .modal-body textarea:focus {
+  outline: 2px dashed #ebbc4a;
+}
+
+.modal-body .button:hover, .gm-style-iw button.button:hover {
+  filter: brightness(150%);
+}
+.btn-xs {
+  padding: 0px 7px 1px !important;
+  box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
+  -webkit-box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
+  -moz-box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
+}
+.opr-yellow {
+    color: #F3EADA;
 }`
 // endregion
