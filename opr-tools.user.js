@@ -11,6 +11,7 @@
 // @match           https://opr.ingress.com/faq
 // @match           https://opr.ingress.com/guide
 // @match           https://opr.ingress.com/settings
+// @match           https://opr.ingress.com/upgrades
 // @grant           unsafeWindow
 // @grant           GM_notification
 // @grant           GM_addStyle
