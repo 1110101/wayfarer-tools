@@ -11,6 +11,7 @@
 // @match           https://opr.ingress.com/faq
 // @match           https://opr.ingress.com/guide
 // @match           https://opr.ingress.com/settings
+// @match           https://opr.ingress.com/upgrades*
 // @grant           unsafeWindow
 // @grant           GM_notification
 // @grant           GM_addStyle
@@ -799,7 +800,6 @@ function init () {
 <li><a target='bing' href='https://bing.com/maps/default.aspx?cp=${newPortalData.lat}~${newPortalData.lng}&lvl=16&style=a'>bing</a></li>
 <li><a target='heremaps' href='https://wego.here.com/?map=${newPortalData.lat},${newPortalData.lng},17,satellite'>HERE maps</a></li>
 <li><a targeT='zoomearth' href='https://zoom.earth/#${newPortalData.lat},${newPortalData.lng},18z,sat'>Zoom Earth</a></li>
-<li><a targeT='yandexmaps' href='https://yandex.ru/maps/?ll=${newPortalData.lng},${newPortalData.lat}&z=18&mode=whatshere&whatshere%5Bpoint%5D=${newPortalData.lng},${newPortalData.lat}&whatshere%5Bzoom%5D=18'>Yandex maps</a></li>
 <li role='separator' class='divider'></li>
 <li><a target='swissgeo' href='http://map.geo.admin.ch/?swisssearch=${newPortalData.lat},${newPortalData.lng}'>CH - Swiss Geo Map</a></li>
 <li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (ortofoto)</a></li>
@@ -1043,6 +1043,10 @@ function init () {
   }
 
   function modifyHeader () {
+
+    // shorten Operation Portal Recon to OPR to make more room
+    w.document.querySelector(".navbar-brand").innerHTML = "OPR"
+
     // stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
 
     // get scanner offset from localStorage
@@ -1050,6 +1054,18 @@ function init () {
 
     const lastPlayerStatLine = w.document.querySelector('#player_stats:not(.visible-xs) div')
     const stats = w.document.querySelector('#player_stats:not(.visible-xs) div')
+
+    // move upgrade button to the right
+    const upgradeIcon = w.document.querySelector(".upgrades-icon")
+    if (upgradeIcon !== undefined) {
+      upgradeIcon.parentElement.removeChild(upgradeIcon)
+
+      upgradeIcon.style.paddingRight = "20px"
+      upgradeIcon.style.color = "#9d9d9d"
+      upgradeIcon.classList.add("pull-right")
+
+      stats.parentElement.insertAdjacentElement('beforebegin', upgradeIcon)
+    }
 
     // add opr-tools options button
 
