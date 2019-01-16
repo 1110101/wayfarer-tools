@@ -1055,6 +1055,18 @@ function init () {
     const lastPlayerStatLine = w.document.querySelector('#player_stats:not(.visible-xs) div')
     const stats = w.document.querySelector('#player_stats:not(.visible-xs) div')
 
+    // move upgrade button to the right
+    const upgradeIcon = w.document.querySelector(".upgrades-icon")
+    if (upgradeIcon !== undefined) {
+      upgradeIcon.parentElement.removeChild(upgradeIcon)
+
+      upgradeIcon.style.paddingRight = "20px"
+      upgradeIcon.style.color = "#9d9d9d"
+      upgradeIcon.classList.add("pull-right")
+
+      stats.parentElement.insertAdjacentElement('beforebegin', upgradeIcon)
+    }
+
     let perfBadge = null
     const imgSrc = stats.children[1].src
 
