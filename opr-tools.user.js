@@ -1043,6 +1043,10 @@ function init () {
   }
 
   function modifyHeader () {
+
+    // shorten Operation Portal Recon to OPR to make more room
+    w.document.querySelector(".navbar-brand").innerHTML = "OPR"
+
     // stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
 
     // get scanner offset from localStorage
