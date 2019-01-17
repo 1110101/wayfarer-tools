@@ -95,7 +95,7 @@ function init () {
     if (tryNumber === 0) {
       clearInterval(initWatcher)
       w.document.getElementById('NewSubmissionController')
-        .insertAdjacentHTML('afterBegin', `
+      .insertAdjacentHTML('afterBegin', `
 <div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
 `)
       addRefreshContainer()
@@ -185,8 +185,34 @@ function init () {
   function modifyNewPage (ansController, subController, whatController, newPortalData) {
     mapButtons(newPortalData, w.document.getElementById('descriptionDiv'), 'beforeEnd')
 
+    // mutation observer
+    const bodyObserver = new MutationObserver(mutationList => {
+      for (let mutationRecord of mutationList) {
+        // we just want addednodes with (class:modal). null and undefined check for performance reasons
+        if (mutationRecord.addedNodes.length > 0 && mutationRecord.addedNodes[0].className === "modal fade ng-isolate-scope") {
+          // adds keyboard-numbers to lowquality sub-sub-lists
+          let sublistItems = mutationRecord.addedNodes[0].querySelectorAll("ul.sub-group-list")
+          if (sublistItems !== undefined) {
+            sublistItems.forEach(el => {
+              let i = 1
+              el.querySelectorAll("li > a").forEach(el2 => { el2.insertAdjacentHTML("afterbegin", `<kbd>${i++}</kbd> `)})
+            })
+            let i = 1
+            // adds keyboard numbers to lowquality sub-list
+            mutationRecord.addedNodes[0].querySelectorAll("label.sub-group")
+            .forEach(el2 => { el2.insertAdjacentHTML("beforeend", `<kbd class="pull-right ">${i++}</kbd>`)})
+          }
+          // skip "Your analysis has been recorded" dialog
+          if (mutationRecord.addedNodes[0].querySelector(".modal-body a[href='/recon']") !== null) {
+            w.document.location.href = '/recon'
+          }
+        }
+      }
+    })
+    bodyObserver.observe(w.document.body, {childList: true})
+
     let newSubmitDiv = moveSubmitButton()
-    let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController)
+    let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController, bodyObserver)
 
     textButtons()
 
@@ -555,6 +581,7 @@ function init () {
             try {
               w.document.getElementById('sub-group-' + numkey).click()
               selectedReasonGroup = numkey - 1
+              w.document.querySelectorAll('label.sub-group kbd').forEach(el => el.classList.add("hide"))
             } catch (err) {}
           } else {
             if (selectedReasonSubGroup === -1) {
@@ -566,6 +593,7 @@ function init () {
               w.document.getElementById('root-label').click()
               selectedReasonGroup = -1
               selectedReasonSubGroup = -1
+              w.document.querySelectorAll('label.sub-group kbd').forEach(el => el.classList.remove("hide"))
             }
           }
           event.preventDefault()
@@ -604,8 +632,21 @@ function init () {
 
     mapButtons(newPortalData, editDiv, 'afterEnd')
 
+    // mutation observer
+    const bodyObserver = new MutationObserver(mutationList => {
+      for (let mutationRecord of mutationList) {
+        // we just want addednodes with (class:modal). null and undefined check for performance reasons
+        if (mutationRecord.addedNodes.length > 0 &&
+          mutationRecord.addedNodes[0].className === "modal fade ng-isolate-scope" &&
+          mutationRecord.addedNodes[0].querySelector(".modal-body a[href='/recon']") !== null) {
+          w.document.location.href = '/recon'
+        }
+      }
+    })
+    bodyObserver.observe(w.document.body, {childList: true})
+
     let newSubmitDiv = moveSubmitButton()
-    let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController)
+    let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController, bodyObserver)
 
     textButtons()
 
@@ -828,10 +869,13 @@ function init () {
   }
 
   // add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
-  function quickSubmitButton (submitDiv, ansController) {
+  function quickSubmitButton (submitDiv, ansController, bodyObserver) {
     let submitButton = submitDiv.querySelector('button')
     submitButton.classList.add('btn', 'btn-warning')
     let submitAndNext = submitButton.cloneNode(false)
+    submitButton.addEventListener('click', exportFunction(() => {
+      bodyObserver.disconnect()
+    }))
     submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`
     submitAndNext.title = 'Submit and go to next review'
     submitAndNext.addEventListener('click', exportFunction(() => {
@@ -1604,6 +1648,12 @@ kbd {
 
 .opr-yellow {
     color: #F3EADA;
+}
+
+@media(min-width:768px) {
+  div.modal-custom1 {
+    width: 500px
+  }
 }
 
 `
