@@ -1060,7 +1060,7 @@ function init () {
     if (upgradeIcon !== undefined) {
       upgradeIcon.parentElement.removeChild(upgradeIcon)
 
-      upgradeIcon.style.paddingRight = "20px"
+      upgradeIcon.style.marginRight = "20px"
       upgradeIcon.style.color = "#9d9d9d"
       upgradeIcon.classList.add("pull-right")
 
