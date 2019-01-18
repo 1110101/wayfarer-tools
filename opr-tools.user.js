@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR tools
-// @version         0.27.1
+// @version         0.27.2
 // @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -17,7 +17,7 @@
 // @downloadURL     https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 // @updateURL       https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 // @supportURL      https://gitlab.com/1110101/opr-tools/issues
-// @require         https://cdn.rawgit.com/alertifyjs/alertify.js/v1.0.10/dist/js/alertify.js
+// @require         https://cdnjs.cloudflare.com/ajax/libs/alertifyjs-alertify.js/1.0.11/js/alertify.js
 // @require         https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.4/proj4.js
 
 // ==/UserScript==
