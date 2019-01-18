@@ -18,7 +18,7 @@
 // @downloadURL     https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 // @updateURL       https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 // @supportURL      https://gitlab.com/1110101/opr-tools/issues
-// @require         https://cdn.rawgit.com/alertifyjs/alertify.js/v1.0.10/dist/js/alertify.js
+// @require         https://cdnjs.cloudflare.com/ajax/libs/alertifyjs-alertify.js/1.0.11/js/alertify.js
 // @require         https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.4/proj4.js
 
 // ==/UserScript==
@@ -52,12 +52,33 @@ SOFTWARE.
 /* globals screen, addEventListener, GM_notification, unsafeWindow, exportFunction, cloneInto, angular, google, alertify, proj4 */
 
 const OPRT = {
-  SCANNER_OFFSET      : 'oprt_scanner_offset',
-  REFRESH             : 'oprt_refresh',
-  FROM_REFRESH        : 'oprt_from_refresh',
-  REFRESH_NOTI_SOUND  : 'oprt_refresh_noti_sound',
-  REFRESH_NOTI_DESKTOP: 'oprt_refresh_noti_desktop',
-  MAP_TYPE            : 'oprt_map_type'
+
+  PREFERENCES: 'oprt_prefs',
+
+  OPTIONS: {
+    KEYBOARD_NAV: 'keyboard_nav',
+    NORWAY_MAP_LAYER: 'norway_map_layer',
+    PRESET_FEATURE: 'preset_feature',
+    SCANNER_OFFSET_PREF: 'scanner_offset_pref',
+    COMMENT_TEMPLATES: 'comment_templates',
+    SKIP_ANALYZED_DIALOG: 'skip_analyzed_dialog',
+
+    REFRESH: 'refresh',
+    REFRESH_NOTI_SOUND: 'refresh_noti_sound',
+    REFRESH_NOTI_DESKTOP: 'refresh_noti_desktop'
+  },
+
+  PREFIX: 'oprt_',
+  VAR_PREFIX: 'oprt_var',
+  VAR: {
+
+    SCANNER_OFFSET: 'scanner_offset',
+    MAP_TYPE: 'map_type',
+    VERSION_CHECK: 'version_check',
+    CUSTOM_PRESETS: 'custom_presets'
+  },
+
+  FROM_REFRESH: 'from_refresh' // sessionStorage
 }
 
 /* eslint-disable */
@@ -83,6 +104,173 @@ function addGlobalStyle (css) {
 
 /* eslint-enable */
 
+class Preferences {
+
+  constructor () {
+    this.options = {}
+    this.defaults = {
+      [OPRT.OPTIONS.KEYBOARD_NAV]: true,
+      [OPRT.OPTIONS.NORWAY_MAP_LAYER]: false,
+      [OPRT.OPTIONS.PRESET_FEATURE]: true,
+      [OPRT.OPTIONS.SCANNER_OFFSET_PREF]: false,
+      [OPRT.OPTIONS.COMMENT_TEMPLATES]: true,
+      [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: true
+    }
+    this.loadOptions()
+  }
+
+  showPreferencesUI (w) {
+    let inout = new InOut(this)
+    let pageContainer = w.document.querySelector('body > div.container')
+    let oprtPreferences = w.document.querySelector('#oprt_sidepanel_container')
+
+    if (oprtPreferences !== null) oprtPreferences.classList.toggle('hide')
+    else {
+      pageContainer.insertAdjacentHTML('afterbegin', `
+<section id="oprt_sidepanel_container" style="
+    background: black;
+    border-left: 2px gold inset;
+    position: absolute;
+    right: 0;
+    height: 100%;
+    padding: 0 20px;
+    z-index: 10;
+    width: 300px;
+    ">
+	<div class="row">
+		<div class="col-lg-12">
+			<h4 class="gold">OPR Tools Preferences</h4>
+		</div>
+		<div class="col-lg-12">
+			<div class="btn-group" role="group">
+				<button id="import_all" class="btn btn-success">Import</button>
+				<button id="export_all" class="btn btn-success">Export</button>
+			</div>
+		</div>
+	</div>
+	<div id="oprt_options"></div>
+</section>`)
+
+      let optionsContainer = w.document.getElementById('oprt_options')
+
+      for (let item in this.options) {
+        const div = w.document.createElement('div')
+        div.classList.add('checkbox')
+        const label = w.document.createElement('label')
+        const input = w.document.createElement('input')
+        input.type = 'checkbox'
+        input.name = item
+        input.checked = this.options[item]
+        div.appendChild(label)
+        label.appendChild(input)
+        label.appendChild(w.document.createTextNode(strings.options[item]))
+        optionsContainer.insertAdjacentElement('beforeEnd', div)
+      }
+
+      optionsContainer.addEventListener('change', (event) => {
+        this.set(event.target.name, event.target.checked)
+      })
+
+      w.document.getElementById('import_all').addEventListener('click', () => {
+        alertify.okBtn('Import').prompt('Paste here:',
+          (value, event) => {
+            event.preventDefault()
+            if (value === 'undefined' || value === '') {
+              return
+            }
+            inout.importFromString(value)
+            alertify.success(`✔ Imported Preferences`)
+          }, event => {
+            event.preventDefault()
+          }
+        )
+      })
+
+      w.document.getElementById('export_all').addEventListener('click', () => {
+        navigator.clipboard.writeText(inout.exportAll()).then(() => {
+          alertify.success(`✔ Exported Preferences to your clipboard`)
+        })
+      })
+
+    }
+  }
+
+  loadOptions () {
+    this.options = JSON.parse(localStorage.getItem(OPRT.PREFERENCES))
+    if (this.options == null) {
+      this.setDefaultOptions()
+    }
+  }
+
+  setDefaultOptions () {
+    this.options = this.defaults
+    localStorage.setItem(OPRT.PREFERENCES, JSON.stringify(this.defaults))
+  }
+
+  set (key, value) {
+    this.options[key] = value
+    localStorage.setItem(OPRT.PREFERENCES, JSON.stringify(this.options))
+  }
+
+  get (key) {
+    return this.options[key]
+  }
+
+  exportPrefs () {
+    return JSON.stringify(this.options)
+  }
+
+  importPrefs (string) {
+    try {
+      this.options = JSON.parse(string)
+      localStorage.setItem(OPRT.PREFERENCES, JSON.stringify(this.options))
+
+    } catch (e) {
+      throw new Error('Could not import preferences!')
+    }
+  }
+}
+
+class InOut {
+  constructor (preferences) {
+    this.preferences = preferences
+  }
+
+  static exportVars () {
+    let exportObject = {}
+    for (const item in OPRT.VAR) {
+      exportObject[OPRT.VAR[item]] = localStorage.getItem(OPRT.PREFIX + OPRT.VAR[item])
+    }
+    return exportObject
+  }
+
+  static importVars (string) {
+    let importObject = JSON.parse(string)
+    for (const item of importObject) {
+      localStorage.setItem(OPRT.PREFIX + item, importObject[item])
+    }
+  }
+
+  importFromString (string) {
+    try {
+      let json = JSON.parse(string)
+
+      if (json.hasOwnProperty(OPRT.PREFERENCES))
+        this.preferences.importPrefs(json[OPRT.PREFERENCES])
+
+      if (json.hasOwnProperty(OPRT.VAR))
+        InOut.importVars(json[OPRT.VAR])
+
+    } catch (e) {
+      throw new Error('Import failed')
+    }
+  }
+
+  exportAll () {
+    return JSON.stringify(Object.assign({}, { [OPRT.PREFERENCES]: this.preferences.exportPrefs() }, { [OPRT.VAR_PREFIX]: InOut.exportVars() }))
+  }
+}
+
 function init () {
   const w = typeof unsafeWindow === 'undefined' ? window : unsafeWindow
   let tryNumber = 15
@@ -90,6 +278,8 @@ function init () {
   let oprtCustomPresets
 
   let browserLocale = window.navigator.languages[0] || window.navigator.language || 'en'
+
+  let preferences = new Preferences()
 
   const initWatcher = setInterval(() => {
     if (tryNumber === 0) {
@@ -128,7 +318,7 @@ function init () {
   }, 1000)
 
   function initAngular () {
-    const el = w.document.querySelector("[ng-app='portalApp']")
+    const el = w.document.querySelector('[ng-app="portalApp"]')
     w.$app = w.angular.element(el)
     w.$injector = w.$app.injector()
     w.inject = w.$injector.invoke
@@ -186,7 +376,7 @@ function init () {
     mapButtons(newPortalData, w.document.getElementById('descriptionDiv'), 'beforeEnd')
 
     let newSubmitDiv = moveSubmitButton()
-    let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController)
+    let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController)
 
     textButtons()
 
@@ -196,7 +386,7 @@ function init () {
   <div class='btn-group' id="customPresets"></div>
 </div></div>`
 
-    w.document.querySelector("form[name='answers'] div.row").insertAdjacentHTML('afterend', customPresetUI)
+    w.document.querySelector('form[name="answers"] div.row').insertAdjacentHTML('afterend', customPresetUI)
 
     addCustomPresetButtons()
 
@@ -204,7 +394,7 @@ function init () {
     w.$injector.invoke(cloneInto(['$compile', ($compile) => {
       let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById('descriptionDiv')))
       w.document.getElementById('addPreset').insertAdjacentElement('beforebegin', compiledSubmit[0])
-    }], w, {cloneFunctions: true}))
+    }], w, { cloneFunctions: true }))
 
     // click listener for +preset button
     w.document.getElementById('addPreset').addEventListener('click', exportFunction(event => {
@@ -318,29 +508,29 @@ function init () {
       google.maps.event.addListener(newLocMarker, 'dragend', function () {
         if (draggableMarkerCircle == null) {
           draggableMarkerCircle = new google.maps.Circle({
-            map          : subController.map2,
-            center       : newLocMarker.position,
-            radius       : 40,
-            strokeColor  : '#4CAF50', // material green 500
+            map: subController.map2,
+            center: newLocMarker.position,
+            radius: 40,
+            strokeColor: '#4CAF50', // material green 500
             strokeOpacity: 1,
-            strokeWeight : 2,
-            fillOpacity  : 0
+            strokeWeight: 2,
+            fillOpacity: 0
           })
         } else draggableMarkerCircle.setCenter(newLocMarker.position)
       })
     })
 
-    document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin', "<small class='pull-left'><span style='color:#ebbc4a'>Circle:</span> 40m</small>")
+    document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin', '<small class="pull-left"><span style="color:#ebbc4a">Circle:</span> 40m</small>')
 
     // move portal rating to the right side. don't move on mobile devices / small width
     if (screen.availWidth > 768) {
-      let nodeToMove = w.document.querySelector("div[class='btn-group']").parentElement
+      let nodeToMove = w.document.querySelector('div[class="btn-group"]').parentElement
       if (subController.hasSupportingImageOrStatement) {
         const descDiv = w.document.getElementById('descriptionDiv')
         const scorePanel = descDiv.querySelector('div.text-center.hidden-xs')
         scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
       } else {
-        const scorePanel = w.document.querySelector("div[class~='pull-right']")
+        const scorePanel = w.document.querySelector('div[class~="pull-right"]')
         scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
       }
     }
@@ -600,12 +790,12 @@ function init () {
   }
 
   function modifyEditPage (ansController, subController, newPortalData) {
-    let editDiv = w.document.querySelector("div[ng-show=\"subCtrl.reviewType==='EDIT'\"]")
+    let editDiv = w.document.querySelector('div[ng-show="subCtrl.reviewType===\'EDIT\'"]')
 
     mapButtons(newPortalData, editDiv, 'afterEnd')
 
     let newSubmitDiv = moveSubmitButton()
-    let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController)
+    let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController)
 
     textButtons()
 
@@ -684,9 +874,9 @@ function init () {
 
     // a list of all 6 star button rows, and the two submit buttons
     let starsAndSubmitButtons = w.document.querySelectorAll(
-      "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.titleEdits.length > 1\"]:not(.ng-hide)," +
-      "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.descriptionEdits.length > 1\"]:not(.ng-hide)," +
-      "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.locationEdits.length > 1\"]:not(.ng-hide)," +
+      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.titleEdits.length > 1"]:not(.ng-hide),' +
+      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.descriptionEdits.length > 1"]:not(.ng-hide),' +
+      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.locationEdits.length > 1"]:not(.ng-hide),' +
       '.big-submit-button')
 
     /* EDIT PORTAL */
@@ -772,7 +962,7 @@ function init () {
           google.maps.event.trigger(angular.element(document.getElementById('NewSubmissionController')).scope().getAllLocationMarkers()[numkey - 1], 'click')
         } else {
           if (hasLocationEdit) numkey = 1
-          starsAndSubmitButtons[currentSelectable].querySelectorAll(".titleEditBox, input[type='checkbox']")[numkey - 1].click()
+          starsAndSubmitButtons[currentSelectable].querySelectorAll('.titleEditBox, input[type="checkbox"]')[numkey - 1].click()
           currentSelectable++
         }
       }
@@ -837,14 +1027,14 @@ function init () {
     submitAndNext.addEventListener('click', exportFunction(() => {
       exportFunction(() => {
         window.location.assign('/recon')
-      }, ansController, {defineAs: 'openSubmissionCompleteModal'})
+      }, ansController, { defineAs: 'openSubmissionCompleteModal' })
     }, w))
 
     w.$injector.invoke(cloneInto(['$compile', ($compile) => {
       let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv))
       submitDiv.querySelector('button').insertAdjacentElement('beforeBegin', compiledSubmit[0])
-    }], w, {cloneFunctions: true}))
-    return {submitButton, submitAndNext}
+    }], w, { cloneFunctions: true }))
+    return { submitButton, submitAndNext }
   }
 
   function textButtons () {
@@ -905,7 +1095,7 @@ function init () {
               text += 'Portal candidate is seasonal or temporary'
               break
             case 'location':
-              text += "Portal candidate's location is not on object"
+              text += 'Portal candidate\'s location is not on object'
               break
             case 'emergencyway':
               text += 'Portal candidate is obstructing the path of emergency vehicles'
@@ -931,13 +1121,13 @@ function init () {
   function mapOriginCircle (map) {
     // noinspection JSUnusedLocalSymbols
     const circle = new google.maps.Circle({ // eslint-disable-line no-unused-vars
-      map          : map,
-      center       : map.center,
-      radius       : 40,
-      strokeColor  : '#ebbc4a',
+      map: map,
+      center: map.center,
+      radius: 40,
+      strokeColor: '#ebbc4a',
       strokeOpacity: 0.8,
-      strokeWeight : 1.5,
-      fillOpacity  : 0
+      strokeWeight: 1.5,
+      fillOpacity: 0
     })
   }
 
@@ -952,31 +1142,31 @@ function init () {
   // set available map types
   function mapTypes (map, isMainMap) {
     const PROVIDERS = {
-      GOOGLE    : 'google',
+      GOOGLE: 'google',
       KARTVERKET: 'kartverket'
     }
 
     const types = [
-      {provider: PROVIDERS.GOOGLE, id: 'roadmap'},
-      {provider: PROVIDERS.GOOGLE, id: 'terrain'},
-      {provider: PROVIDERS.GOOGLE, id: 'satellite'},
-      {provider: PROVIDERS.GOOGLE, id: 'hybrid'},
-      {provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`, code: 'topo4', label: 'NO - Topo'},
-      {provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster'},
-      {provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart'}
+      { provider: PROVIDERS.GOOGLE, id: 'roadmap' },
+      { provider: PROVIDERS.GOOGLE, id: 'terrain' },
+      { provider: PROVIDERS.GOOGLE, id: 'satellite' },
+      { provider: PROVIDERS.GOOGLE, id: 'hybrid' },
+      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`, code: 'topo4', label: 'NO - Topo' },
+      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster' },
+      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart' }
     ]
 
-    const defaultType = 'hybrid'
+    const defaultMapType = 'hybrid'
 
     const mapOptions = {
       // re-enabling map scroll zoom and allow zoom with out holding ctrl
-      scrollwheel          : true,
-      gestureHandling      : 'greedy',
+      scrollwheel: true,
+      gestureHandling: 'greedy',
       // map type selection
-      mapTypeControl       : true,
+      mapTypeControl: true,
       mapTypeControlOptions: {
         mapTypeIds: types.map(t => t.id),
-        style     : google.maps.MapTypeControlStyle.DROPDOWN_MENU
+        style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
       }
     }
     map.setOptions(cloneInto(mapOptions, w))
@@ -986,11 +1176,11 @@ function init () {
       switch (t.provider) {
         case PROVIDERS.KARTVERKET:
           map.mapTypes.set(t.id, new google.maps.ImageMapType({
-            layer     : t.code,
-            name      : t.label,
-            alt       : t.label,
-            maxZoom   : 19,
-            tileSize  : new google.maps.Size(256, 256),
+            layer: t.code,
+            name: t.label,
+            alt: t.label,
+            maxZoom: 19,
+            tileSize: new google.maps.Size(256, 256),
             getTileUrl: function (coord, zoom) {
               return `//opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=${this.layer}&zoom=${zoom}&x=${coord.x}&y=${coord.y}`
             }
@@ -1003,11 +1193,11 @@ function init () {
     if (isMainMap) {
       // save selection when changed
       map.addListener('maptypeid_changed', function () {
-        w.localStorage.setItem(OPRT.MAP_TYPE, map.getMapTypeId())
+        w.localStorage.setItem(OPRT.PREFIX + OPRT.VAR.MAP_TYPE, map.getMapTypeId())
       })
 
       // get map type saved from last use or fall back to default
-      map.setMapTypeId(w.localStorage.getItem(OPRT.MAP_TYPE) || defaultType)
+      map.setMapTypeId(w.localStorage.getItem(OPRT.PREFIX + OPRT.VAR.MAP_TYPE) || defaultMapType)
     }
   }
 
@@ -1045,7 +1235,7 @@ function init () {
   function modifyHeader () {
 
     // shorten Operation Portal Recon to OPR to make more room
-    w.document.querySelector(".navbar-brand").innerHTML = "OPR"
+    w.document.querySelector('.navbar-brand').innerHTML = 'OPR'
 
     // stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
 
@@ -1056,31 +1246,30 @@ function init () {
     const stats = w.document.querySelector('#player_stats:not(.visible-xs) div')
 
     // move upgrade button to the right
-    const upgradeIcon = w.document.querySelector(".upgrades-icon")
+    const upgradeIcon = w.document.querySelector('.upgrades-icon')
     if (upgradeIcon !== undefined) {
       upgradeIcon.parentElement.removeChild(upgradeIcon)
 
-      upgradeIcon.style.paddingRight = "20px"
-      upgradeIcon.style.color = "#9d9d9d"
-      upgradeIcon.classList.add("pull-right")
+      upgradeIcon.style.paddingRight = '20px'
+      upgradeIcon.style.color = '#9d9d9d'
+      upgradeIcon.classList.add('pull-right')
 
       stats.parentElement.insertAdjacentElement('beforebegin', upgradeIcon)
     }
 
-    // add opr-tools options button
+    // add opr-tools preferences button
+    let profile_button_row = w.document.querySelector('.navbar-form')
+    let oprt_preferences_button = w.document.createElement('button')
+    oprt_preferences_button.classList.add('btn', 'btn-sm', 'btn-success')
+    oprt_preferences_button.style.setProperty('margin-right', '10px')
+    oprt_preferences_button.addEventListener('click', () => preferences.showPreferencesUI(w))
+    oprt_preferences_button.title = 'OPR-Tools Preferences'
 
-    let profile_button_row = w.document.querySelector(".navbar-form")
-    let oprt_settings_button = w.document.createElement("button")
-    oprt_settings_button.classList.add("btn", "btn-sm" ,"btn-success")
-    oprt_settings_button.style.setProperty("margin-right", "10px")
-    oprt_settings_button.addEventListener("click", () => showOptions())
-    oprt_settings_button.title = "OPR-Tools Settings"
+    const pref_cog = w.document.createElement('span')
+    pref_cog.classList.add('glyphicon', 'glyphicon-cog')
+    oprt_preferences_button.appendChild(pref_cog)
 
-    const settings_cog = w.document.createElement("span");
-    settings_cog.classList.add("glyphicon", "glyphicon-cog")
-    oprt_settings_button.appendChild(settings_cog)
-
-    profile_button_row.insertAdjacentElement('afterbegin', oprt_settings_button)
+    profile_button_row.insertAdjacentElement('afterbegin', oprt_preferences_button)
 
     let perfBadge = null
     const imgSrc = stats.children[1].src
@@ -1109,7 +1298,7 @@ function init () {
     const acceptedPercent = roundToPrecision(accepted / (reviewed) * 100, 1)
     const rejectedPercent = roundToPrecision(rejected / (reviewed) * 100, 1)
 
-    const reconBadge = {100: 'Bronze', 750: 'Silver', 2500: 'Gold', 5000: 'Platin', 10000: 'Black'}
+    const reconBadge = { 100: 'Bronze', 750: 'Silver', 2500: 'Gold', 5000: 'Platin', 10000: 'Black' }
     let nextBadgeName, nextBadgeCount
 
     for (const key in reconBadge) {
@@ -1121,13 +1310,13 @@ function init () {
     }
     const nextBadgeProcess = processed / nextBadgeCount * 100
 
-    const numberSpans = stats.querySelectorAll("p span.gold")
+    const numberSpans = stats.querySelectorAll('p span.gold')
 
     numberSpans[0].insertAdjacentHTML('beforeend', `, <span class='ingress-gray'>100%</span>`)
     numberSpans[1].insertAdjacentHTML('beforeend', `, <span class='opr-yellow'>${acceptedPercent}%</span>`)
     numberSpans[2].insertAdjacentHTML('beforeend', `, <span class='opr-yellow'>${rejectedPercent}%</span>`)
 
-    stats.querySelectorAll("p")[1].insertAdjacentHTML('afterend', `<br>
+    stats.querySelectorAll('p')[1].insertAdjacentHTML('afterend', `<br>
 <p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses:</span> <span class="gold pull-right">${processed}, <span class="ingress-gray">${processedPercent}%</span></span></p>`)
 
     if (accepted < 10000) {
@@ -1163,7 +1352,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
       w.$injector.invoke(cloneInto(['$compile', ($compile) => {
         let compiledSubmit = $compile(tooltipSpan)(w.$scope(stats))
         w.document.getElementById('scannerOffsetContainer').insertAdjacentElement('afterbegin', compiledSubmit[0])
-      }], w, {cloneFunctions: true}));
+      }], w, { cloneFunctions: true }));
 
       ['change', 'keyup', 'cut', 'paste', 'input'].forEach(e => {
         w.document.getElementById('scannerOffset').addEventListener(e, (event) => {
@@ -1281,7 +1470,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
         if (w.localStorage.getItem(OPRT.REFRESH_NOTI_DESKTOP) === 'true') {
           GM_notification({
             'title': 'OPR - New Portal Analysis Available',
-            'text' : 'by OPR-Tools',
+            'text': 'by OPR-Tools',
             'image': 'https://gitlab.com/uploads/-/system/project/avatar/3311015/opr-tools.png'
           })
         }
@@ -1303,7 +1492,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
   }
 
   function changeFavicon (src) {
-    let link = w.document.querySelector("link[rel='shortcut icon']")
+    let link = w.document.querySelector('link[rel="shortcut icon"]')
     link.href = src
   }
 
@@ -1350,7 +1539,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
 
   function getCustomPresets (w) {
     // simply to scope the string we don't need after JSON.parse
-    let presetsJSON = w.localStorage.getItem('oprt_custom_presets')
+    let presetsJSON = w.localStorage.getItem(OPRT.PREFIX + OPRT.VAR.CUSTOM_PRESETS)
     if (presetsJSON != null && presetsJSON !== '') {
       return JSON.parse(presetsJSON)
     }
@@ -1360,24 +1549,24 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
   function saveCustomPreset (label, ansController, whatController) {
     // uid snippet from https://stackoverflow.com/a/47496558/6447397
     let preset = {
-      uid        : [...Array(5)].map(() => Math.random().toString(36)[3]).join(''),
-      label      : label,
-      nodeName   : whatController.whatNode.name,
-      nodeId     : whatController.whatNode.id,
-      quality    : ansController.formData.quality,
+      uid: [...Array(5)].map(() => Math.random().toString(36)[3]).join(''),
+      label: label,
+      nodeName: whatController.whatNode.name,
+      nodeId: whatController.whatNode.id,
+      quality: ansController.formData.quality,
       description: ansController.formData.description,
-      cultural   : ansController.formData.cultural,
-      uniqueness : ansController.formData.uniqueness,
-      location   : ansController.formData.location,
-      safety     : ansController.formData.safety
+      cultural: ansController.formData.cultural,
+      uniqueness: ansController.formData.uniqueness,
+      location: ansController.formData.location,
+      safety: ansController.formData.safety
     }
     oprtCustomPresets.push(preset)
-    w.localStorage.setItem('oprt_custom_presets', JSON.stringify(oprtCustomPresets))
+    w.localStorage.setItem(OPRT.PREFIX + OPRT.VAR.CUSTOM_PRESETS, JSON.stringify(oprtCustomPresets))
   }
 
   function deleteCustomPreset (preset) {
     oprtCustomPresets = oprtCustomPresets.filter(item => item.uid !== preset.uid)
-    w.localStorage.setItem('oprt_custom_presets', JSON.stringify(oprtCustomPresets))
+    w.localStorage.setItem(OPRT.PREFIX + OPRT.VAR.CUSTOM_PRESETS, JSON.stringify(oprtCustomPresets))
   }
 
   function showHelp () {
@@ -1446,22 +1635,32 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
   function roundToPrecision (num, precision) {
     let shifter
     precision = Number(precision || 0)
-    if (precision % 1 !== 0) throw new RangeError("precision must be an integer")
+    if (precision % 1 !== 0) throw new RangeError('precision must be an integer')
     shifter = Math.pow(10, precision)
     return Math.round(num * shifter) / shifter
-  }
-
-  function showOptions () {
-
   }
 
 }
 
 setTimeout(() => {
   init()
-}, 500)
+}, 250)
 
 // region const
+
+const strings = {
+  options: {
+    [OPRT.OPTIONS.COMMENT_TEMPLATES]: 'Comment templates',
+    [OPRT.OPTIONS.KEYBOARD_NAV]: 'Keyboard Navigation',
+    [OPRT.OPTIONS.NORWAY_MAP_LAYER]: 'Norwegian Map Layer',
+    [OPRT.OPTIONS.PRESET_FEATURE]: 'Presets',
+    [OPRT.OPTIONS.REFRESH]: 'Periodically refresh opr if no analysis is available',
+    [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: '- With desktop notification',
+    [OPRT.OPTIONS.REFRESH_NOTI_SOUND]: '- With sound ',
+    [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: 'Skip \'Analysis accepted\' dialog',
+    [OPRT.OPTIONS.SCANNER_OFFSET_PREF]: 'Scanner offset'
+  }
+}
 
 const GLOBAL_CSS = `
 .dropdown {
