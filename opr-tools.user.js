@@ -848,12 +848,6 @@ function init () {
   }
 
   function textButtons () {
-    let emergencyWay = ''
-    if (browserLocale.includes('de')) {
-      emergencyWay = 'RETTUNGSWEG!1'
-    } else {
-      emergencyWay = 'Emergency Way'
-    }
 
     // add text buttons
     const textButtons = `
@@ -865,7 +859,7 @@ function init () {
 <li><a class='textButton' id='perm' data-tooltip='Seasonal or temporary display or item'>Temporary</a></li>
 <li><a class='textButton' id='location' data-tooltip='Location wrong'>Location</a></li>
 <li><a class='textButton' id='natural' data-tooltip='Candidate is a natural feature'>Natural</a></li>
-<li><a class='textButton' id='emergencyway' data-tooltip='Obstructing emergency way'>${emergencyWay}</a></li>
+<li><a class='textButton' id='emergencyway' data-tooltip='Obstructing emergency way'>Emergency Way</a></li>
 `
 
     const textBox = w.document.querySelector('#submitDiv + .text-center > textarea')
