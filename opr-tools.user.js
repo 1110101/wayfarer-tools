@@ -666,7 +666,7 @@ function init () {
     expandWhatIsItBox()
 
     // fix locationEditsMap if only one location edit exists
-    if (newPortalData.locationEdits.length <= 1) {
+    if (newPortalData.locationEdits.length <= 1 || subController.locationEditsMap.getZoom() > 19) {
       subController.locationEditsMap.setZoom(19)
     }
 
