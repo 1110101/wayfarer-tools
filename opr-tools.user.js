@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR tools
-// @version         0.27.2
+// @version         0.27.3
 // @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -1099,7 +1099,7 @@ function init () {
     stats.querySelectorAll("p")[1].insertAdjacentHTML('afterend', `<br>
 <p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses:</span> <span class="gold pull-right">${processed}, <span class="ingress-gray">${processedPercent}%</span></span></p>`)
 
-    if (accepted < 10000) {
+    if (processed < 10000) {
       lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `
 <br><div>Next recon badge tier: <b>${nextBadgeName} (${nextBadgeCount})</b><span class='pull-right'></span>
 <div class='progress'>
