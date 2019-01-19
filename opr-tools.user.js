@@ -95,7 +95,7 @@ function init () {
     if (tryNumber === 0) {
       clearInterval(initWatcher)
       w.document.getElementById('NewSubmissionController')
-        .insertAdjacentHTML('afterBegin', `
+      .insertAdjacentHTML('afterBegin', `
 <div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
 `)
       addRefreshContainer()
@@ -128,7 +128,7 @@ function init () {
   }, 1000)
 
   function initAngular () {
-    const el = w.document.querySelector("[ng-app='portalApp']")
+    const el = w.document.querySelector('[ng-app=\'portalApp\']')
     w.$app = w.angular.element(el)
     w.$injector = w.$app.injector()
     w.inject = w.$injector.invoke
@@ -195,15 +195,15 @@ function init () {
           if (sublistItems !== undefined) {
             sublistItems.forEach(el => {
               let i = 1
-              el.querySelectorAll('li > a').forEach(el2 => { el2.insertAdjacentHTML('afterbegin', `<kbd>${i++}</kbd> `) })
+              el.querySelectorAll('li > a').forEach(el2 => { el2.insertAdjacentHTML('afterbegin', `<kbd>${i++}</kbd> `)})
             })
             let i = 1
             // adds keyboard numbers to lowquality sub-list
             mutationRecord.addedNodes[0].querySelectorAll('label.sub-group')
-              .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
+            .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`)})
           }
           // skip "Your analysis has been recorded" dialog
-          if (mutationRecord.addedNodes[0].querySelector(".modal-body a[href='/recon']") !== null) {
+          if (mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
             w.document.location.href = '/recon'
           }
         }
@@ -222,7 +222,7 @@ function init () {
   <div class='btn-group' id="customPresets"></div>
 </div></div>`
 
-    w.document.querySelector("form[name='answers'] div.row").insertAdjacentHTML('afterend', customPresetUI)
+    w.document.querySelector('form[name=\'answers\'] div.row').insertAdjacentHTML('afterend', customPresetUI)
 
     addCustomPresetButtons()
 
@@ -356,17 +356,17 @@ function init () {
       })
     })
 
-    document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin', "<small class='pull-left'><span style='color:#ebbc4a'>Circle:</span> 40m</small>")
+    document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin', '<small class=\'pull-left\'><span style=\'color:#ebbc4a\'>Circle:</span> 40m</small>')
 
     // move portal rating to the right side. don't move on mobile devices / small width
     if (screen.availWidth > 768) {
-      let nodeToMove = w.document.querySelector("div[class='btn-group']").parentElement
+      let nodeToMove = w.document.querySelector('div[class=\'btn-group\']').parentElement
       if (subController.hasSupportingImageOrStatement) {
         const descDiv = w.document.getElementById('descriptionDiv')
         const scorePanel = descDiv.querySelector('div.text-center.hidden-xs')
         scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
       } else {
-        const scorePanel = w.document.querySelector("div[class~='pull-right']")
+        const scorePanel = w.document.querySelector('div[class~=\'pull-right\']')
         scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
       }
     }
@@ -628,7 +628,7 @@ function init () {
   }
 
   function modifyEditPage (ansController, subController, newPortalData) {
-    let editDiv = w.document.querySelector("div[ng-show=\"subCtrl.reviewType==='EDIT'\"]")
+    let editDiv = w.document.querySelector('div[ng-show="subCtrl.reviewType===\'EDIT\'"]')
 
     mapButtons(newPortalData, editDiv, 'afterEnd')
 
@@ -638,7 +638,7 @@ function init () {
         // we just want addednodes with (class:modal). null and undefined check for performance reasons
         if (mutationRecord.addedNodes.length > 0 &&
           mutationRecord.addedNodes[0].className === 'modal fade ng-isolate-scope' &&
-          mutationRecord.addedNodes[0].querySelector(".modal-body a[href='/recon']") !== null) {
+          mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
           w.document.location.href = '/recon'
         }
       }
@@ -725,9 +725,9 @@ function init () {
 
     // a list of all 6 star button rows, and the two submit buttons
     let starsAndSubmitButtons = w.document.querySelectorAll(
-      "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.titleEdits.length > 1\"]:not(.ng-hide)," +
-      "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.descriptionEdits.length > 1\"]:not(.ng-hide)," +
-      "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.locationEdits.length > 1\"]:not(.ng-hide)," +
+      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.titleEdits.length > 1"]:not(.ng-hide),' +
+      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.descriptionEdits.length > 1"]:not(.ng-hide),' +
+      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.locationEdits.length > 1"]:not(.ng-hide),' +
       '.big-submit-button')
 
     /* EDIT PORTAL */
@@ -813,7 +813,7 @@ function init () {
           google.maps.event.trigger(angular.element(document.getElementById('NewSubmissionController')).scope().getAllLocationMarkers()[numkey - 1], 'click')
         } else {
           if (hasLocationEdit) numkey = 1
-          starsAndSubmitButtons[currentSelectable].querySelectorAll(".titleEditBox, input[type='checkbox']")[numkey - 1].click()
+          starsAndSubmitButtons[currentSelectable].querySelectorAll('.titleEditBox, input[type=\'checkbox\']')[numkey - 1].click()
           currentSelectable++
         }
       }
@@ -949,7 +949,7 @@ function init () {
               text += 'Portal candidate is seasonal or temporary'
               break
             case 'location':
-              text += "Portal candidate's location is not on object"
+              text += 'Portal candidate\'s location is not on object'
               break
             case 'emergencyway':
               text += 'Portal candidate is obstructing the path of emergency vehicles'
@@ -1331,7 +1331,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
   }
 
   function changeFavicon (src) {
-    let link = w.document.querySelector("link[rel='shortcut icon']")
+    let link = w.document.querySelector('link[rel=\'shortcut icon\']')
     link.href = src
   }
 
