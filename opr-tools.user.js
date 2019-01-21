@@ -1744,8 +1744,8 @@ const strings = {
     [OPRT.OPTIONS.NORWAY_MAP_LAYER]: 'Norwegian Map Layer',
     [OPRT.OPTIONS.PRESET_FEATURE]: 'Presets',
     [OPRT.OPTIONS.REFRESH]: 'Periodically refresh opr if no analysis is available',
-    [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: '- With desktop notification',
-    [OPRT.OPTIONS.REFRESH_NOTI_SOUND]: '- With sound ',
+    [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: '↳ With desktop notification',
+    [OPRT.OPTIONS.REFRESH_NOTI_SOUND]: '↳ With sound notification',
     [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: 'Skip \'Analysis accepted\' dialog',
     [OPRT.OPTIONS.SCANNER_OFFSET_PREF]: 'Scanner offset'
   },
