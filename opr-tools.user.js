@@ -395,74 +395,74 @@ function init () {
 
       addCustomPresetButtons()
 
-    // we have to inject the tooltip to angular
-    w.$injector.invoke(cloneInto(['$compile', ($compile) => {
-      let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById('descriptionDiv')))
-      w.document.getElementById('addPreset').insertAdjacentElement('beforebegin', compiledSubmit[0])
-    }], w, { cloneFunctions: true }))
+      // we have to inject the tooltip to angular
+      w.$injector.invoke(cloneInto(['$compile', ($compile) => {
+        let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById('descriptionDiv')))
+        w.document.getElementById('addPreset').insertAdjacentElement('beforebegin', compiledSubmit[0])
+      }], w, { cloneFunctions: true }))
 
-    // click listener for +preset button
-    w.document.getElementById('addPreset').addEventListener('click', exportFunction(event => {
-      alertify.okBtn('Save').prompt('New preset name:',
-        (value, event) => {
-          event.preventDefault()
-          if (value === 'undefined' || value === '') {
-            return
+      // click listener for +preset button
+      w.document.getElementById('addPreset').addEventListener('click', exportFunction(event => {
+        alertify.okBtn('Save').prompt('New preset name:',
+          (value, event) => {
+            event.preventDefault()
+            if (value === 'undefined' || value === '') {
+              return
+            }
+            saveCustomPreset(value, ansController, whatController)
+            alertify.success(`✔ Created preset <i>${value}</i>`)
+            addCustomPresetButtons()
+          }, event => {
+            event.preventDefault()
           }
-          saveCustomPreset(value, ansController, whatController)
-          alertify.success(`✔ Created preset <i>${value}</i>`)
-          addCustomPresetButtons()
-        }, event => {
-          event.preventDefault()
+        )
+      }), w, false)
+
+      let clickListener = exportFunction(event => {
+        const source = event.target || event.srcElement
+        let value = source.id
+        if (value === '' || event.target.nodeName !== 'BUTTON') {
+          return
         }
-      )
-    }), w, false)
 
-    let clickListener = exportFunction(event => {
-      const source = event.target || event.srcElement
-      let value = source.id
-      if (value === '' || event.target.nodeName !== 'BUTTON') {
-        return
-      }
+        let preset = oprtCustomPresets.find(item => item.uid === value)
 
-      let preset = oprtCustomPresets.find(item => item.uid === value)
-
-      if (event.shiftKey) {
-        alertify.log(`Deleted preset <i>${preset.label}</i>`)
-        w.document.getElementById(preset.uid).remove()
-        deleteCustomPreset(preset)
-        return
-      }
-
-      ansController.formData.quality = preset.quality
-      ansController.formData.description = preset.description
-      ansController.formData.cultural = preset.cultural
-      ansController.formData.uniqueness = preset.uniqueness
-      ansController.formData.location = preset.location
-      ansController.formData.safety = preset.safety
-
-      // the controller's set by ID function doesn't work
-      // and autocomplete breaks if there are any spaces
-      // so set the field to the first word from name and match autocomplete by ID
-      // at the very least, I know this will set it and leave the UI looking like it was manually set.
-      whatController.whatInput = preset.nodeName.split(' ')[0]
-      let nodes = whatController.getWhatAutocomplete()
-      for (let i = 0; i < nodes.length; i++) {
-        if (nodes[i].id === preset.nodeId) {
-          whatController.whatNode = nodes[i]
-          break
+        if (event.shiftKey) {
+          alertify.log(`Deleted preset <i>${preset.label}</i>`)
+          w.document.getElementById(preset.uid).remove()
+          deleteCustomPreset(preset)
+          return
         }
-      }
-      whatController.whatInput = ''
 
-      // update ui
-      event.target.blur()
-      w.$rootScope.$apply()
+        ansController.formData.quality = preset.quality
+        ansController.formData.description = preset.description
+        ansController.formData.cultural = preset.cultural
+        ansController.formData.uniqueness = preset.uniqueness
+        ansController.formData.location = preset.location
+        ansController.formData.safety = preset.safety
 
-      alertify.success(`✔ Applied <i>${preset.label}</i>`)
-    }, w)
+        // the controller's set by ID function doesn't work
+        // and autocomplete breaks if there are any spaces
+        // so set the field to the first word from name and match autocomplete by ID
+        // at the very least, I know this will set it and leave the UI looking like it was manually set.
+        whatController.whatInput = preset.nodeName.split(' ')[0]
+        let nodes = whatController.getWhatAutocomplete()
+        for (let i = 0; i < nodes.length; i++) {
+          if (nodes[i].id === preset.nodeId) {
+            whatController.whatNode = nodes[i]
+            break
+          }
+        }
+        whatController.whatInput = ''
 
-    w.document.getElementById('customPresets').addEventListener('click', clickListener, false)
+        // update ui
+        event.target.blur()
+        w.$rootScope.$apply()
+
+        alertify.success(`✔ Applied <i>${preset.label}</i>`)
+      }, w)
+
+      w.document.getElementById('customPresets').addEventListener('click', clickListener, false)
     }
     /* presets end */
 
@@ -1158,11 +1158,14 @@ function init () {
       { provider: PROVIDERS.GOOGLE, id: 'roadmap' },
       { provider: PROVIDERS.GOOGLE, id: 'terrain' },
       { provider: PROVIDERS.GOOGLE, id: 'satellite' },
-      { provider: PROVIDERS.GOOGLE, id: 'hybrid' },
-      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`, code: 'topo4', label: 'NO - Topo' },
-      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster' },
-      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart' }
-    ]
+      { provider: PROVIDERS.GOOGLE, id: 'hybrid' }]
+
+    if (preferences.get(OPRT.OPTIONS.NORWAY_MAP_LAYER)) {
+      types.push({ provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`, code: 'topo4', label: 'NO - Topo' },
+        { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster' },
+        { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart' }
+      )
+    }
 
     const defaultMapType = 'hybrid'
 
