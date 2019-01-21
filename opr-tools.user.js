@@ -151,9 +151,12 @@ class Preferences {
 		</div>
 	</div>
 	<div id="oprt_options"></div>
+	<a id="oprt_reload" class="btn btn-danger hide"><span class="glyphicon glyphicon-refresh"></span>
+ Reload to apply changes</a>
 </section>`)
 
       let optionsContainer = w.document.getElementById('oprt_options')
+      let reloadButton = w.document.getElementById('oprt_reload')
 
       for (let item in this.options) {
         const div = w.document.createElement('div')
@@ -171,6 +174,11 @@ class Preferences {
 
       optionsContainer.addEventListener('change', (event) => {
         this.set(event.target.name, event.target.checked)
+        reloadButton.classList.remove('hide')
+      })
+
+      reloadButton.addEventListener('click', () => {
+        window.location.reload()
       })
 
       w.document.getElementById('import_all').addEventListener('click', () => {
@@ -421,11 +429,11 @@ function init () {
 
       addCustomPresetButtons()
 
-    // we have to inject the tooltip to angular
-    w.$injector.invoke(cloneInto(['$compile', ($compile) => {
-      let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById('descriptionDiv')))
-      w.document.getElementById('addPreset').insertAdjacentElement('beforebegin', compiledSubmit[0])
-    }], w, { cloneFunctions: true }))
+      // we have to inject the tooltip to angular
+      w.$injector.invoke(cloneInto(['$compile', ($compile) => {
+        let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById('descriptionDiv')))
+        w.document.getElementById('addPreset').insertAdjacentElement('beforebegin', compiledSubmit[0])
+      }], w, { cloneFunctions: true }))
 
       // click listener for +preset button
       w.document.getElementById('addPreset').addEventListener('click', exportFunction(event => {
@@ -781,7 +789,7 @@ function init () {
               try {
                 w.document.getElementById('sub-group-' + numkey).click()
                 selectedReasonGroup = numkey - 1
-              w.document.querySelectorAll('label.sub-group kbd').forEach(el => el.classList.add('hide'))
+                w.document.querySelectorAll('label.sub-group kbd').forEach(el => el.classList.add('hide'))
               } catch (err) {}
             } else {
               if (selectedReasonSubGroup === -1) {
@@ -793,7 +801,7 @@ function init () {
                 w.document.getElementById('root-label').click()
                 selectedReasonGroup = -1
                 selectedReasonSubGroup = -1
-              w.document.querySelectorAll('label.sub-group kbd').forEach(el => el.classList.remove('hide'))
+                w.document.querySelectorAll('label.sub-group kbd').forEach(el => el.classList.remove('hide'))
               }
             }
             event.preventDefault()
@@ -930,9 +938,9 @@ function init () {
 
       // a list of all 6 star button rows, and the two submit buttons
       let starsAndSubmitButtons = w.document.querySelectorAll(
-      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.titleEdits.length > 1"]:not(.ng-hide),' +
-      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.descriptionEdits.length > 1"]:not(.ng-hide),' +
-      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.locationEdits.length > 1"]:not(.ng-hide),' +
+        'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.titleEdits.length > 1"]:not(.ng-hide),' +
+        'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.descriptionEdits.length > 1"]:not(.ng-hide),' +
+        'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.locationEdits.length > 1"]:not(.ng-hide),' +
         '.big-submit-button')
 
       /* EDIT PORTAL */
@@ -1219,8 +1227,8 @@ function init () {
 
     if (preferences.get(OPRT.OPTIONS.NORWAY_MAP_LAYER)) {
       types.push({ provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`, code: 'topo4', label: 'NO - Topo' },
-      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster' },
-      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart' }
+        { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster' },
+        { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart' }
       )
     }
 
