@@ -383,15 +383,17 @@ function init () {
     if (preferences.get(OPRT.OPTIONS.COMMENT_TEMPLATES))
       commentTemplates()
 
-    const customPresetUI = `
+    /* presets start */
+    if (preferences.get(OPRT.OPTIONS.PRESET_FEATURE)) {
+      const customPresetUI = `
 <div class="row" id="presets"><div class="col-xs-12">
   <div>Presets&nbsp;<button class="button btn btn-default btn-xs" id="addPreset">+</button></div>
   <div class='btn-group' id="customPresets"></div>
 </div></div>`
 
-    w.document.querySelector('form[name="answers"] div.row').insertAdjacentHTML('afterend', customPresetUI)
+      w.document.querySelector('form[name="answers"] div.row').insertAdjacentHTML('afterend', customPresetUI)
 
-    addCustomPresetButtons()
+      addCustomPresetButtons()
 
     // we have to inject the tooltip to angular
     w.$injector.invoke(cloneInto(['$compile', ($compile) => {
@@ -461,6 +463,8 @@ function init () {
     }, w)
 
     w.document.getElementById('customPresets').addEventListener('click', clickListener, false)
+    }
+    /* presets end */
 
     // make photo filmstrip scrollable
     const filmstrip = w.document.getElementById('map-filmstrip')
