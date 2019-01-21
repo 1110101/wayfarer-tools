@@ -395,7 +395,7 @@ function init () {
             .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`)})
           }
           // skip "Your analysis has been recorded" dialog
-          if (mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
+          if (preferences.get(OPRT.OPTIONS.SKIP_ANALYZED_DIALOG) && mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
             w.document.location.href = '/recon'
           }
         }
@@ -1078,6 +1078,11 @@ function init () {
   function quickSubmitButton (submitDiv, ansController, bodyObserver) {
     let submitButton = submitDiv.querySelector('button')
     submitButton.classList.add('btn', 'btn-warning')
+
+    if (!preferences.get(OPRT.OPTIONS.SKIP_ANALYZED_DIALOG)) { // quick hack, meh
+      return { submitButton, submitAndNext: submitButton } // eslint-disable-line
+    }
+
     let submitAndNext = submitButton.cloneNode(false)
     submitButton.addEventListener('click', exportFunction(() => {
       bodyObserver.disconnect()
