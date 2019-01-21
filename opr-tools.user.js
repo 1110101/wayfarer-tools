@@ -383,7 +383,7 @@ function init () {
     if (preferences.get(OPRT.OPTIONS.COMMENT_TEMPLATES))
       commentTemplates()
 
-    /* presets start */
+    /* region presets start */
     if (preferences.get(OPRT.OPTIONS.PRESET_FEATURE)) {
       const customPresetUI = `
 <div class="row" id="presets"><div class="col-xs-12">
@@ -464,7 +464,7 @@ function init () {
 
       w.document.getElementById('customPresets').addEventListener('click', clickListener, false)
     }
-    /* presets end */
+    /* endregion presets end */
 
     // make photo filmstrip scrollable
     const filmstrip = w.document.getElementById('map-filmstrip')
@@ -603,24 +603,6 @@ function init () {
 
     expandWhatIsItBox()
 
-    // keyboard navigation
-    // documentation: https://gitlab.com/1110101/opr-tools#keyboard-navigation
-
-    let currentSelectable = 0
-    let maxItems = 7
-    let selectedReasonGroup = -1
-    let selectedReasonSubGroup = -1
-
-    // Reset when modal is closed
-    let _resetLowQuality = ansController.resetLowQuality
-    ansController.resetLowQuality = exportFunction(() => {
-      _resetLowQuality()
-      selectedReasonGroup = -1
-      selectedReasonSubGroup = -1
-      currentSelectable = 0
-      highlight()
-    })
-
     // Fix rejectComment width
     let _showLowQualityModal = ansController.showLowQualityModal
     ansController.showLowQualityModal = exportFunction(() => {
@@ -631,167 +613,190 @@ function init () {
       }, 10)
     })
 
-    // a list of all 6 star button rows, and the two submit buttons
-    let starsAndSubmitButtons
-    if (subController.hasSupportingImageOrStatement) {
-      starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .text-center.hidden-xs:not(.ng-hide) .btn-group, .big-submit-button')
-    } else {
-      starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button')
-    }
+    /* region keyboard nav */
+    if (preferences.get(OPRT.OPTIONS.KEYBOARD_NAV)) {
 
-    function highlight () {
-      starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none' }, w))
-      if (currentSelectable <= maxItems - 2) {
-        starsAndSubmitButtons[currentSelectable].style.border = cloneInto('1px dashed #ebbc4a', w)
-        submitAndNext.blur()
-        submitButton.blur()
-      } else if (currentSelectable === 6) {
-        submitAndNext.focus()
-      } else if (currentSelectable === 7) {
-        submitButton.focus()
-      }
-    }
+      // keyboard navigation
+      // documentation: https://gitlab.com/1110101/opr-tools#keyboard-navigation
 
-    addEventListener('keydown', (event) => {
-      /*
-      keycodes:
+      let currentSelectable = 0
+      let maxItems = 7
+      let selectedReasonGroup = -1
+      let selectedReasonSubGroup = -1
 
-      8: Backspace
-      9: TAB
-      13: Enter
-      16: Shift
-      27: Escape
-      32: Space
-      68: D
-      107: NUMPAD +
-      109: NUMPAD -
-      111: NUMPAD /
+      // Reset when modal is closed
+      let _resetLowQuality = ansController.resetLowQuality
+      ansController.resetLowQuality = exportFunction(() => {
+        _resetLowQuality()
+        selectedReasonGroup = -1
+        selectedReasonSubGroup = -1
+        currentSelectable = 0
+        highlight()
+      })
 
-      49 - 53:  Keys 1-5
-      97 - 101: NUMPAD 1-5
-
-       */
-
-      let numkey = null
-      if (event.keyCode >= 49 && event.keyCode <= 55) {
-        numkey = event.keyCode - 48
-      } else if (event.keyCode >= 97 && event.keyCode <= 103) {
-        numkey = event.keyCode - 96
+      // a list of all 6 star button rows, and the two submit buttons
+      let starsAndSubmitButtons
+      if (subController.hasSupportingImageOrStatement) {
+        starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .text-center.hidden-xs:not(.ng-hide) .btn-group, .big-submit-button')
+      } else {
+        starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button')
       }
 
-      // do not do anything if a text area or a input with type text has focus
-      if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
-        return
-      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
-        // "analyze next" button
-        w.document.location.href = '/recon'
-        event.preventDefault()
-      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
-        // submit low quality rating
-        w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]').click()
-        currentSelectable = 0
-        event.preventDefault()
-      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQualityOld()"]')) {
-        // submit low quality rating alternate
-        w.document.querySelector('[ng-click="answerCtrl2.confirmLowQualityOld()"]').click()
-        currentSelectable = 0
-        event.preventDefault()
-      } else if ((event.keyCode === 68) && w.document.querySelector('#content > button')) {
-        // click first/selected duplicate (key D)
-        w.document.querySelector('#content > button').click()
-        currentSelectable = 0
-        event.preventDefault()
-      } else if (event.keyCode === 84) {
-        // click on translate title link (key T)
-        const link = w.document.querySelector('#descriptionDiv > .translate-title')
-        if (link) {
-          link.click()
+      function highlight () {
+        starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none' }, w))
+        if (currentSelectable <= maxItems - 2) {
+          starsAndSubmitButtons[currentSelectable].style.border = cloneInto('1px dashed #ebbc4a', w)
+          submitAndNext.blur()
+          submitButton.blur()
+        } else if (currentSelectable === 6) {
+          submitAndNext.focus()
+        } else if (currentSelectable === 7) {
+          submitButton.focus()
+        }
+      }
+
+      addEventListener('keydown', (event) => {
+        /*
+        keycodes:
+
+        8: Backspace
+        9: TAB
+        13: Enter
+        16: Shift
+        27: Escape
+        32: Space
+        68: D
+        107: NUMPAD +
+        109: NUMPAD -
+        111: NUMPAD /
+
+        49 - 53:  Keys 1-5
+        97 - 101: NUMPAD 1-5
+
+         */
+
+        let numkey = null
+        if (event.keyCode >= 49 && event.keyCode <= 55) {
+          numkey = event.keyCode - 48
+        } else if (event.keyCode >= 97 && event.keyCode <= 103) {
+          numkey = event.keyCode - 96
+        }
+
+        // do not do anything if a text area or a input with type text has focus
+        if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
+          return
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+          // "analyze next" button
+          w.document.location.href = '/recon'
           event.preventDefault()
-        }
-      } else if (event.keyCode === 89) {
-        // click on translate description link (key Y)
-        const link = w.document.querySelector('#descriptionDiv > .translate-description')
-        if (link) {
-          link.click()
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+          // submit low quality rating
+          w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]').click()
+          currentSelectable = 0
           event.preventDefault()
-        }
-      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
-        // submit duplicate
-        w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]').click()
-        currentSelectable = 0
-        event.preventDefault()
-      } else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
-        // submit normal rating
-        w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click()
-        event.preventDefault()
-      } else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]')) {
-        // close duplicate dialog
-        w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]').click()
-        currentSelectable = 0
-        event.preventDefault()
-      } else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]')) {
-        // close low quality ration dialog
-        w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]').click()
-        currentSelectable = 0
-        event.preventDefault()
-      } else if (event.keyCode === 27 || event.keyCode === 111) {
-        // return to first selection (should this be a portal)
-        currentSelectable = 0
-        event.preventDefault()
-      } else if (event.keyCode === 106 || event.keyCode === 220) {
-        // skip portal if possible
-        if (newPortalData.canSkip) {
-          ansController.skipToNext()
-        }
-      } else if (event.keyCode === 72) {
-        showHelp() // @todo
-      } else if (w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
-        // Reject reason shortcuts
-        if (numkey != null) {
-          if (selectedReasonGroup === -1) {
-            try {
-              w.document.getElementById('sub-group-' + numkey).click()
-              selectedReasonGroup = numkey - 1
-            } catch (err) {}
-          } else {
-            if (selectedReasonSubGroup === -1) {
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQualityOld()"]')) {
+          // submit low quality rating alternate
+          w.document.querySelector('[ng-click="answerCtrl2.confirmLowQualityOld()"]').click()
+          currentSelectable = 0
+          event.preventDefault()
+        } else if ((event.keyCode === 68) && w.document.querySelector('#content > button')) {
+          // click first/selected duplicate (key D)
+          w.document.querySelector('#content > button').click()
+          currentSelectable = 0
+          event.preventDefault()
+        } else if (event.keyCode === 84) {
+          // click on translate title link (key T)
+          const link = w.document.querySelector('#descriptionDiv > .translate-title')
+          if (link) {
+            link.click()
+            event.preventDefault()
+          }
+        } else if (event.keyCode === 89) {
+          // click on translate description link (key Y)
+          const link = w.document.querySelector('#descriptionDiv > .translate-description')
+          if (link) {
+            link.click()
+            event.preventDefault()
+          }
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
+          // submit duplicate
+          w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]').click()
+          currentSelectable = 0
+          event.preventDefault()
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+          // submit normal rating
+          w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click()
+          event.preventDefault()
+        } else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]')) {
+          // close duplicate dialog
+          w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]').click()
+          currentSelectable = 0
+          event.preventDefault()
+        } else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]')) {
+          // close low quality ration dialog
+          w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]').click()
+          currentSelectable = 0
+          event.preventDefault()
+        } else if (event.keyCode === 27 || event.keyCode === 111) {
+          // return to first selection (should this be a portal)
+          currentSelectable = 0
+          event.preventDefault()
+        } else if (event.keyCode === 106 || event.keyCode === 220) {
+          // skip portal if possible
+          if (newPortalData.canSkip) {
+            ansController.skipToNext()
+          }
+        } else if (event.keyCode === 72) {
+          showHelp() // @todo
+        } else if (w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+          // Reject reason shortcuts
+          if (numkey != null) {
+            if (selectedReasonGroup === -1) {
               try {
-                w.document.querySelectorAll('#reject-reason ul ul')[selectedReasonGroup].children[numkey - 1].children[0].click()
-                selectedReasonSubGroup = numkey - 1
+                w.document.getElementById('sub-group-' + numkey).click()
+                selectedReasonGroup = numkey - 1
               } catch (err) {}
             } else {
-              w.document.getElementById('root-label').click()
-              selectedReasonGroup = -1
-              selectedReasonSubGroup = -1
+              if (selectedReasonSubGroup === -1) {
+                try {
+                  w.document.querySelectorAll('#reject-reason ul ul')[selectedReasonGroup].children[numkey - 1].children[0].click()
+                  selectedReasonSubGroup = numkey - 1
+                } catch (err) {}
+              } else {
+                w.document.getElementById('root-label').click()
+                selectedReasonGroup = -1
+                selectedReasonSubGroup = -1
+              }
             }
+            event.preventDefault()
           }
+        } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+          // select next rating
+          currentSelectable++
           event.preventDefault()
+        } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+          // select previous rating
+          currentSelectable--
+          event.preventDefault()
+        } else if (numkey === null || currentSelectable > maxItems - 2) {
+          return
+        } else if (numkey !== null && event.shiftKey) {
+          try {
+            w.document.getElementsByClassName('customPresetButton')[numkey - 1].click()
+          } catch (e) {
+            // ignore
+          }
+        } else {
+          // rating 1-5
+          starsAndSubmitButtons[currentSelectable].querySelectorAll('button.button-star')[numkey - 1].click()
+          currentSelectable++
         }
-      } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
-        // select next rating
-        currentSelectable++
-        event.preventDefault()
-      } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
-        // select previous rating
-        currentSelectable--
-        event.preventDefault()
-      } else if (numkey === null || currentSelectable > maxItems - 2) {
-        return
-      } else if (numkey !== null && event.shiftKey) {
-        try {
-          w.document.getElementsByClassName('customPresetButton')[numkey - 1].click()
-        } catch (e) {
-          // ignore
-        }
-      } else {
-        // rating 1-5
-        starsAndSubmitButtons[currentSelectable].querySelectorAll('button.button-star')[numkey - 1].click()
-        currentSelectable++
-      }
-      highlight()
-    })
+        highlight()
+      })
 
-    highlight()
+      highlight()
+    }
+    /* endregion keyboard nav */
 
     modifyNewPage = () => {} // eslint-disable-line
   }
@@ -869,115 +874,118 @@ function init () {
     }
 
     /* EDIT PORTAL */
-    // keyboard navigation
+    /* region keyboard navigation */
 
-    let currentSelectable = 0
-    let hasLocationEdit = (newPortalData.locationEdits.length > 1)
-    // counting *true*, please don't shoot me
-    let maxItems = (newPortalData.descriptionEdits.length > 1) + (newPortalData.titleEdits.length > 1) + (hasLocationEdit) + 2
+    if (preferences.get(OPRT.OPTIONS.KEYBOARD_NAV)) {
 
-    let mapMarkers
-    if (hasLocationEdit) mapMarkers = subController.allLocationMarkers
-    else mapMarkers = []
+      let currentSelectable = 0
+      let hasLocationEdit = (newPortalData.locationEdits.length > 1)
+      // counting *true*, please don't shoot me
+      let maxItems = (newPortalData.descriptionEdits.length > 1) + (newPortalData.titleEdits.length > 1) + (hasLocationEdit) + 2
 
-    // a list of all 6 star button rows, and the two submit buttons
-    let starsAndSubmitButtons = w.document.querySelectorAll(
-      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.titleEdits.length > 1"]:not(.ng-hide),' +
-      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.descriptionEdits.length > 1"]:not(.ng-hide),' +
-      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.locationEdits.length > 1"]:not(.ng-hide),' +
-      '.big-submit-button')
+      let mapMarkers
+      if (hasLocationEdit) mapMarkers = subController.allLocationMarkers
+      else mapMarkers = []
 
-    /* EDIT PORTAL */
-    function highlight () {
-      let el = editDiv.querySelector('h3[ng-show="subCtrl.pageData.locationEdits.length > 1"]')
-      el.style.border = 'none'
+      // a list of all 6 star button rows, and the two submit buttons
+      let starsAndSubmitButtons = w.document.querySelectorAll(
+        'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.titleEdits.length > 1"]:not(.ng-hide),' +
+        'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.descriptionEdits.length > 1"]:not(.ng-hide),' +
+        'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.locationEdits.length > 1"]:not(.ng-hide),' +
+        '.big-submit-button')
 
-      starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none' }, w))
-      if (hasLocationEdit && currentSelectable === maxItems - 3) {
-        el.style.borderLeft = cloneInto('4px dashed #ebbc4a', w)
-        el.style.borderTop = cloneInto('4px dashed #ebbc4a', w)
-        el.style.borderRight = cloneInto('4px dashed #ebbc4a', w)
-        el.style.padding = cloneInto('16px', w)
-        el.style.marginBottom = cloneInto('0', w)
-        submitAndNext.blur()
-        submitButton.blur()
-      } else if (currentSelectable < maxItems - 2) {
-        starsAndSubmitButtons[currentSelectable].style.borderLeft = cloneInto('4px dashed #ebbc4a', w)
-        starsAndSubmitButtons[currentSelectable].style.paddingLeft = cloneInto('16px', w)
-        submitAndNext.blur()
-        submitButton.blur()
-      } else if (currentSelectable === maxItems - 2) {
-        submitAndNext.focus()
-      } else if (currentSelectable === maxItems) {
-        submitButton.focus()
-      }
-    }
+      /* EDIT PORTAL */
+      function highlight () {
+        let el = editDiv.querySelector('h3[ng-show="subCtrl.pageData.locationEdits.length > 1"]')
+        el.style.border = 'none'
 
-    /* EDIT PORTAL */
-    addEventListener('keydown', (event) => {
-      /*
-      Keycodes:
-
-      8: Backspace
-      9: TAB
-      13: Enter
-      16: Shift
-      27: Escape
-      32: Space
-      68: D
-      107: NUMPAD +
-      109: NUMPAD -
-      111: NUMPAD /
-
-      49 - 53:  Keys 1-5
-      97 - 101: NUMPAD 1-5
-       */
-
-      let numkey = null
-      if (event.keyCode >= 49 && event.keyCode <= 53) {
-        numkey = event.keyCode - 48
-      } else if (event.keyCode >= 97 && event.keyCode <= 101) {
-        numkey = event.keyCode - 96
-      }
-
-      // do not do anything if a text area or a input with type text has focus
-      if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
-        return
-      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
-        // "analyze next" button
-        w.document.location.href = '/recon'
-        event.preventDefault()
-      } else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
-        // submit normal rating
-        w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click()
-        event.preventDefault()
-      } else if (event.keyCode === 27 || event.keyCode === 111) {
-        // return to first selection (should this be a portal)
-        currentSelectable = 0
-      } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
-        // select next rating
-        currentSelectable++
-        event.preventDefault()
-      } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
-        // select previous rating
-        currentSelectable--
-        event.preventDefault()
-      } else if (numkey === null || currentSelectable > maxItems - 2) {
-        return
-      } else {
-        // rating 1-5
-        if (hasLocationEdit && currentSelectable === maxItems - 3 && numkey <= mapMarkers.length) {
-          google.maps.event.trigger(angular.element(document.getElementById('NewSubmissionController')).scope().getAllLocationMarkers()[numkey - 1], 'click')
-        } else {
-          if (hasLocationEdit) numkey = 1
-          starsAndSubmitButtons[currentSelectable].querySelectorAll('.titleEditBox, input[type="checkbox"]')[numkey - 1].click()
-          currentSelectable++
+        starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none' }, w))
+        if (hasLocationEdit && currentSelectable === maxItems - 3) {
+          el.style.borderLeft = cloneInto('4px dashed #ebbc4a', w)
+          el.style.borderTop = cloneInto('4px dashed #ebbc4a', w)
+          el.style.borderRight = cloneInto('4px dashed #ebbc4a', w)
+          el.style.padding = cloneInto('16px', w)
+          el.style.marginBottom = cloneInto('0', w)
+          submitAndNext.blur()
+          submitButton.blur()
+        } else if (currentSelectable < maxItems - 2) {
+          starsAndSubmitButtons[currentSelectable].style.borderLeft = cloneInto('4px dashed #ebbc4a', w)
+          starsAndSubmitButtons[currentSelectable].style.paddingLeft = cloneInto('16px', w)
+          submitAndNext.blur()
+          submitButton.blur()
+        } else if (currentSelectable === maxItems - 2) {
+          submitAndNext.focus()
+        } else if (currentSelectable === maxItems) {
+          submitButton.focus()
         }
       }
-      highlight()
-    })
 
-    highlight()
+      /* EDIT PORTAL */
+      addEventListener('keydown', (event) => {
+        /*
+        Keycodes:
+
+        8: Backspace
+        9: TAB
+        13: Enter
+        16: Shift
+        27: Escape
+        32: Space
+        68: D
+        107: NUMPAD +
+        109: NUMPAD -
+        111: NUMPAD /
+
+        49 - 53:  Keys 1-5
+        97 - 101: NUMPAD 1-5
+         */
+
+        let numkey = null
+        if (event.keyCode >= 49 && event.keyCode <= 53) {
+          numkey = event.keyCode - 48
+        } else if (event.keyCode >= 97 && event.keyCode <= 101) {
+          numkey = event.keyCode - 96
+        }
+
+        // do not do anything if a text area or a input with type text has focus
+        if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
+          return
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+          // "analyze next" button
+          w.document.location.href = '/recon'
+          event.preventDefault()
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+          // submit normal rating
+          w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click()
+          event.preventDefault()
+        } else if (event.keyCode === 27 || event.keyCode === 111) {
+          // return to first selection (should this be a portal)
+          currentSelectable = 0
+        } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+          // select next rating
+          currentSelectable++
+          event.preventDefault()
+        } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+          // select previous rating
+          currentSelectable--
+          event.preventDefault()
+        } else if (numkey === null || currentSelectable > maxItems - 2) {
+          return
+        } else {
+          // rating 1-5
+          if (hasLocationEdit && currentSelectable === maxItems - 3 && numkey <= mapMarkers.length) {
+            google.maps.event.trigger(angular.element(document.getElementById('NewSubmissionController')).scope().getAllLocationMarkers()[numkey - 1], 'click')
+          } else {
+            if (hasLocationEdit) numkey = 1
+            starsAndSubmitButtons[currentSelectable].querySelectorAll('.titleEditBox, input[type="checkbox"]')[numkey - 1].click()
+            currentSelectable++
+          }
+        }
+        highlight()
+      })
+
+      highlight()
+    }
   }
 
   // add map buttons
