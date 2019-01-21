@@ -208,15 +208,7 @@ class Preferences {
   }
 
   loadOptions () {
-    this.options = JSON.parse(localStorage.getItem(OPRT.PREFERENCES))
-    if (this.options == null) {
-      this.setDefaultOptions()
-    }
-  }
-
-  setDefaultOptions () {
-    this.options = this.defaults
-    localStorage.setItem(OPRT.PREFERENCES, JSON.stringify(this.defaults))
+    Object.assign(this.options, this.defaults, JSON.parse(localStorage.getItem(OPRT.PREFERENCES)))
   }
 
   set (key, value) {
