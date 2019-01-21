@@ -53,6 +53,8 @@ SOFTWARE.
 
 const OPRT = {
 
+  VERSION: 2701,
+
   PREFERENCES: 'oprt_prefs',
 
   OPTIONS: {
@@ -379,6 +381,9 @@ function init () {
       checkIfAutorefresh()
 
       startExpirationTimer(subController)
+
+      versionCheck()
+
     }
   }
 
@@ -1602,6 +1607,23 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
     }, 1000)
   }
 
+  function versionCheck () {
+    if (OPRT.VERSION > (parseInt(w.localStorage.getItem(OPRT.PREFIX + OPRT.VAR.VERSION_CHECK)) || OPRT.VERSION - 1)) {
+      w.localStorage.setItem(OPRT.PREFIX + OPRT.VAR.VERSION_CHECK, OPRT.VERSION)
+
+      const changelogString = `
+        <h4><span class="glyphicon glyphicon-asterisk"></span> OPR Tools was updated:</h4>
+        <div>${strings.changelog}</div>      
+      `
+      // show changelog
+      alertify.closeLogOnClick(false).logPosition('bottom right').delay(0).log(changelogString, (ev) => {
+        ev.preventDefault()
+        ev.target.closest('div.default.show').remove()
+      }).reset()
+
+    }
+  }
+
   function addCustomPresetButtons () {
     // add customPreset UI
     oprtCustomPresets = getCustomPresets(w)
@@ -1734,7 +1756,9 @@ const strings = {
     [OPRT.OPTIONS.REFRESH_NOTI_SOUND]: '- With sound ',
     [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: 'Skip \'Analysis accepted\' dialog',
     [OPRT.OPTIONS.SCANNER_OFFSET_PREF]: 'Scanner offset'
-  }
+  },
+  changelog:
+    `* New preferences menu`
 }
 
 const GLOBAL_CSS = `
