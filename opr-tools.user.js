@@ -1251,7 +1251,9 @@ function init () {
     // stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
 
     // get scanner offset from localStorage
-    let oprtScannerOffset = parseInt(w.localStorage.getItem(OPRT.SCANNER_OFFSET)) || 0
+    let oprtScannerOffset = 0
+    if (preferences.get(OPRT.SCANNER_OFFSET_PREF))
+      oprtScannerOffset = parseInt(w.localStorage.getItem(OPRT.SCANNER_OFFSET)) || 0
 
     const lastPlayerStatLine = w.document.querySelector('#player_stats:not(.visible-xs) div')
     const stats = w.document.querySelector('#player_stats:not(.visible-xs) div')
@@ -1348,11 +1350,9 @@ ${Math.round(nextBadgeProcess)}%
     lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `<p><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 90%;" type="text"
 value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(processedPercent)}%"/></p>`)
 
-    let tooltipSpan = `<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder"
-uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
-
     // ** opr-scanner offset
-    if (accepted < 10000) {
+    if (accepted < 10000 && preferences.get(OPRT.OPTIONS.SCANNER_OFFSET_PREF)) {
+
       lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `
 <p id='scannerOffsetContainer'>
 <span style="margin-left: 5px" class="ingress-mid-blue pull-left">Scanner offset:</span>
@@ -1361,7 +1361,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
 
       // we have to inject the tooltip to angular
       w.$injector.invoke(cloneInto(['$compile', ($compile) => {
-        let compiledSubmit = $compile(tooltipSpan)(w.$scope(stats))
+        let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`)(w.$scope(stats))
         w.document.getElementById('scannerOffsetContainer').insertAdjacentElement('afterbegin', compiledSubmit[0])
       }], w, { cloneFunctions: true }));
 
