@@ -1328,9 +1328,8 @@ function init () {
     }
 
     // add opr-tools preferences button
-    let profile_button_row = w.document.querySelector('.navbar-form')
     let oprt_preferences_button = w.document.createElement('button')
-    oprt_preferences_button.classList.add('btn', 'btn-sm', 'btn-success')
+    oprt_preferences_button.classList.add('btn', 'btn-sm', 'btn-success', 'pull-right')
     oprt_preferences_button.style.setProperty('margin-right', '10px')
     oprt_preferences_button.addEventListener('click', () => preferences.showPreferencesUI(w))
     oprt_preferences_button.title = 'OPR-Tools Preferences'
@@ -1339,7 +1338,7 @@ function init () {
     pref_cog.classList.add('glyphicon', 'glyphicon-cog')
     oprt_preferences_button.appendChild(pref_cog)
 
-    profile_button_row.insertAdjacentElement('afterbegin', oprt_preferences_button)
+    stats.parentElement.insertAdjacentElement('beforebegin', oprt_preferences_button)
 
     let perfBadge = null
     const imgSrc = stats.children[1].src
