@@ -380,7 +380,8 @@ function init () {
     let newSubmitDiv = moveSubmitButton()
     let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController)
 
-    textButtons()
+    if (preferences.get(OPRT.OPTIONS.COMMENT_TEMPLATES))
+      commentTemplates()
 
     const customPresetUI = `
 <div class="row" id="presets"><div class="col-xs-12">
@@ -799,7 +800,8 @@ function init () {
     let newSubmitDiv = moveSubmitButton()
     let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController)
 
-    textButtons()
+    if (preferences.get(OPRT.OPTIONS.COMMENT_TEMPLATES))
+      commentTemplates()
 
     mapTypes(subController.locationEditsMap, true)
 
@@ -1039,7 +1041,7 @@ function init () {
     return { submitButton, submitAndNext }
   }
 
-  function textButtons () {
+  function commentTemplates () {
     let emergencyWay = ''
     if (browserLocale.includes('de')) {
       emergencyWay = 'RETTUNGSWEG!1'
