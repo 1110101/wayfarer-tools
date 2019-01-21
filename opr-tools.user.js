@@ -69,9 +69,8 @@ const OPRT = {
   },
 
   PREFIX: 'oprt_',
-  VAR_PREFIX: 'oprt_var',
+  VAR_PREFIX: 'oprt_var', // used in import/export **only**
   VAR: {
-
     SCANNER_OFFSET: 'scanner_offset',
     MAP_TYPE: 'map_type',
     VERSION_CHECK: 'version_check',
@@ -114,7 +113,10 @@ class Preferences {
       [OPRT.OPTIONS.PRESET_FEATURE]: true,
       [OPRT.OPTIONS.SCANNER_OFFSET_PREF]: false,
       [OPRT.OPTIONS.COMMENT_TEMPLATES]: true,
-      [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: true
+      [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: true,
+      [OPRT.OPTIONS.REFRESH]: true,
+      [OPRT.OPTIONS.REFRESH_NOTI_SOUND]: false,
+      [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: true
     }
     this.loadOptions()
   }
@@ -1372,21 +1374,21 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
 
     cbxRefresh.id = OPRT.REFRESH
     cbxRefresh.type = 'checkbox'
-    cbxRefresh.checked = (w.localStorage.getItem(cbxRefresh.id) === 'true')
+    cbxRefresh.checked = preferences.get(OPRT.REFRESH) === 'true'
 
     cbxRefreshSound.id = OPRT.REFRESH_NOTI_SOUND
     cbxRefreshSound.type = 'checkbox'
-    cbxRefreshSound.checked = (w.localStorage.getItem(cbxRefreshSound.id) === 'true')
+    cbxRefreshSound.checked = preferences.get(OPRT.REFRESH_NOTI_SOUND) === 'true'
 
     cbxRefreshDesktop.id = OPRT.REFRESH_NOTI_DESKTOP
     cbxRefreshDesktop.type = 'checkbox'
-    cbxRefreshDesktop.checked = (w.localStorage.getItem(cbxRefreshDesktop.id) === 'true')
+    cbxRefreshDesktop.checked = preferences.get(OPRT.REFRESH_NOTI_DESKTOP) === 'true'
 
     let refreshPanel = w.document.createElement('div')
     refreshPanel.className = 'panel panel-ingress'
 
     refreshPanel.addEventListener('change', (event) => {
-      w.localStorage.setItem(event.target.id, event.target.checked) // i'm lazy
+      preferences.set(event.target.id, event.target.checked)
       if (event.target.checked) {
         startRefresh()
       } else {
@@ -1462,12 +1464,12 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
       if (w.document.hidden) { // if tab in background: flash favicon
         let flag = true
 
-        if (w.localStorage.getItem(OPRT.REFRESH_NOTI_SOUND) === 'true') {
+        if (preferences.get(OPRT.REFRESH_NOTI_SOUND) === 'true') {
           let audio = document.createElement('audio')
           audio.src = NOTIFICATION_SOUND
           audio.autoplay = true
         }
-        if (w.localStorage.getItem(OPRT.REFRESH_NOTI_DESKTOP) === 'true') {
+        if (preferences.get(OPRT.REFRESH_NOTI_DESKTOP) === 'true') {
           GM_notification({
             'title': 'OPR - New Portal Analysis Available',
             'text': 'by OPR-Tools',
