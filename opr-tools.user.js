@@ -377,8 +377,34 @@ function init () {
   function modifyNewPage (ansController, subController, whatController, newPortalData) {
     mapButtons(newPortalData, w.document.getElementById('descriptionDiv'), 'beforeEnd')
 
+    // mutation observer
+    const bodyObserver = new MutationObserver(mutationList => {
+      for (let mutationRecord of mutationList) {
+        // we just want addednodes with (class:modal). null and undefined check for performance reasons
+        if (mutationRecord.addedNodes.length > 0 && mutationRecord.addedNodes[0].className === 'modal fade ng-isolate-scope') {
+          // adds keyboard-numbers to lowquality sub-sub-lists
+          let sublistItems = mutationRecord.addedNodes[0].querySelectorAll('ul.sub-group-list')
+          if (sublistItems !== undefined) {
+            sublistItems.forEach(el => {
+              let i = 1
+              el.querySelectorAll('li > a').forEach(el2 => { el2.insertAdjacentHTML('afterbegin', `<kbd>${i++}</kbd> `)})
+            })
+            let i = 1
+            // adds keyboard numbers to lowquality sub-list
+            mutationRecord.addedNodes[0].querySelectorAll('label.sub-group')
+            .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`)})
+          }
+          // skip "Your analysis has been recorded" dialog
+          if (mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
+            w.document.location.href = '/recon'
+          }
+        }
+      }
+    })
+    bodyObserver.observe(w.document.body, { childList: true })
+
     let newSubmitDiv = moveSubmitButton()
-    let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController)
+    let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController, bodyObserver)
 
     if (preferences.get(OPRT.OPTIONS.COMMENT_TEMPLATES))
       commentTemplates()
@@ -395,11 +421,11 @@ function init () {
 
       addCustomPresetButtons()
 
-      // we have to inject the tooltip to angular
-      w.$injector.invoke(cloneInto(['$compile', ($compile) => {
-        let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById('descriptionDiv')))
-        w.document.getElementById('addPreset').insertAdjacentElement('beforebegin', compiledSubmit[0])
-      }], w, { cloneFunctions: true }))
+    // we have to inject the tooltip to angular
+    w.$injector.invoke(cloneInto(['$compile', ($compile) => {
+      let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById('descriptionDiv')))
+      w.document.getElementById('addPreset').insertAdjacentElement('beforebegin', compiledSubmit[0])
+    }], w, { cloneFunctions: true }))
 
       // click listener for +preset button
       w.document.getElementById('addPreset').addEventListener('click', exportFunction(event => {
@@ -755,6 +781,7 @@ function init () {
               try {
                 w.document.getElementById('sub-group-' + numkey).click()
                 selectedReasonGroup = numkey - 1
+              w.document.querySelectorAll('label.sub-group kbd').forEach(el => el.classList.add('hide'))
               } catch (err) {}
             } else {
               if (selectedReasonSubGroup === -1) {
@@ -766,6 +793,7 @@ function init () {
                 w.document.getElementById('root-label').click()
                 selectedReasonGroup = -1
                 selectedReasonSubGroup = -1
+              w.document.querySelectorAll('label.sub-group kbd').forEach(el => el.classList.remove('hide'))
               }
             }
             event.preventDefault()
@@ -806,8 +834,21 @@ function init () {
 
     mapButtons(newPortalData, editDiv, 'afterEnd')
 
+    // mutation observer
+    const bodyObserver = new MutationObserver(mutationList => {
+      for (let mutationRecord of mutationList) {
+        // we just want addednodes with (class:modal). null and undefined check for performance reasons
+        if (mutationRecord.addedNodes.length > 0 &&
+          mutationRecord.addedNodes[0].className === 'modal fade ng-isolate-scope' &&
+          mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
+          w.document.location.href = '/recon'
+        }
+      }
+    })
+    bodyObserver.observe(w.document.body, { childList: true })
+
     let newSubmitDiv = moveSubmitButton()
-    let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController)
+    let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController, bodyObserver)
 
     if (preferences.get(OPRT.OPTIONS.COMMENT_TEMPLATES))
       commentTemplates()
@@ -889,9 +930,9 @@ function init () {
 
       // a list of all 6 star button rows, and the two submit buttons
       let starsAndSubmitButtons = w.document.querySelectorAll(
-        'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.titleEdits.length > 1"]:not(.ng-hide),' +
-        'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.descriptionEdits.length > 1"]:not(.ng-hide),' +
-        'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.locationEdits.length > 1"]:not(.ng-hide),' +
+      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.titleEdits.length > 1"]:not(.ng-hide),' +
+      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.descriptionEdits.length > 1"]:not(.ng-hide),' +
+      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.locationEdits.length > 1"]:not(.ng-hide),' +
         '.big-submit-button')
 
       /* EDIT PORTAL */
@@ -1034,10 +1075,13 @@ function init () {
   }
 
   // add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
-  function quickSubmitButton (submitDiv, ansController) {
+  function quickSubmitButton (submitDiv, ansController, bodyObserver) {
     let submitButton = submitDiv.querySelector('button')
     submitButton.classList.add('btn', 'btn-warning')
     let submitAndNext = submitButton.cloneNode(false)
+    submitButton.addEventListener('click', exportFunction(() => {
+      bodyObserver.disconnect()
+    }))
     submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`
     submitAndNext.title = 'Submit and go to next review'
     submitAndNext.addEventListener('click', exportFunction(() => {
@@ -1170,8 +1214,8 @@ function init () {
 
     if (preferences.get(OPRT.OPTIONS.NORWAY_MAP_LAYER)) {
       types.push({ provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`, code: 'topo4', label: 'NO - Topo' },
-        { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster' },
-        { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart' }
+      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster' },
+      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart' }
       )
     }
 
@@ -1842,6 +1886,12 @@ kbd {
 
 .opr-yellow {
     color: #F3EADA;
+}
+
+@media(min-width:768px) {
+  div.modal-custom1 {
+    width: 500px
+  }
 }
 
 `
