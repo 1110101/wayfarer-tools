@@ -1313,9 +1313,7 @@ function init () {
     // stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
 
     // get scanner offset from localStorage
-    let oprtScannerOffset = 0
-    if (preferences.get(OPRT.SCANNER_OFFSET_PREF))
-      oprtScannerOffset = parseInt(w.localStorage.getItem(OPRT.SCANNER_OFFSET)) || 0
+    let oprtScannerOffset = parseInt(w.localStorage.getItem(OPRT.SCANNER_OFFSET)) || 0
 
     const lastPlayerStatLine = w.document.querySelector('#player_stats:not(.visible-xs) div')
     const stats = w.document.querySelector('#player_stats:not(.visible-xs) div')
