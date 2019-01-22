@@ -49,7 +49,7 @@ SOFTWARE.
 
 */
 
-/* globals screen, addEventListener, GM_notification, unsafeWindow, exportFunction, cloneInto, angular, google, alertify, proj4 */
+/* globals screen, addEventListener, localStorage, MutationObserver, GM_notification, unsafeWindow, exportFunction, cloneInto, angular, google, alertify, proj4 */
 
 const OPRT = {
 
@@ -106,7 +106,6 @@ function addGlobalStyle (css) {
 /* eslint-enable */
 
 class Preferences {
-
   constructor () {
     this.options = {}
     this.defaults = {
@@ -141,19 +140,19 @@ class Preferences {
     z-index: 10;
     width: 300px;
     ">
-	<div class="row">
-		<div class="col-lg-12">
-			<h4 class="gold">OPR Tools Preferences</h4>
-		</div>
-		<div class="col-lg-12">
-			<div class="btn-group" role="group">
-				<button id="import_all" class="btn btn-success">Import</button>
-				<button id="export_all" class="btn btn-success">Export</button>
-			</div>
-		</div>
-	</div>
-	<div id="oprt_options"></div>
-	<a id="oprt_reload" class="btn btn-danger hide"><span class="glyphicon glyphicon-refresh"></span>
+  <div class="row">
+    <div class="col-lg-12">
+      <h4 class="gold">OPR Tools Preferences</h4>
+    </div>
+    <div class="col-lg-12">
+      <div class="btn-group" role="group">
+        <button id="import_all" class="btn btn-success">Import</button>
+        <button id="export_all" class="btn btn-success">Export</button>
+      </div>
+    </div>
+  </div>
+  <div id="oprt_options"></div>
+  <a id="oprt_reload" class="btn btn-danger hide"><span class="glyphicon glyphicon-refresh"></span>
  Reload to apply changes</a>
 </section>`)
 
@@ -203,7 +202,6 @@ class Preferences {
           alertify.success(`✔ Exported Preferences to your clipboard`)
         })
       })
-
     }
   }
 
@@ -228,7 +226,6 @@ class Preferences {
     try {
       this.options = JSON.parse(string)
       localStorage.setItem(OPRT.PREFERENCES, JSON.stringify(this.options))
-
     } catch (e) {
       throw new Error('Could not import preferences!')
     }
@@ -259,12 +256,9 @@ class InOut {
     try {
       let json = JSON.parse(string)
 
-      if (json.hasOwnProperty(OPRT.PREFERENCES))
-        this.preferences.importPrefs(json[OPRT.PREFERENCES])
+      if (json.hasOwnProperty(OPRT.PREFERENCES)) { this.preferences.importPrefs(json[OPRT.PREFERENCES]) }
 
-      if (json.hasOwnProperty(OPRT.VAR))
-        InOut.importVars(json[OPRT.VAR])
-
+      if (json.hasOwnProperty(OPRT.VAR)) { InOut.importVars(json[OPRT.VAR]) }
     } catch (e) {
       throw new Error('Import failed')
     }
@@ -289,7 +283,7 @@ function init () {
     if (tryNumber === 0) {
       clearInterval(initWatcher)
       w.document.getElementById('NewSubmissionController')
-      .insertAdjacentHTML('afterBegin', `
+        .insertAdjacentHTML('afterBegin', `
 <div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
 `)
       addRefreshContainer()
@@ -375,7 +369,6 @@ function init () {
       startExpirationTimer(subController)
 
       versionCheck()
-
     }
   }
 
@@ -392,12 +385,12 @@ function init () {
           if (sublistItems !== undefined) {
             sublistItems.forEach(el => {
               let i = 1
-              el.querySelectorAll('li > a').forEach(el2 => { el2.insertAdjacentHTML('afterbegin', `<kbd>${i++}</kbd> `)})
+              el.querySelectorAll('li > a').forEach(el2 => { el2.insertAdjacentHTML('afterbegin', `<kbd>${i++}</kbd> `) })
             })
             let i = 1
             // adds keyboard numbers to lowquality sub-list
             mutationRecord.addedNodes[0].querySelectorAll('label.sub-group')
-            .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`)})
+              .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
           }
           // skip "Your analysis has been recorded" dialog
           if (preferences.get(OPRT.OPTIONS.SKIP_ANALYZED_DIALOG) && mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
@@ -411,8 +404,7 @@ function init () {
     let newSubmitDiv = moveSubmitButton()
     let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController, bodyObserver)
 
-    if (preferences.get(OPRT.OPTIONS.COMMENT_TEMPLATES))
-      commentTemplates()
+    if (preferences.get(OPRT.OPTIONS.COMMENT_TEMPLATES)) { commentTemplates() }
 
     /* region presets start */
     if (preferences.get(OPRT.OPTIONS.PRESET_FEATURE)) {
@@ -646,7 +638,10 @@ function init () {
 
     /* region keyboard nav */
     if (preferences.get(OPRT.OPTIONS.KEYBOARD_NAV)) {
+      activateShortcuts()
+    }
 
+    function activateShortcuts () {
       // keyboard navigation
       // documentation: https://gitlab.com/1110101/opr-tools#keyboard-navigation
 
@@ -855,8 +850,7 @@ function init () {
     let newSubmitDiv = moveSubmitButton()
     let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController, bodyObserver)
 
-    if (preferences.get(OPRT.OPTIONS.COMMENT_TEMPLATES))
-      commentTemplates()
+    if (preferences.get(OPRT.OPTIONS.COMMENT_TEMPLATES)) { commentTemplates() }
 
     mapTypes(subController.locationEditsMap, true)
 
@@ -923,7 +917,10 @@ function init () {
     /* region keyboard navigation */
 
     if (preferences.get(OPRT.OPTIONS.KEYBOARD_NAV)) {
+      activateShortcuts()
+    }
 
+    function activateShortcuts () {
       let currentSelectable = 0
       let hasLocationEdit = (newPortalData.locationEdits.length > 1)
       // counting *true*, please don't shoot me
@@ -1306,7 +1303,6 @@ function init () {
   }
 
   function modifyHeader () {
-
     // shorten Operation Portal Recon to OPR to make more room
     w.document.querySelector('.navbar-brand').innerHTML = 'OPR'
 
@@ -1331,17 +1327,17 @@ function init () {
     }
 
     // add opr-tools preferences button
-    let oprt_preferences_button = w.document.createElement('button')
-    oprt_preferences_button.classList.add('btn', 'btn-sm', 'btn-success', 'pull-right')
-    oprt_preferences_button.style.setProperty('margin-right', '10px')
-    oprt_preferences_button.addEventListener('click', () => preferences.showPreferencesUI(w))
-    oprt_preferences_button.title = 'OPR-Tools Preferences'
+    let oprtPreferencesButton = w.document.createElement('button')
+    oprtPreferencesButton.classList.add('btn', 'btn-sm', 'btn-success', 'pull-right')
+    oprtPreferencesButton.style.setProperty('margin-right', '10px')
+    oprtPreferencesButton.addEventListener('click', () => preferences.showPreferencesUI(w))
+    oprtPreferencesButton.title = 'OPR-Tools Preferences'
 
-    const pref_cog = w.document.createElement('span')
-    pref_cog.classList.add('glyphicon', 'glyphicon-cog')
-    oprt_preferences_button.appendChild(pref_cog)
+    const prefCog = w.document.createElement('span')
+    prefCog.classList.add('glyphicon', 'glyphicon-cog')
+    oprtPreferencesButton.appendChild(prefCog)
 
-    stats.parentElement.insertAdjacentElement('beforebegin', oprt_preferences_button)
+    stats.parentElement.insertAdjacentElement('beforebegin', oprtPreferencesButton)
 
     let perfBadge = null
     const imgSrc = stats.children[1].src
@@ -1411,7 +1407,6 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
 
     // ** opr-scanner offset
     if (accepted < 10000 && preferences.get(OPRT.OPTIONS.SCANNER_OFFSET_PREF)) {
-
       lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `
 <p id='scannerOffsetContainer'>
 <span style="margin-left: 5px" class="ingress-mid-blue pull-left">Scanner offset:</span>
@@ -1610,7 +1605,6 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
         ev.preventDefault()
         ev.target.closest('div.default.show').remove()
       }).reset()
-
     }
   }
 
@@ -1726,7 +1720,6 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
     shifter = Math.pow(10, precision)
     return Math.round(num * shifter) / shifter
   }
-
 }
 
 setTimeout(() => {
