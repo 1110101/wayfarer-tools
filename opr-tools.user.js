@@ -95,7 +95,7 @@ function init () {
     if (tryNumber === 0) {
       clearInterval(initWatcher)
       w.document.getElementById('NewSubmissionController')
-      .insertAdjacentHTML('afterBegin', `
+        .insertAdjacentHTML('afterBegin', `
 <div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
 `)
       addRefreshContainer()
@@ -195,12 +195,12 @@ function init () {
           if (sublistItems !== undefined) {
             sublistItems.forEach(el => {
               let i = 1
-              el.querySelectorAll('li > a').forEach(el2 => { el2.insertAdjacentHTML('afterbegin', `<kbd>${i++}</kbd> `)})
+              el.querySelectorAll('li > a').forEach(el2 => { el2.insertAdjacentHTML('afterbegin', `<kbd>${i++}</kbd> `) })
             })
             let i = 1
             // adds keyboard numbers to lowquality sub-list
             mutationRecord.addedNodes[0].querySelectorAll('label.sub-group')
-            .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`)})
+              .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
           }
           // skip "Your analysis has been recorded" dialog
           if (mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
