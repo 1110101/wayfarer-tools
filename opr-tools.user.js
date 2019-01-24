@@ -49,7 +49,7 @@ SOFTWARE.
 
 */
 
-/* globals screen, addEventListener, GM_notification, unsafeWindow, exportFunction, cloneInto, angular, google, alertify, proj4 */
+/* globals screen, MutationObserver, addEventListener, GM_notification, unsafeWindow, exportFunction, cloneInto, angular, google, alertify, proj4 */
 
 const OPRT = {
   SCANNER_OFFSET: 'oprt_scanner_offset',
@@ -128,7 +128,7 @@ function init () {
   }, 1000)
 
   function initAngular () {
-    const el = w.document.querySelector("[ng-app='portalApp']")
+    const el = w.document.querySelector('[ng-app=\'portalApp\']')
     w.$app = w.angular.element(el)
     w.$injector = w.$app.injector()
     w.inject = w.$injector.invoke
@@ -185,8 +185,34 @@ function init () {
   function modifyNewPage (ansController, subController, whatController, newPortalData) {
     mapButtons(newPortalData, w.document.getElementById('descriptionDiv'), 'beforeEnd')
 
+    // mutation observer
+    const bodyObserver = new MutationObserver(mutationList => {
+      for (let mutationRecord of mutationList) {
+        // we just want addednodes with (class:modal). null and undefined check for performance reasons
+        if (mutationRecord.addedNodes.length > 0 && mutationRecord.addedNodes[0].className === 'modal fade ng-isolate-scope') {
+          // adds keyboard-numbers to lowquality sub-sub-lists
+          let sublistItems = mutationRecord.addedNodes[0].querySelectorAll('ul.sub-group-list')
+          if (sublistItems !== undefined) {
+            sublistItems.forEach(el => {
+              let i = 1
+              el.querySelectorAll('li > a').forEach(el2 => { el2.insertAdjacentHTML('afterbegin', `<kbd>${i++}</kbd> `) })
+            })
+            let i = 1
+            // adds keyboard numbers to lowquality sub-list
+            mutationRecord.addedNodes[0].querySelectorAll('label.sub-group')
+              .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
+          }
+          // skip "Your analysis has been recorded" dialog
+          if (mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
+            w.document.location.href = '/recon'
+          }
+        }
+      }
+    })
+    bodyObserver.observe(w.document.body, { childList: true })
+
     let newSubmitDiv = moveSubmitButton()
-    let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController)
+    let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController, bodyObserver)
 
     textButtons()
 
@@ -196,7 +222,7 @@ function init () {
   <div class='btn-group' id="customPresets"></div>
 </div></div>`
 
-    w.document.querySelector("form[name='answers'] div.row").insertAdjacentHTML('afterend', customPresetUI)
+    w.document.querySelector('form[name=\'answers\'] div.row').insertAdjacentHTML('afterend', customPresetUI)
 
     addCustomPresetButtons()
 
@@ -204,7 +230,7 @@ function init () {
     w.$injector.invoke(cloneInto(['$compile', ($compile) => {
       let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById('descriptionDiv')))
       w.document.getElementById('addPreset').insertAdjacentElement('beforebegin', compiledSubmit[0])
-    }], w, {cloneFunctions: true}))
+    }], w, { cloneFunctions: true }))
 
     // click listener for +preset button
     w.document.getElementById('addPreset').addEventListener('click', exportFunction(event => {
@@ -330,17 +356,17 @@ function init () {
       })
     })
 
-    document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin', "<small class='pull-left'><span style='color:#ebbc4a'>Circle:</span> 40m</small>")
+    document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin', '<small class=\'pull-left\'><span style=\'color:#ebbc4a\'>Circle:</span> 40m</small>')
 
     // move portal rating to the right side. don't move on mobile devices / small width
     if (screen.availWidth > 768) {
-      let nodeToMove = w.document.querySelector("div[class='btn-group']").parentElement
+      let nodeToMove = w.document.querySelector('div[class=\'btn-group\']').parentElement
       if (subController.hasSupportingImageOrStatement) {
         const descDiv = w.document.getElementById('descriptionDiv')
         const scorePanel = descDiv.querySelector('div.text-center.hidden-xs')
         scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
       } else {
-        const scorePanel = w.document.querySelector("div[class~='pull-right']")
+        const scorePanel = w.document.querySelector('div[class~=\'pull-right\']')
         scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
       }
     }
@@ -555,6 +581,7 @@ function init () {
             try {
               w.document.getElementById('sub-group-' + numkey).click()
               selectedReasonGroup = numkey - 1
+              w.document.querySelectorAll('label.sub-group kbd').forEach(el => el.classList.add('hide'))
             } catch (err) {}
           } else {
             if (selectedReasonSubGroup === -1) {
@@ -566,6 +593,7 @@ function init () {
               w.document.getElementById('root-label').click()
               selectedReasonGroup = -1
               selectedReasonSubGroup = -1
+              w.document.querySelectorAll('label.sub-group kbd').forEach(el => el.classList.remove('hide'))
             }
           }
           event.preventDefault()
@@ -600,12 +628,25 @@ function init () {
   }
 
   function modifyEditPage (ansController, subController, newPortalData) {
-    let editDiv = w.document.querySelector("div[ng-show=\"subCtrl.reviewType==='EDIT'\"]")
+    let editDiv = w.document.querySelector('div[ng-show="subCtrl.reviewType===\'EDIT\'"]')
 
     mapButtons(newPortalData, editDiv, 'afterEnd')
 
+    // mutation observer
+    const bodyObserver = new MutationObserver(mutationList => {
+      for (let mutationRecord of mutationList) {
+        // we just want addednodes with (class:modal). null and undefined check for performance reasons
+        if (mutationRecord.addedNodes.length > 0 &&
+          mutationRecord.addedNodes[0].className === 'modal fade ng-isolate-scope' &&
+          mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
+          w.document.location.href = '/recon'
+        }
+      }
+    })
+    bodyObserver.observe(w.document.body, { childList: true })
+
     let newSubmitDiv = moveSubmitButton()
-    let {submitButton, submitAndNext} = quickSubmitButton(newSubmitDiv, ansController)
+    let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController, bodyObserver)
 
     textButtons()
 
@@ -684,9 +725,9 @@ function init () {
 
     // a list of all 6 star button rows, and the two submit buttons
     let starsAndSubmitButtons = w.document.querySelectorAll(
-      "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.titleEdits.length > 1\"]:not(.ng-hide)," +
-      "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.descriptionEdits.length > 1\"]:not(.ng-hide)," +
-      "div[ng-show=\"subCtrl.reviewType==='EDIT'\"] > div[ng-show=\"subCtrl.pageData.locationEdits.length > 1\"]:not(.ng-hide)," +
+      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.titleEdits.length > 1"]:not(.ng-hide),' +
+      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.descriptionEdits.length > 1"]:not(.ng-hide),' +
+      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.locationEdits.length > 1"]:not(.ng-hide),' +
       '.big-submit-button')
 
     /* EDIT PORTAL */
@@ -772,7 +813,7 @@ function init () {
           google.maps.event.trigger(angular.element(document.getElementById('NewSubmissionController')).scope().getAllLocationMarkers()[numkey - 1], 'click')
         } else {
           if (hasLocationEdit) numkey = 1
-          starsAndSubmitButtons[currentSelectable].querySelectorAll(".titleEditBox, input[type='checkbox']")[numkey - 1].click()
+          starsAndSubmitButtons[currentSelectable].querySelectorAll('.titleEditBox, input[type=\'checkbox\']')[numkey - 1].click()
           currentSelectable++
         }
       }
@@ -828,23 +869,26 @@ function init () {
   }
 
   // add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
-  function quickSubmitButton (submitDiv, ansController) {
+  function quickSubmitButton (submitDiv, ansController, bodyObserver) {
     let submitButton = submitDiv.querySelector('button')
     submitButton.classList.add('btn', 'btn-warning')
     let submitAndNext = submitButton.cloneNode(false)
+    submitButton.addEventListener('click', exportFunction(() => {
+      bodyObserver.disconnect()
+    }))
     submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`
     submitAndNext.title = 'Submit and go to next review'
     submitAndNext.addEventListener('click', exportFunction(() => {
       exportFunction(() => {
         window.location.assign('/recon')
-      }, ansController, {defineAs: 'openSubmissionCompleteModal'})
+      }, ansController, { defineAs: 'openSubmissionCompleteModal' })
     }, w))
 
     w.$injector.invoke(cloneInto(['$compile', ($compile) => {
       let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv))
       submitDiv.querySelector('button').insertAdjacentElement('beforeBegin', compiledSubmit[0])
-    }], w, {cloneFunctions: true}))
-    return {submitButton, submitAndNext}
+    }], w, { cloneFunctions: true }))
+    return { submitButton, submitAndNext }
   }
 
   function textButtons () {
@@ -899,7 +943,7 @@ function init () {
               text += 'Portal candidate is seasonal or temporary'
               break
             case 'location':
-              text += "Portal candidate's location is not on object"
+              text += 'Portal candidate\'s location is not on object'
               break
             case 'emergencyway':
               text += 'Portal candidate is obstructing the path of emergency vehicles'
@@ -951,13 +995,13 @@ function init () {
     }
 
     const types = [
-      {provider: PROVIDERS.GOOGLE, id: 'roadmap'},
-      {provider: PROVIDERS.GOOGLE, id: 'terrain'},
-      {provider: PROVIDERS.GOOGLE, id: 'satellite'},
-      {provider: PROVIDERS.GOOGLE, id: 'hybrid'},
-      {provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`, code: 'topo4', label: 'NO - Topo'},
-      {provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster'},
-      {provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart'}
+      { provider: PROVIDERS.GOOGLE, id: 'roadmap' },
+      { provider: PROVIDERS.GOOGLE, id: 'terrain' },
+      { provider: PROVIDERS.GOOGLE, id: 'satellite' },
+      { provider: PROVIDERS.GOOGLE, id: 'hybrid' },
+      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`, code: 'topo4', label: 'NO - Topo' },
+      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster' },
+      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart' }
     ]
 
     const defaultType = 'hybrid'
@@ -1037,9 +1081,8 @@ function init () {
   }
 
   function modifyHeader () {
-
     // shorten Operation Portal Recon to OPR to make more room
-    w.document.querySelector(".navbar-brand").innerHTML = "OPR"
+    w.document.querySelector('.navbar-brand').innerHTML = 'OPR'
 
     // stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
 
@@ -1050,13 +1093,13 @@ function init () {
     const stats = w.document.querySelector('#player_stats:not(.visible-xs) div')
 
     // move upgrade button to the right
-    const upgradeIcon = w.document.querySelector(".upgrades-icon")
+    const upgradeIcon = w.document.querySelector('.upgrades-icon')
     if (upgradeIcon !== undefined) {
       upgradeIcon.parentElement.removeChild(upgradeIcon)
 
-      upgradeIcon.style.marginRight = "20px"
-      upgradeIcon.style.color = "#9d9d9d"
-      upgradeIcon.classList.add("pull-right")
+      upgradeIcon.style.marginRight = '20px'
+      upgradeIcon.style.color = '#9d9d9d'
+      upgradeIcon.classList.add('pull-right')
 
       stats.parentElement.insertAdjacentElement('beforebegin', upgradeIcon)
     }
@@ -1088,7 +1131,7 @@ function init () {
     const acceptedPercent = roundToPrecision(accepted / (reviewed) * 100, 1)
     const rejectedPercent = roundToPrecision(rejected / (reviewed) * 100, 1)
 
-    const reconBadge = {100: 'Bronze', 750: 'Silver', 2500: 'Gold', 5000: 'Platin', 10000: 'Black'}
+    const reconBadge = { 100: 'Bronze', 750: 'Silver', 2500: 'Gold', 5000: 'Platin', 10000: 'Black' }
     let nextBadgeName, nextBadgeCount
 
     for (const key in reconBadge) {
@@ -1100,13 +1143,13 @@ function init () {
     }
     const nextBadgeProcess = processed / nextBadgeCount * 100
 
-    const numberSpans = stats.querySelectorAll("p span.gold")
+    const numberSpans = stats.querySelectorAll('p span.gold')
 
     numberSpans[0].insertAdjacentHTML('beforeend', `, <span class='ingress-gray'>100%</span>`)
     numberSpans[1].insertAdjacentHTML('beforeend', `, <span class='opr-yellow'>${acceptedPercent}%</span>`)
     numberSpans[2].insertAdjacentHTML('beforeend', `, <span class='opr-yellow'>${rejectedPercent}%</span>`)
 
-    stats.querySelectorAll("p")[1].insertAdjacentHTML('afterend', `<br>
+    stats.querySelectorAll('p')[1].insertAdjacentHTML('afterend', `<br>
 <p><span class="glyphicon glyphicon-info-sign ingress-gray pull-left"></span><span style="margin-left: 5px;" class="ingress-mid-blue pull-left">Processed <u>and</u> accepted analyses:</span> <span class="gold pull-right">${processed}, <span class="ingress-gray">${processedPercent}%</span></span></p>`)
 
     if (processed < 10000) {
@@ -1142,7 +1185,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
       w.$injector.invoke(cloneInto(['$compile', ($compile) => {
         let compiledSubmit = $compile(tooltipSpan)(w.$scope(stats))
         w.document.getElementById('scannerOffsetContainer').insertAdjacentElement('afterbegin', compiledSubmit[0])
-      }], w, {cloneFunctions: true}));
+      }], w, { cloneFunctions: true }));
 
       ['change', 'keyup', 'cut', 'paste', 'input'].forEach(e => {
         w.document.getElementById('scannerOffset').addEventListener(e, (event) => {
@@ -1282,7 +1325,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
   }
 
   function changeFavicon (src) {
-    let link = w.document.querySelector("link[rel='shortcut icon']")
+    let link = w.document.querySelector('link[rel=\'shortcut icon\']')
     link.href = src
   }
 
@@ -1425,7 +1468,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
   function roundToPrecision (num, precision) {
     let shifter
     precision = Number(precision || 0)
-    if (precision % 1 !== 0) throw new RangeError("precision must be an integer")
+    if (precision % 1 !== 0) throw new RangeError('precision must be an integer')
     shifter = Math.pow(10, precision)
     return Math.round(num * shifter) / shifter
   }
@@ -1598,6 +1641,12 @@ kbd {
 
 .opr-yellow {
     color: #F3EADA;
+}
+
+@media(min-width:768px) {
+  div.modal-custom1 {
+    width: 500px
+  }
 }
 
 `
