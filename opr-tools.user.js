@@ -1744,7 +1744,7 @@ const strings = {
     [OPRT.OPTIONS.REFRESH]: 'Periodically refresh opr if no analysis is available',
     [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: '↳ With desktop notification',
     [OPRT.OPTIONS.REFRESH_NOTI_SOUND]: '↳ With sound notification',
-    [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: 'Skip \'Analysis accepted\' dialog',
+    [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: 'Skip \'Analysis recorded\' dialog',
     [OPRT.OPTIONS.SCANNER_OFFSET_FEATURE]: 'Scanner offset',
     [OPRT.OPTIONS.SCANNER_OFFSET_UI]: '↳ Display offset input field',
   },
