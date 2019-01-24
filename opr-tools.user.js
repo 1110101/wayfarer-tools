@@ -49,15 +49,39 @@ SOFTWARE.
 
 */
 
-/* globals screen, MutationObserver, addEventListener, GM_notification, unsafeWindow, exportFunction, cloneInto, angular, google, alertify, proj4 */
+/* globals screen, MutationObserver, addEventListener, localStorage, MutationObserver, GM_notification, unsafeWindow, exportFunction, cloneInto, angular, google, alertify, proj4 */
 
 const OPRT = {
-  SCANNER_OFFSET: 'oprt_scanner_offset',
-  REFRESH: 'oprt_refresh',
-  FROM_REFRESH: 'oprt_from_refresh',
-  REFRESH_NOTI_SOUND: 'oprt_refresh_noti_sound',
-  REFRESH_NOTI_DESKTOP: 'oprt_refresh_noti_desktop',
-  MAP_TYPE: 'oprt_map_type'
+
+  VERSION: 2701,
+
+  PREFERENCES: 'oprt_prefs',
+
+  OPTIONS: {
+    KEYBOARD_NAV: 'keyboard_nav',
+    NORWAY_MAP_LAYER: 'norway_map_layer',
+    PRESET_FEATURE: 'preset_feature',
+    SCANNER_OFFSET_FEATURE: 'scanner_offset_feature',
+    SCANNER_OFFSET_UI: 'scanner_offset_ui',
+    COMMENT_TEMPLATES: 'comment_templates',
+    SKIP_ANALYZED_DIALOG: 'skip_analyzed_dialog',
+
+    REFRESH: 'refresh',
+    REFRESH_NOTI_SOUND: 'refresh_noti_sound',
+    REFRESH_NOTI_DESKTOP: 'refresh_noti_desktop'
+  },
+
+  PREFIX: 'oprt_',
+  VAR_PREFIX: 'oprt_var', // used in import/export **only**
+  VAR: { // will be included in import/export
+    SCANNER_OFFSET: 'scanner_offset',
+    MAP_TYPE: 'map_type',
+    CUSTOM_PRESETS: 'custom_presets'
+  },
+
+  VERSION_CHECK: 'version_check', // outside var, because it should not get Exported
+
+  FROM_REFRESH: 'from_refresh' // sessionStorage
 }
 
 /* eslint-disable */
@@ -83,6 +107,179 @@ function addGlobalStyle (css) {
 
 /* eslint-enable */
 
+class Preferences {
+  constructor () {
+    this.options = {}
+    this.defaults = {
+      [OPRT.OPTIONS.KEYBOARD_NAV]: true,
+      [OPRT.OPTIONS.NORWAY_MAP_LAYER]: false,
+      [OPRT.OPTIONS.PRESET_FEATURE]: true,
+      [OPRT.OPTIONS.SCANNER_OFFSET_FEATURE]: false,
+      [OPRT.OPTIONS.SCANNER_OFFSET_UI]: false,
+      [OPRT.OPTIONS.COMMENT_TEMPLATES]: true,
+      [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: true,
+      [OPRT.OPTIONS.REFRESH]: true,
+      [OPRT.OPTIONS.REFRESH_NOTI_SOUND]: false,
+      [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: true
+    }
+    this.loadOptions()
+  }
+
+  showPreferencesUI (w) {
+    let inout = new InOut(this)
+    let pageContainer = w.document.querySelector('body > div.container')
+    let oprtPreferences = w.document.querySelector('#oprt_sidepanel_container')
+
+    if (oprtPreferences !== null) oprtPreferences.classList.toggle('hide')
+    else {
+      pageContainer.insertAdjacentHTML('afterbegin', `
+<section id="oprt_sidepanel_container" style="
+    background: black;
+    border-left: 2px gold inset;
+    position: absolute;
+    right: 0;
+    height: 95%;
+    padding: 0 20px;
+    z-index: 10;
+    width: 400px;
+    ">
+  <div class="row">
+    <div class="col-lg-12">
+      <h4 class="gold">OPR Tools Preferences</h4>
+    </div>
+    <div class="col-lg-12">
+      <div class="btn-group" role="group">
+        <button id="import_all" class="btn btn-success">Import</button>
+        <button id="export_all" class="btn btn-success">Export</button>
+      </div>
+    </div>
+  </div>
+  <div id="oprt_options"></div>
+  <a id="oprt_reload" class="btn btn-danger hide"><span class="glyphicon glyphicon-refresh"></span>
+ Reload to apply changes</a>
+</section>`)
+
+      let optionsContainer = w.document.getElementById('oprt_options')
+      let reloadButton = w.document.getElementById('oprt_reload')
+
+      for (let item in this.options) {
+        const div = w.document.createElement('div')
+        div.classList.add('checkbox')
+        const label = w.document.createElement('label')
+        const input = w.document.createElement('input')
+        input.type = 'checkbox'
+        input.name = item
+        input.checked = this.options[item]
+        div.appendChild(label)
+        label.appendChild(input)
+        label.appendChild(w.document.createTextNode(strings.options[item]))
+        optionsContainer.insertAdjacentElement('beforeEnd', div)
+      }
+
+      optionsContainer.addEventListener('change', exportFunction((event) => {
+        this.set(event.target.name, event.target.checked)
+        reloadButton.classList.remove('hide')
+      }))
+
+      reloadButton.addEventListener('click', exportFunction(() => {
+        window.location.reload()
+      }))
+
+      w.document.getElementById('import_all').addEventListener('click', exportFunction(() => {
+        alertify.okBtn('Import').prompt('Paste here:',
+          (value, event) => {
+            event.preventDefault()
+            if (value === 'undefined' || value === '') {
+              return
+            }
+            inout.importFromString(value)
+            alertify.success(`✔ Imported preferences`)
+          }, event => {
+            event.preventDefault()
+          }
+        )
+      }))
+
+      w.document.getElementById('export_all').addEventListener('click', exportFunction(() => {
+          if (navigator.clipboard !== undefined) {
+            navigator.clipboard.writeText(inout.exportAll()).then(() => {
+              alertify.success(`✔ Exported preferences to your clipboard!`)
+            }, () => {
+              // ugly alert as fallback
+              alertify.alert(inout.exportAll())
+            })
+          } else {
+            alertify.alert(inout.exportAll())
+          }
+        }
+      ))
+    }
+  }
+
+  loadOptions () {
+    Object.assign(this.options, this.defaults, JSON.parse(localStorage.getItem(OPRT.PREFERENCES)))
+  }
+
+  set (key, value) {
+    this.options[key] = value
+    localStorage.setItem(OPRT.PREFERENCES, JSON.stringify(this.options))
+  }
+
+  get (key) {
+    return this.options[key]
+  }
+
+  exportPrefs () {
+    return JSON.stringify(this.options)
+  }
+
+  importPrefs (string) {
+    try {
+      this.options = JSON.parse(string)
+      localStorage.setItem(OPRT.PREFERENCES, JSON.stringify(this.options))
+    } catch (e) {
+      throw new Error('Could not import preferences!')
+    }
+  }
+}
+
+class InOut {
+  constructor (preferences) {
+    this.preferences = preferences
+  }
+
+  static exportVars () {
+    let exportObject = {}
+    for (const item in OPRT.VAR) {
+      exportObject[OPRT.VAR[item]] = localStorage.getItem(OPRT.PREFIX + OPRT.VAR[item])
+    }
+    return exportObject
+  }
+
+  static importVars (string) {
+    let importObject = JSON.parse(string)
+    for (const item of importObject) {
+      localStorage.setItem(OPRT.PREFIX + item, importObject[item])
+    }
+  }
+
+  importFromString (string) {
+    try {
+      let json = JSON.parse(string)
+
+      if (json.hasOwnProperty(OPRT.PREFERENCES)) { this.preferences.importPrefs(json[OPRT.PREFERENCES]) }
+
+      if (json.hasOwnProperty(OPRT.VAR)) { InOut.importVars(json[OPRT.VAR]) }
+    } catch (e) {
+      throw new Error('Import failed')
+    }
+  }
+
+  exportAll () {
+    return JSON.stringify(Object.assign({}, { [OPRT.PREFERENCES]: this.preferences.exportPrefs() }, { [OPRT.VAR_PREFIX]: InOut.exportVars() }))
+  }
+}
+
 function init () {
   const w = typeof unsafeWindow === 'undefined' ? window : unsafeWindow
   let tryNumber = 15
@@ -90,6 +287,8 @@ function init () {
   let oprtCustomPresets
 
   let browserLocale = window.navigator.languages[0] || window.navigator.language || 'en'
+
+  let preferences = new Preferences()
 
   const initWatcher = setInterval(() => {
     if (tryNumber === 0) {
@@ -128,7 +327,7 @@ function init () {
   }, 1000)
 
   function initAngular () {
-    const el = w.document.querySelector('[ng-app=\'portalApp\']')
+    const el = w.document.querySelector('[ng-app="portalApp"]')
     w.$app = w.angular.element(el)
     w.$injector = w.$app.injector()
     w.inject = w.$injector.invoke
@@ -179,6 +378,8 @@ function init () {
       checkIfAutorefresh()
 
       startExpirationTimer(subController)
+
+      versionCheck()
     }
   }
 
@@ -203,7 +404,7 @@ function init () {
               .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
           }
           // skip "Your analysis has been recorded" dialog
-          if (mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
+          if (preferences.get(OPRT.OPTIONS.SKIP_ANALYZED_DIALOG) && mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
             w.document.location.href = '/recon'
           }
         }
@@ -214,86 +415,90 @@ function init () {
     let newSubmitDiv = moveSubmitButton()
     let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController, bodyObserver)
 
-    textButtons()
+    if (preferences.get(OPRT.OPTIONS.COMMENT_TEMPLATES)) { commentTemplates() }
 
-    const customPresetUI = `
+    /* region presets start */
+    if (preferences.get(OPRT.OPTIONS.PRESET_FEATURE)) {
+      const customPresetUI = `
 <div class="row" id="presets"><div class="col-xs-12">
   <div>Presets&nbsp;<button class="button btn btn-default btn-xs" id="addPreset">+</button></div>
   <div class='btn-group' id="customPresets"></div>
 </div></div>`
 
-    w.document.querySelector('form[name=\'answers\'] div.row').insertAdjacentHTML('afterend', customPresetUI)
+      w.document.querySelector('form[name="answers"] div.row').insertAdjacentHTML('afterend', customPresetUI)
 
-    addCustomPresetButtons()
+      addCustomPresetButtons()
 
-    // we have to inject the tooltip to angular
-    w.$injector.invoke(cloneInto(['$compile', ($compile) => {
-      let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById('descriptionDiv')))
-      w.document.getElementById('addPreset').insertAdjacentElement('beforebegin', compiledSubmit[0])
-    }], w, { cloneFunctions: true }))
+      // we have to inject the tooltip to angular
+      w.$injector.invoke(cloneInto(['$compile', ($compile) => {
+        let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById('descriptionDiv')))
+        w.document.getElementById('addPreset').insertAdjacentElement('beforebegin', compiledSubmit[0])
+      }], w, { cloneFunctions: true }))
 
-    // click listener for +preset button
-    w.document.getElementById('addPreset').addEventListener('click', exportFunction(event => {
-      alertify.okBtn('Save').prompt('New preset name:',
-        (value, event) => {
-          event.preventDefault()
-          if (value === 'undefined' || value === '') {
-            return
+      // click listener for +preset button
+      w.document.getElementById('addPreset').addEventListener('click', exportFunction(event => {
+        alertify.okBtn('Save').prompt('New preset name:',
+          (value, event) => {
+            event.preventDefault()
+            if (value === 'undefined' || value === '') {
+              return
+            }
+            saveCustomPreset(value, ansController, whatController)
+            alertify.success(`✔ Created preset <i>${value}</i>`)
+            addCustomPresetButtons()
+          }, event => {
+            event.preventDefault()
           }
-          saveCustomPreset(value, ansController, whatController)
-          alertify.success(`✔ Created preset <i>${value}</i>`)
-          addCustomPresetButtons()
-        }, event => {
-          event.preventDefault()
+        )
+      }), w, false)
+
+      let clickListener = exportFunction(event => {
+        const source = event.target || event.srcElement
+        let value = source.id
+        if (value === '' || event.target.nodeName !== 'BUTTON') {
+          return
         }
-      )
-    }), w, false)
 
-    let clickListener = exportFunction(event => {
-      const source = event.target || event.srcElement
-      let value = source.id
-      if (value === '' || event.target.nodeName !== 'BUTTON') {
-        return
-      }
+        let preset = oprtCustomPresets.find(item => item.uid === value)
 
-      let preset = oprtCustomPresets.find(item => item.uid === value)
-
-      if (event.shiftKey) {
-        alertify.log(`Deleted preset <i>${preset.label}</i>`)
-        w.document.getElementById(preset.uid).remove()
-        deleteCustomPreset(preset)
-        return
-      }
-
-      ansController.formData.quality = preset.quality
-      ansController.formData.description = preset.description
-      ansController.formData.cultural = preset.cultural
-      ansController.formData.uniqueness = preset.uniqueness
-      ansController.formData.location = preset.location
-      ansController.formData.safety = preset.safety
-
-      // the controller's set by ID function doesn't work
-      // and autocomplete breaks if there are any spaces
-      // so set the field to the first word from name and match autocomplete by ID
-      // at the very least, I know this will set it and leave the UI looking like it was manually set.
-      whatController.whatInput = preset.nodeName.split(' ')[0]
-      let nodes = whatController.getWhatAutocomplete()
-      for (let i = 0; i < nodes.length; i++) {
-        if (nodes[i].id === preset.nodeId) {
-          whatController.whatNode = nodes[i]
-          break
+        if (event.shiftKey) {
+          alertify.log(`Deleted preset <i>${preset.label}</i>`)
+          w.document.getElementById(preset.uid).remove()
+          deleteCustomPreset(preset)
+          return
         }
-      }
-      whatController.whatInput = ''
 
-      // update ui
-      event.target.blur()
-      w.$rootScope.$apply()
+        ansController.formData.quality = preset.quality
+        ansController.formData.description = preset.description
+        ansController.formData.cultural = preset.cultural
+        ansController.formData.uniqueness = preset.uniqueness
+        ansController.formData.location = preset.location
+        ansController.formData.safety = preset.safety
 
-      alertify.success(`✔ Applied <i>${preset.label}</i>`)
-    }, w)
+        // the controller's set by ID function doesn't work
+        // and autocomplete breaks if there are any spaces
+        // so set the field to the first word from name and match autocomplete by ID
+        // at the very least, I know this will set it and leave the UI looking like it was manually set.
+        whatController.whatInput = preset.nodeName.split(' ')[0]
+        let nodes = whatController.getWhatAutocomplete()
+        for (let i = 0; i < nodes.length; i++) {
+          if (nodes[i].id === preset.nodeId) {
+            whatController.whatNode = nodes[i]
+            break
+          }
+        }
+        whatController.whatInput = ''
 
-    w.document.getElementById('customPresets').addEventListener('click', clickListener, false)
+        // update ui
+        event.target.blur()
+        w.$rootScope.$apply()
+
+        alertify.success(`✔ Applied <i>${preset.label}</i>`)
+      }, w)
+
+      w.document.getElementById('customPresets').addEventListener('click', clickListener, false)
+    }
+    /* endregion presets end */
 
     // make photo filmstrip scrollable
     const filmstrip = w.document.getElementById('map-filmstrip')
@@ -356,17 +561,17 @@ function init () {
       })
     })
 
-    document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin', '<small class=\'pull-left\'><span style=\'color:#ebbc4a\'>Circle:</span> 40m</small>')
+    document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin', '<small class="pull-left"><span style="color:#ebbc4a">Circle:</span> 40m</small>')
 
     // move portal rating to the right side. don't move on mobile devices / small width
     if (screen.availWidth > 768) {
-      let nodeToMove = w.document.querySelector('div[class=\'btn-group\']').parentElement
+      let nodeToMove = w.document.querySelector('div[class="btn-group"]').parentElement
       if (subController.hasSupportingImageOrStatement) {
         const descDiv = w.document.getElementById('descriptionDiv')
         const scorePanel = descDiv.querySelector('div.text-center.hidden-xs')
         scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
       } else {
-        const scorePanel = w.document.querySelector('div[class~=\'pull-right\']')
+        const scorePanel = w.document.querySelector('div[class~="pull-right"]')
         scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
       }
     }
@@ -378,14 +583,14 @@ function init () {
     }
     for (let imgSep in imgDups) {
       if (imgDups.hasOwnProperty(imgSep)) {
-        imgDups[imgSep].addEventListener('click', () => {
+        imgDups[imgSep].addEventListener('click', exportFunction(() => {
           const imgDup = w.document.querySelector('#content > img')
           if (imgDup !== null) {
             imgDup.removeEventListener('click', openFullImage)
             imgDup.addEventListener('click', openFullImage)
             imgDup.setAttribute('style', 'cursor: pointer;')
           }
-        })
+        }))
       }
     }
 
@@ -401,7 +606,7 @@ function init () {
     a.appendChild(span)
     a.className = 'translate-title button btn btn-default pull-right'
     a.target = 'translate'
-    a.style.padding = '0px 4px'
+    a.style.setProperty('padding', '0px 4px')
     a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(content)}`
     link.insertAdjacentElement('afterend', a)
 
@@ -414,7 +619,7 @@ function init () {
       a.appendChild(span)
       a.className = 'translate-description button btn btn-default pull-right'
       a.target = 'translate'
-      a.style.padding = '0px 4px'
+      a.style.setProperty('padding', '0px 4px')
       a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(description)}`
       const br = w.document.querySelectorAll('#descriptionDiv br')[2]
       br.insertAdjacentElement('afterend', a)
@@ -432,197 +637,206 @@ function init () {
 
     expandWhatIsItBox()
 
-    // keyboard navigation
-    // documentation: https://gitlab.com/1110101/opr-tools#keyboard-navigation
-
-    let currentSelectable = 0
-    let maxItems = 7
-    let selectedReasonGroup = -1
-    let selectedReasonSubGroup = -1
-
-    // Reset when modal is closed
-    let _resetLowQuality = ansController.resetLowQuality
-    ansController.resetLowQuality = exportFunction(() => {
-      _resetLowQuality()
-      selectedReasonGroup = -1
-      selectedReasonSubGroup = -1
-      currentSelectable = 0
-      highlight()
-    })
-
     // Fix rejectComment width
     let _showLowQualityModal = ansController.showLowQualityModal
     ansController.showLowQualityModal = exportFunction(() => {
       _showLowQualityModal()
       setTimeout(() => {
         let rejectReasonTA = w.document.querySelector('textarea[ng-model="answerCtrl2.rejectComment"]')
-        rejectReasonTA.style['max-width'] = '100%'
+        rejectReasonTA.style.setProperty('max-width', '100%')
       }, 10)
     })
 
-    // a list of all 6 star button rows, and the two submit buttons
-    let starsAndSubmitButtons
-    if (subController.hasSupportingImageOrStatement) {
-      starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .text-center.hidden-xs:not(.ng-hide) .btn-group, .big-submit-button')
-    } else {
-      starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button')
+    /* region keyboard nav */
+    if (preferences.get(OPRT.OPTIONS.KEYBOARD_NAV)) {
+      activateShortcuts()
     }
 
-    function highlight () {
-      starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none' }, w))
-      if (currentSelectable <= maxItems - 2) {
-        starsAndSubmitButtons[currentSelectable].style.border = cloneInto('1px dashed #ebbc4a', w)
-        submitAndNext.blur()
-        submitButton.blur()
-      } else if (currentSelectable === 6) {
-        submitAndNext.focus()
-      } else if (currentSelectable === 7) {
-        submitButton.focus()
-      }
-    }
+    function activateShortcuts () {
+      // keyboard navigation
+      // documentation: https://gitlab.com/1110101/opr-tools#keyboard-navigation
 
-    addEventListener('keydown', (event) => {
-      /*
-      keycodes:
+      let currentSelectable = 0
+      let maxItems = 7
+      let selectedReasonGroup = -1
+      let selectedReasonSubGroup = -1
 
-      8: Backspace
-      9: TAB
-      13: Enter
-      16: Shift
-      27: Escape
-      32: Space
-      68: D
-      107: NUMPAD +
-      109: NUMPAD -
-      111: NUMPAD /
+      // Reset when modal is closed
+      let _resetLowQuality = ansController.resetLowQuality
+      ansController.resetLowQuality = exportFunction(() => {
+        _resetLowQuality()
+        selectedReasonGroup = -1
+        selectedReasonSubGroup = -1
+        currentSelectable = 0
+        highlight()
+      })
 
-      49 - 53:  Keys 1-5
-      97 - 101: NUMPAD 1-5
-
-       */
-
-      let numkey = null
-      if (event.keyCode >= 49 && event.keyCode <= 55) {
-        numkey = event.keyCode - 48
-      } else if (event.keyCode >= 97 && event.keyCode <= 103) {
-        numkey = event.keyCode - 96
+      // a list of all 6 star button rows, and the two submit buttons
+      let starsAndSubmitButtons
+      if (subController.hasSupportingImageOrStatement) {
+        starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .text-center.hidden-xs:not(.ng-hide) .btn-group, .big-submit-button')
+      } else {
+        starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button')
       }
 
-      // do not do anything if a text area or a input with type text has focus
-      if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
-        return
-      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
-        // "analyze next" button
-        w.document.location.href = '/recon'
-        event.preventDefault()
-      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
-        // submit low quality rating
-        w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]').click()
-        currentSelectable = 0
-        event.preventDefault()
-      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQualityOld()"]')) {
-        // submit low quality rating alternate
-        w.document.querySelector('[ng-click="answerCtrl2.confirmLowQualityOld()"]').click()
-        currentSelectable = 0
-        event.preventDefault()
-      } else if ((event.keyCode === 68) && w.document.querySelector('#content > button')) {
-        // click first/selected duplicate (key D)
-        w.document.querySelector('#content > button').click()
-        currentSelectable = 0
-        event.preventDefault()
-      } else if (event.keyCode === 84) {
-        // click on translate title link (key T)
-        const link = w.document.querySelector('#descriptionDiv > .translate-title')
-        if (link) {
-          link.click()
+      function highlight () {
+        starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.setProperty('border', 'none') }, w))
+        if (currentSelectable <= maxItems - 2) {
+          starsAndSubmitButtons[currentSelectable].style.setProperty('border', '1px dashed #ebbc4a')
+          submitAndNext.blur()
+          submitButton.blur()
+        } else if (currentSelectable === 6) {
+          submitAndNext.focus()
+        } else if (currentSelectable === 7) {
+          submitButton.focus()
+        }
+      }
+
+      addEventListener('keydown', (event) => {
+        /*
+        keycodes:
+
+        8: Backspace
+        9: TAB
+        13: Enter
+        16: Shift
+        27: Escape
+        32: Space
+        68: D
+        107: NUMPAD +
+        109: NUMPAD -
+        111: NUMPAD /
+
+        49 - 53:  Keys 1-5
+        97 - 101: NUMPAD 1-5
+
+         */
+
+        let numkey = null
+        if (event.keyCode >= 49 && event.keyCode <= 55) {
+          numkey = event.keyCode - 48
+        } else if (event.keyCode >= 97 && event.keyCode <= 103) {
+          numkey = event.keyCode - 96
+        }
+
+        // do not do anything if a text area or a input with type text has focus
+        if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
+          return
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+          // "analyze next" button
+          w.document.location.href = '/recon'
           event.preventDefault()
-        }
-      } else if (event.keyCode === 89) {
-        // click on translate description link (key Y)
-        const link = w.document.querySelector('#descriptionDiv > .translate-description')
-        if (link) {
-          link.click()
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+          // submit low quality rating
+          w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]').click()
+          currentSelectable = 0
           event.preventDefault()
-        }
-      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
-        // submit duplicate
-        w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]').click()
-        currentSelectable = 0
-        event.preventDefault()
-      } else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
-        // submit normal rating
-        w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click()
-        event.preventDefault()
-      } else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]')) {
-        // close duplicate dialog
-        w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]').click()
-        currentSelectable = 0
-        event.preventDefault()
-      } else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]')) {
-        // close low quality ration dialog
-        w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]').click()
-        currentSelectable = 0
-        event.preventDefault()
-      } else if (event.keyCode === 27 || event.keyCode === 111) {
-        // return to first selection (should this be a portal)
-        currentSelectable = 0
-        event.preventDefault()
-      } else if (event.keyCode === 106 || event.keyCode === 220) {
-        // skip portal if possible
-        if (newPortalData.canSkip) {
-          ansController.skipToNext()
-        }
-      } else if (event.keyCode === 72) {
-        showHelp() // @todo
-      } else if (w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
-        // Reject reason shortcuts
-        if (numkey != null) {
-          if (selectedReasonGroup === -1) {
-            try {
-              w.document.getElementById('sub-group-' + numkey).click()
-              selectedReasonGroup = numkey - 1
-              w.document.querySelectorAll('label.sub-group kbd').forEach(el => el.classList.add('hide'))
-            } catch (err) {}
-          } else {
-            if (selectedReasonSubGroup === -1) {
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQualityOld()"]')) {
+          // submit low quality rating alternate
+          w.document.querySelector('[ng-click="answerCtrl2.confirmLowQualityOld()"]').click()
+          currentSelectable = 0
+          event.preventDefault()
+        } else if ((event.keyCode === 68) && w.document.querySelector('#content > button')) {
+          // click first/selected duplicate (key D)
+          w.document.querySelector('#content > button').click()
+          currentSelectable = 0
+          event.preventDefault()
+        } else if (event.keyCode === 84) {
+          // click on translate title link (key T)
+          const link = w.document.querySelector('#descriptionDiv > .translate-title')
+          if (link) {
+            link.click()
+            event.preventDefault()
+          }
+        } else if (event.keyCode === 89) {
+          // click on translate description link (key Y)
+          const link = w.document.querySelector('#descriptionDiv > .translate-description')
+          if (link) {
+            link.click()
+            event.preventDefault()
+          }
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
+          // submit duplicate
+          w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]').click()
+          currentSelectable = 0
+          event.preventDefault()
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+          // submit normal rating
+          w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click()
+          event.preventDefault()
+        } else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]')) {
+          // close duplicate dialog
+          w.document.querySelector('[ng-click="answerCtrl2.resetDuplicate()"]').click()
+          currentSelectable = 0
+          event.preventDefault()
+        } else if ((event.keyCode === 27 || event.keyCode === 111) && w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]')) {
+          // close low quality ration dialog
+          w.document.querySelector('[ng-click="answerCtrl2.resetLowQuality()"]').click()
+          currentSelectable = 0
+          event.preventDefault()
+        } else if (event.keyCode === 27 || event.keyCode === 111) {
+          // return to first selection (should this be a portal)
+          currentSelectable = 0
+          event.preventDefault()
+        } else if (event.keyCode === 106 || event.keyCode === 220) {
+          // skip portal if possible
+          if (newPortalData.canSkip) {
+            ansController.skipToNext()
+          }
+        } else if (event.keyCode === 72) {
+          showHelp() // @todo
+        } else if (w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
+          // Reject reason shortcuts
+          if (numkey != null) {
+            if (selectedReasonGroup === -1) {
               try {
-                w.document.querySelectorAll('#reject-reason ul ul')[selectedReasonGroup].children[numkey - 1].children[0].click()
-                selectedReasonSubGroup = numkey - 1
+                w.document.getElementById('sub-group-' + numkey).click()
+                selectedReasonGroup = numkey - 1
+                w.document.querySelectorAll('label.sub-group kbd').forEach(el => el.classList.add('hide'))
               } catch (err) {}
             } else {
-              w.document.getElementById('root-label').click()
-              selectedReasonGroup = -1
-              selectedReasonSubGroup = -1
-              w.document.querySelectorAll('label.sub-group kbd').forEach(el => el.classList.remove('hide'))
+              if (selectedReasonSubGroup === -1) {
+                try {
+                  w.document.querySelectorAll('#reject-reason ul ul')[selectedReasonGroup].children[numkey - 1].children[0].click()
+                  selectedReasonSubGroup = numkey - 1
+                } catch (err) {}
+              } else {
+                w.document.getElementById('root-label').click()
+                selectedReasonGroup = -1
+                selectedReasonSubGroup = -1
+                w.document.querySelectorAll('label.sub-group kbd').forEach(el => el.classList.remove('hide'))
+              }
             }
+            event.preventDefault()
           }
+        } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+          // select next rating
+          currentSelectable++
           event.preventDefault()
+        } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+          // select previous rating
+          currentSelectable--
+          event.preventDefault()
+        } else if (numkey === null || currentSelectable > maxItems - 2) {
+          return
+        } else if (numkey !== null && event.shiftKey) {
+          try {
+            w.document.getElementsByClassName('customPresetButton')[numkey - 1].click()
+          } catch (e) {
+            // ignore
+          }
+        } else {
+          // rating 1-5
+          starsAndSubmitButtons[currentSelectable].querySelectorAll('button.button-star')[numkey - 1].click()
+          currentSelectable++
         }
-      } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
-        // select next rating
-        currentSelectable++
-        event.preventDefault()
-      } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
-        // select previous rating
-        currentSelectable--
-        event.preventDefault()
-      } else if (numkey === null || currentSelectable > maxItems - 2) {
-        return
-      } else if (numkey !== null && event.shiftKey) {
-        try {
-          w.document.getElementsByClassName('customPresetButton')[numkey - 1].click()
-        } catch (e) {
-          // ignore
-        }
-      } else {
-        // rating 1-5
-        starsAndSubmitButtons[currentSelectable].querySelectorAll('button.button-star')[numkey - 1].click()
-        currentSelectable++
-      }
-      highlight()
-    })
+        highlight()
+      })
 
-    highlight()
+      highlight()
+    }
+
+    /* endregion keyboard nav */
 
     modifyNewPage = () => {} // eslint-disable-line
   }
@@ -648,7 +862,7 @@ function init () {
     let newSubmitDiv = moveSubmitButton()
     let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController, bodyObserver)
 
-    textButtons()
+    if (preferences.get(OPRT.OPTIONS.COMMENT_TEMPLATES)) { commentTemplates() }
 
     mapTypes(subController.locationEditsMap, true)
 
@@ -663,9 +877,9 @@ function init () {
         a.appendChild(span)
         a.className = 'translate-title button btn btn-default pull-right'
         a.target = 'translate'
-        a.style.padding = '0px 4px'
+        a.style.setProperty('padding', '0px 4px')
         a.href = `https://translate.google.com/#auto/${browserLocale.split('-')[0]}/${encodeURIComponent(content)}`
-        titleEditBox.querySelector('p').style.display = 'inline-block'
+        titleEditBox.querySelector('p').style.setProperty('display', 'inline-block')
         titleEditBox.insertAdjacentElement('beforeEnd', a)
       }
     }
@@ -680,8 +894,8 @@ function init () {
       a.appendChild(span)
       a.className = 'translate-title button btn btn-default'
       a.target = 'translate'
-      a.style.padding = '0px 4px'
-      a.style.marginLeft = '14px'
+      a.style.setProperty('padding', '0px 4px')
+      a.style.setProperty('margin-left', '14px')
       a.href = `https://translate.google.com/#auto/${browserLocale.split('-')[0]}/${encodeURIComponent(content)}`
       titleDiv.insertAdjacentElement('beforeend', a)
     }
@@ -697,8 +911,8 @@ function init () {
         a.appendChild(span)
         a.className = 'translate-title button btn btn-default'
         a.target = 'translate'
-        a.style.padding = '0px 4px'
-        a.style.marginLeft = '14px'
+        a.style.setProperty('padding', '0px 4px')
+        a.style.setProperty('margin-left', '14px')
         a.href = `https://translate.google.com/#auto/${browserLocale.split('-')[0]}/${encodeURIComponent(content)}`
         titleDiv.insertAdjacentElement('beforeEnd', a)
       }
@@ -712,115 +926,121 @@ function init () {
     }
 
     /* EDIT PORTAL */
-    // keyboard navigation
+    /* region keyboard navigation */
 
-    let currentSelectable = 0
-    let hasLocationEdit = (newPortalData.locationEdits.length > 1)
-    // counting *true*, please don't shoot me
-    let maxItems = (newPortalData.descriptionEdits.length > 1) + (newPortalData.titleEdits.length > 1) + (hasLocationEdit) + 2
-
-    let mapMarkers
-    if (hasLocationEdit) mapMarkers = subController.allLocationMarkers
-    else mapMarkers = []
-
-    // a list of all 6 star button rows, and the two submit buttons
-    let starsAndSubmitButtons = w.document.querySelectorAll(
-      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.titleEdits.length > 1"]:not(.ng-hide),' +
-      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.descriptionEdits.length > 1"]:not(.ng-hide),' +
-      'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.locationEdits.length > 1"]:not(.ng-hide),' +
-      '.big-submit-button')
-
-    /* EDIT PORTAL */
-    function highlight () {
-      let el = editDiv.querySelector('h3[ng-show="subCtrl.pageData.locationEdits.length > 1"]')
-      el.style.border = 'none'
-
-      starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none' }, w))
-      if (hasLocationEdit && currentSelectable === maxItems - 3) {
-        el.style.borderLeft = cloneInto('4px dashed #ebbc4a', w)
-        el.style.borderTop = cloneInto('4px dashed #ebbc4a', w)
-        el.style.borderRight = cloneInto('4px dashed #ebbc4a', w)
-        el.style.padding = cloneInto('16px', w)
-        el.style.marginBottom = cloneInto('0', w)
-        submitAndNext.blur()
-        submitButton.blur()
-      } else if (currentSelectable < maxItems - 2) {
-        starsAndSubmitButtons[currentSelectable].style.borderLeft = cloneInto('4px dashed #ebbc4a', w)
-        starsAndSubmitButtons[currentSelectable].style.paddingLeft = cloneInto('16px', w)
-        submitAndNext.blur()
-        submitButton.blur()
-      } else if (currentSelectable === maxItems - 2) {
-        submitAndNext.focus()
-      } else if (currentSelectable === maxItems) {
-        submitButton.focus()
-      }
+    if (preferences.get(OPRT.OPTIONS.KEYBOARD_NAV)) {
+      activateShortcuts()
     }
 
-    /* EDIT PORTAL */
-    addEventListener('keydown', (event) => {
-      /*
-      Keycodes:
+    function activateShortcuts () {
+      let currentSelectable = 0
+      let hasLocationEdit = (newPortalData.locationEdits.length > 1)
+      // counting *true*, please don't shoot me
+      let maxItems = (newPortalData.descriptionEdits.length > 1) + (newPortalData.titleEdits.length > 1) + (hasLocationEdit) + 2
 
-      8: Backspace
-      9: TAB
-      13: Enter
-      16: Shift
-      27: Escape
-      32: Space
-      68: D
-      107: NUMPAD +
-      109: NUMPAD -
-      111: NUMPAD /
+      let mapMarkers
+      if (hasLocationEdit) mapMarkers = subController.allLocationMarkers
+      else mapMarkers = []
 
-      49 - 53:  Keys 1-5
-      97 - 101: NUMPAD 1-5
-       */
+      // a list of all 6 star button rows, and the two submit buttons
+      let starsAndSubmitButtons = w.document.querySelectorAll(
+        'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.titleEdits.length > 1"]:not(.ng-hide),' +
+        'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.descriptionEdits.length > 1"]:not(.ng-hide),' +
+        'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.locationEdits.length > 1"]:not(.ng-hide),' +
+        '.big-submit-button')
 
-      let numkey = null
-      if (event.keyCode >= 49 && event.keyCode <= 53) {
-        numkey = event.keyCode - 48
-      } else if (event.keyCode >= 97 && event.keyCode <= 101) {
-        numkey = event.keyCode - 96
-      }
+      /* EDIT PORTAL */
+      function highlight () {
+        let el = editDiv.querySelector('h3[ng-show="subCtrl.pageData.locationEdits.length > 1"]')
+        el.style.setProperty('border', 'none')
 
-      // do not do anything if a text area or a input with type text has focus
-      if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
-        return
-      } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
-        // "analyze next" button
-        w.document.location.href = '/recon'
-        event.preventDefault()
-      } else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
-        // submit normal rating
-        w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click()
-        event.preventDefault()
-      } else if (event.keyCode === 27 || event.keyCode === 111) {
-        // return to first selection (should this be a portal)
-        currentSelectable = 0
-      } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
-        // select next rating
-        currentSelectable++
-        event.preventDefault()
-      } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
-        // select previous rating
-        currentSelectable--
-        event.preventDefault()
-      } else if (numkey === null || currentSelectable > maxItems - 2) {
-        return
-      } else {
-        // rating 1-5
-        if (hasLocationEdit && currentSelectable === maxItems - 3 && numkey <= mapMarkers.length) {
-          google.maps.event.trigger(angular.element(document.getElementById('NewSubmissionController')).scope().getAllLocationMarkers()[numkey - 1], 'click')
-        } else {
-          if (hasLocationEdit) numkey = 1
-          starsAndSubmitButtons[currentSelectable].querySelectorAll('.titleEditBox, input[type=\'checkbox\']')[numkey - 1].click()
-          currentSelectable++
+        starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.setProperty('border', 'none') }, w))
+        if (hasLocationEdit && currentSelectable === maxItems - 3) {
+          el.style.setProperty('border-left', '4px dashed #ebbc4a')
+          el.style.setProperty('border-top', '4px dashed #ebbc4a')
+          el.style.setProperty('border-right', '4px dashed #ebbc4a')
+          el.style.setProperty('padding', '16px')
+          el.style.setProperty('margin-bottom', '0')
+          submitAndNext.blur()
+          submitButton.blur()
+        } else if (currentSelectable < maxItems - 2) {
+          starsAndSubmitButtons[currentSelectable].style.setProperty('border-left', '4px dashed #ebbc4a')
+          starsAndSubmitButtons[currentSelectable].style.setProperty('padding-left', '16px')
+          submitAndNext.blur()
+          submitButton.blur()
+        } else if (currentSelectable === maxItems - 2) {
+          submitAndNext.focus()
+        } else if (currentSelectable === maxItems) {
+          submitButton.focus()
         }
       }
-      highlight()
-    })
 
-    highlight()
+      /* EDIT PORTAL */
+      addEventListener('keydown', (event) => {
+        /*
+        Keycodes:
+
+        8: Backspace
+        9: TAB
+        13: Enter
+        16: Shift
+        27: Escape
+        32: Space
+        68: D
+        107: NUMPAD +
+        109: NUMPAD -
+        111: NUMPAD /
+
+        49 - 53:  Keys 1-5
+        97 - 101: NUMPAD 1-5
+         */
+
+        let numkey = null
+        if (event.keyCode >= 49 && event.keyCode <= 53) {
+          numkey = event.keyCode - 48
+        } else if (event.keyCode >= 97 && event.keyCode <= 101) {
+          numkey = event.keyCode - 96
+        }
+
+        // do not do anything if a text area or a input with type text has focus
+        if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
+          return
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+          // "analyze next" button
+          w.document.location.href = '/recon'
+          event.preventDefault()
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
+          // submit normal rating
+          w.document.querySelector('[ng-click="answerCtrl.submitForm()"]').click()
+          event.preventDefault()
+        } else if (event.keyCode === 27 || event.keyCode === 111) {
+          // return to first selection (should this be a portal)
+          currentSelectable = 0
+        } else if ((event.keyCode === 107 || event.keyCode === 9) && currentSelectable < maxItems) {
+          // select next rating
+          currentSelectable++
+          event.preventDefault()
+        } else if ((event.keyCode === 109 || event.keyCode === 16 || event.keyCode === 8) && currentSelectable > 0) {
+          // select previous rating
+          currentSelectable--
+          event.preventDefault()
+        } else if (numkey === null || currentSelectable > maxItems - 2) {
+          return
+        } else {
+          // rating 1-5
+          if (hasLocationEdit && currentSelectable === maxItems - 3 && numkey <= mapMarkers.length) {
+            google.maps.event.trigger(angular.element(document.getElementById('NewSubmissionController')).scope().getAllLocationMarkers()[numkey - 1], 'click')
+          } else {
+            if (hasLocationEdit) numkey = 1
+            starsAndSubmitButtons[currentSelectable].querySelectorAll('.titleEditBox, input[type="checkbox"]')[numkey - 1].click()
+            currentSelectable++
+          }
+        }
+        highlight()
+      })
+
+      highlight()
+    }
   }
 
   // add map buttons
@@ -872,6 +1092,11 @@ function init () {
   function quickSubmitButton (submitDiv, ansController, bodyObserver) {
     let submitButton = submitDiv.querySelector('button')
     submitButton.classList.add('btn', 'btn-warning')
+
+    if (!preferences.get(OPRT.OPTIONS.SKIP_ANALYZED_DIALOG)) { // quick hack, meh
+      return { submitButton, submitAndNext: submitButton } // eslint-disable-line
+    }
+
     let submitAndNext = submitButton.cloneNode(false)
     submitButton.addEventListener('click', exportFunction(() => {
       bodyObserver.disconnect()
@@ -891,7 +1116,7 @@ function init () {
     return { submitButton, submitAndNext }
   }
 
-  function textButtons () {
+  function commentTemplates () {
 
     // add text buttons
     const textButtons = `
@@ -998,13 +1223,16 @@ function init () {
       { provider: PROVIDERS.GOOGLE, id: 'roadmap' },
       { provider: PROVIDERS.GOOGLE, id: 'terrain' },
       { provider: PROVIDERS.GOOGLE, id: 'satellite' },
-      { provider: PROVIDERS.GOOGLE, id: 'hybrid' },
-      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`, code: 'topo4', label: 'NO - Topo' },
-      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster' },
-      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart' }
-    ]
+      { provider: PROVIDERS.GOOGLE, id: 'hybrid' }]
 
-    const defaultType = 'hybrid'
+    if (preferences.get(OPRT.OPTIONS.NORWAY_MAP_LAYER)) {
+      types.push({ provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`, code: 'topo4', label: 'NO - Topo' },
+        { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster' },
+        { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart' }
+      )
+    }
+
+    const defaultMapType = 'hybrid'
 
     const mapOptions = {
       // re-enabling map scroll zoom and allow zoom with out holding ctrl
@@ -1041,11 +1269,11 @@ function init () {
     if (isMainMap) {
       // save selection when changed
       map.addListener('maptypeid_changed', function () {
-        w.localStorage.setItem(OPRT.MAP_TYPE, map.getMapTypeId())
+        w.localStorage.setItem(OPRT.PREFIX + OPRT.VAR.MAP_TYPE, map.getMapTypeId())
       })
 
       // get map type saved from last use or fall back to default
-      map.setMapTypeId(w.localStorage.getItem(OPRT.MAP_TYPE) || defaultType)
+      map.setMapTypeId(w.localStorage.getItem(OPRT.PREFIX + OPRT.VAR.MAP_TYPE) || defaultMapType)
     }
   }
 
@@ -1057,7 +1285,7 @@ function init () {
       let newSubmitDiv = w.document.createElement('div')
       const classificationRow = w.document.querySelector('.classification-row')
       newSubmitDiv.className = 'col-xs-12 col-sm-6'
-      submitDiv[0].style.marginTop = 16
+      submitDiv[0].style.setProperty('margin-top', '16px')
       newSubmitDiv.appendChild(submitDiv[0])
       newSubmitDiv.appendChild(submitDiv[1])
       classificationRow.insertAdjacentElement('afterend', newSubmitDiv)
@@ -1086,19 +1314,36 @@ function init () {
 
     // stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
 
-    // get scanner offset from localStorage
-    let oprtScannerOffset = parseInt(w.localStorage.getItem(OPRT.SCANNER_OFFSET)) || 0
-
+    let oprtScannerOffset = 0
+    if (preferences.get(OPRT.OPTIONS.SCANNER_OFFSET_FEATURE)) {
+      // get scanner offset from localStorage
+      oprtScannerOffset = parseInt(w.localStorage.getItem(OPRT.SCANNER_OFFSET)) || 0
+    }
     const lastPlayerStatLine = w.document.querySelector('#player_stats:not(.visible-xs) div')
     const stats = w.document.querySelector('#player_stats:not(.visible-xs) div')
+
+    // add opr-tools preferences button
+    let oprtPreferencesButton = w.document.createElement('a')
+    oprtPreferencesButton.classList.add('brand', 'upgrades-icon', 'pull-right')
+    oprtPreferencesButton.style.setProperty('cursor', 'pointer')
+    oprtPreferencesButton.style.setProperty('margin-right', '20px')
+    oprtPreferencesButton.style.setProperty('color', 'rgb(157, 157, 157)')
+    oprtPreferencesButton.addEventListener('click', () => preferences.showPreferencesUI(w))
+    oprtPreferencesButton.title = 'OPR-Tools Preferences'
+
+    const prefCog = w.document.createElement('span')
+    prefCog.classList.add('glyphicon', 'glyphicon-cog')
+    oprtPreferencesButton.appendChild(prefCog)
+
+    stats.parentElement.insertAdjacentElement('beforebegin', oprtPreferencesButton)
 
     // move upgrade button to the right
     const upgradeIcon = w.document.querySelector('.upgrades-icon')
     if (upgradeIcon !== undefined) {
       upgradeIcon.parentElement.removeChild(upgradeIcon)
 
-      upgradeIcon.style.marginRight = '20px'
-      upgradeIcon.style.color = '#9d9d9d'
+      upgradeIcon.style.setProperty('margin-right', '20px')
+      upgradeIcon.style.setProperty('color', '#9d9d9d')
       upgradeIcon.classList.add('pull-right')
 
       stats.parentElement.insertAdjacentElement('beforebegin', upgradeIcon)
@@ -1170,11 +1415,8 @@ ${Math.round(nextBadgeProcess)}%
     lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `<p><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 90%;" type="text"
 value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(processedPercent)}%"/></p>`)
 
-    let tooltipSpan = `<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder"
-uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
-
     // ** opr-scanner offset
-    if (accepted < 10000) {
+    if (accepted < 10000 && preferences.get(OPRT.OPTIONS.SCANNER_OFFSET_UI)) {
       lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `
 <p id='scannerOffsetContainer'>
 <span style="margin-left: 5px" class="ingress-mid-blue pull-left">Scanner offset:</span>
@@ -1183,7 +1425,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
 
       // we have to inject the tooltip to angular
       w.$injector.invoke(cloneInto(['$compile', ($compile) => {
-        let compiledSubmit = $compile(tooltipSpan)(w.$scope(stats))
+        let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`)(w.$scope(stats))
         w.document.getElementById('scannerOffsetContainer').insertAdjacentElement('afterbegin', compiledSubmit[0])
       }], w, { cloneFunctions: true }));
 
@@ -1203,23 +1445,23 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
     let cbxRefreshSound = w.document.createElement('input')
     let cbxRefreshDesktop = w.document.createElement('input')
 
-    cbxRefresh.id = OPRT.REFRESH
+    cbxRefresh.id = OPRT.OPTIONS.REFRESH
     cbxRefresh.type = 'checkbox'
-    cbxRefresh.checked = (w.localStorage.getItem(cbxRefresh.id) === 'true')
+    cbxRefresh.checked = preferences.get(OPRT.OPTIONS.REFRESH) === 'true'
 
-    cbxRefreshSound.id = OPRT.REFRESH_NOTI_SOUND
+    cbxRefreshSound.id = OPRT.OPTIONS.REFRESH_NOTI_SOUND
     cbxRefreshSound.type = 'checkbox'
-    cbxRefreshSound.checked = (w.localStorage.getItem(cbxRefreshSound.id) === 'true')
+    cbxRefreshSound.checked = preferences.get(OPRT.OPTIONS.REFRESH_NOTI_SOUND) === 'true'
 
-    cbxRefreshDesktop.id = OPRT.REFRESH_NOTI_DESKTOP
+    cbxRefreshDesktop.id = OPRT.OPTIONS.REFRESH_NOTI_DESKTOP
     cbxRefreshDesktop.type = 'checkbox'
-    cbxRefreshDesktop.checked = (w.localStorage.getItem(cbxRefreshDesktop.id) === 'true')
+    cbxRefreshDesktop.checked = preferences.get(OPRT.OPTIONS.REFRESH_NOTI_DESKTOP) === 'true'
 
     let refreshPanel = w.document.createElement('div')
     refreshPanel.className = 'panel panel-ingress'
 
     refreshPanel.addEventListener('change', (event) => {
-      w.localStorage.setItem(event.target.id, event.target.checked) // i'm lazy
+      preferences.set(event.target.id, event.target.checked)
       if (event.target.checked) {
         startRefresh()
       } else {
@@ -1295,12 +1537,12 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
       if (w.document.hidden) { // if tab in background: flash favicon
         let flag = true
 
-        if (w.localStorage.getItem(OPRT.REFRESH_NOTI_SOUND) === 'true') {
+        if (preferences.get(OPRT.OPTIONS.REFRESH_NOTI_SOUND) === 'true') {
           let audio = document.createElement('audio')
           audio.src = NOTIFICATION_SOUND
           audio.autoplay = true
         }
-        if (w.localStorage.getItem(OPRT.REFRESH_NOTI_DESKTOP) === 'true') {
+        if (preferences.get(OPRT.OPTIONS.REFRESH_NOTI_DESKTOP) === 'true') {
           GM_notification({
             'title': 'OPR - New Portal Analysis Available',
             'text': 'by OPR-Tools',
@@ -1325,7 +1567,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
   }
 
   function changeFavicon (src) {
-    let link = w.document.querySelector('link[rel=\'shortcut icon\']')
+    let link = w.document.querySelector('link[rel="shortcut icon"]')
     link.href = src
   }
 
@@ -1334,7 +1576,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
 
     let countdownEnd = subController.countdownDate
     let countdownDisplay = document.getElementById('countdownDisplay')
-    countdownDisplay.style.color = 'white'
+    countdownDisplay.style.setProperty('color', 'white')
 
     // Update the count down every 1 second
     let counterInterval = setInterval(function () {
@@ -1353,11 +1595,27 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
         // If the count down is finished, write some text
         clearInterval(counterInterval)
         countdownDisplay.innerText = 'EXPIRED'
-        countdownDisplay.style.color = 'red'
+        countdownDisplay.style.setProperty('color', 'red')
       } else if (distance < 90000) {
-        countdownDisplay.style.color = 'red'
+        countdownDisplay.style.setProperty('color', 'red')
       }
     }, 1000)
+  }
+
+  function versionCheck () {
+    if (OPRT.VERSION > (parseInt(w.localStorage.getItem(OPRT.PREFIX + OPRT.VERSION_CHECK)) || OPRT.VERSION - 1)) {
+      w.localStorage.setItem(OPRT.PREFIX + OPRT.VERSION_CHECK, OPRT.VERSION)
+
+      const changelogString = `
+        <h4><span class="glyphicon glyphicon-asterisk"></span> OPR Tools was updated:</h4>
+        <div>${strings.changelog}</div>      
+      `
+      // show changelog
+      alertify.closeLogOnClick(false).logPosition('bottom right').delay(0).log(changelogString, (ev) => {
+        ev.preventDefault()
+        ev.target.closest('div.default.show').remove()
+      }).reset()
+    }
   }
 
   function addCustomPresetButtons () {
@@ -1372,7 +1630,7 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
 
   function getCustomPresets (w) {
     // simply to scope the string we don't need after JSON.parse
-    let presetsJSON = w.localStorage.getItem('oprt_custom_presets')
+    let presetsJSON = w.localStorage.getItem(OPRT.PREFIX + OPRT.VAR.CUSTOM_PRESETS)
     if (presetsJSON != null && presetsJSON !== '') {
       return JSON.parse(presetsJSON)
     }
@@ -1394,12 +1652,12 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
       safety: ansController.formData.safety
     }
     oprtCustomPresets.push(preset)
-    w.localStorage.setItem('oprt_custom_presets', JSON.stringify(oprtCustomPresets))
+    w.localStorage.setItem(OPRT.PREFIX + OPRT.VAR.CUSTOM_PRESETS, JSON.stringify(oprtCustomPresets))
   }
 
   function deleteCustomPreset (preset) {
     oprtCustomPresets = oprtCustomPresets.filter(item => item.uid !== preset.uid)
-    w.localStorage.setItem('oprt_custom_presets', JSON.stringify(oprtCustomPresets))
+    w.localStorage.setItem(OPRT.PREFIX + OPRT.VAR.CUSTOM_PRESETS, JSON.stringify(oprtCustomPresets))
   }
 
   function showHelp () {
@@ -1476,9 +1734,27 @@ uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`
 
 setTimeout(() => {
   init()
-}, 500)
+}, 250)
 
 // region const
+
+const strings = {
+  options: {
+    [OPRT.OPTIONS.COMMENT_TEMPLATES]: 'Comment templates',
+    [OPRT.OPTIONS.KEYBOARD_NAV]: 'Keyboard Navigation',
+    [OPRT.OPTIONS.NORWAY_MAP_LAYER]: 'Norwegian Map Layer',
+    [OPRT.OPTIONS.PRESET_FEATURE]: 'Presets',
+    [OPRT.OPTIONS.REFRESH]: 'Periodically refresh opr if no analysis is available',
+    [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: '↳ With desktop notification',
+    [OPRT.OPTIONS.REFRESH_NOTI_SOUND]: '↳ With sound notification',
+    [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: 'Skip \'Analysis recorded\' dialog',
+
+    [OPRT.OPTIONS.SCANNER_OFFSET_FEATURE]: 'Scanner offset',
+    [OPRT.OPTIONS.SCANNER_OFFSET_UI]: '↳ Display offset input field'
+  },
+  changelog:
+    `* New preferences menu`
+}
 
 const GLOBAL_CSS = `
 .dropdown {
@@ -1641,6 +1917,9 @@ kbd {
 
 .opr-yellow {
     color: #F3EADA;
+}
+.upgrades-icon:hover {
+  color: rgb(200, 200, 200) !important;
 }
 
 @media(min-width:768px) {
