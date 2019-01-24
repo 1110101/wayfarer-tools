@@ -137,7 +137,7 @@ class Preferences {
     border-left: 2px gold inset;
     position: absolute;
     right: 0;
-    height: 100%;
+    height: 95%;
     padding: 0 20px;
     z-index: 10;
     width: 400px;
