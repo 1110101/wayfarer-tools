@@ -73,12 +73,13 @@ const OPRT = {
 
   PREFIX: 'oprt_',
   VAR_PREFIX: 'oprt_var', // used in import/export **only**
-  VAR: {
+  VAR: { // will be included in import/export
     SCANNER_OFFSET: 'scanner_offset',
     MAP_TYPE: 'map_type',
-    VERSION_CHECK: 'version_check',
     CUSTOM_PRESETS: 'custom_presets'
   },
+
+  VERSION_CHECK: 'version_check', // outside var, because it should not get Exported
 
   FROM_REFRESH: 'from_refresh' // sessionStorage
 }
@@ -1600,8 +1601,8 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
   }
 
   function versionCheck () {
-    if (OPRT.VERSION > (parseInt(w.localStorage.getItem(OPRT.PREFIX + OPRT.VAR.VERSION_CHECK)) || OPRT.VERSION - 1)) {
-      w.localStorage.setItem(OPRT.PREFIX + OPRT.VAR.VERSION_CHECK, OPRT.VERSION)
+    if (OPRT.VERSION > (parseInt(w.localStorage.getItem(OPRT.PREFIX + OPRT.VERSION_CHECK)) || OPRT.VERSION - 1)) {
+      w.localStorage.setItem(OPRT.PREFIX + OPRT.VERSION_CHECK, OPRT.VERSION)
 
       const changelogString = `
         <h4><span class="glyphicon glyphicon-asterisk"></span> OPR Tools was updated:</h4>
