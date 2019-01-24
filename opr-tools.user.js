@@ -140,7 +140,7 @@ class Preferences {
     height: 100%;
     padding: 0 20px;
     z-index: 10;
-    width: 300px;
+    width: 400px;
     ">
   <div class="row">
     <div class="col-lg-12">
@@ -192,7 +192,7 @@ class Preferences {
               return
             }
             inout.importFromString(value)
-            alertify.success(`✔ Imported Preferences`)
+            alertify.success(`✔ Imported preferences`)
           }, event => {
             event.preventDefault()
           }
@@ -201,7 +201,10 @@ class Preferences {
 
       w.document.getElementById('export_all').addEventListener('click', () => {
         navigator.clipboard.writeText(inout.exportAll()).then(() => {
-          alertify.success(`✔ Exported Preferences to your clipboard`)
+          alertify.success(`✔ Exported preferences to your clipboard!`)
+        },() => {
+          // ugly alert as fallback
+          alertify.alert(inout.exportAll());
         })
       })
     }
