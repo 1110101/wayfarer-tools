@@ -1316,6 +1316,21 @@ function init () {
     const lastPlayerStatLine = w.document.querySelector('#player_stats:not(.visible-xs) div')
     const stats = w.document.querySelector('#player_stats:not(.visible-xs) div')
 
+    // add opr-tools preferences button
+    let oprtPreferencesButton = w.document.createElement('a')
+    oprtPreferencesButton.classList.add('brand', 'upgrades-icon', 'pull-right')
+    oprtPreferencesButton.style.setProperty('cursor','pointer')
+    oprtPreferencesButton.style.setProperty('margin-right', '15px')
+    oprtPreferencesButton.style.setProperty('color', 'rgb(157, 157, 157)')
+    oprtPreferencesButton.addEventListener('click', () => preferences.showPreferencesUI(w))
+    oprtPreferencesButton.title = 'OPR-Tools Preferences'
+
+    const prefCog = w.document.createElement('span')
+    prefCog.classList.add('glyphicon', 'glyphicon-cog')
+    oprtPreferencesButton.appendChild(prefCog)
+
+    stats.parentElement.insertAdjacentElement('beforebegin', oprtPreferencesButton)
+
     // move upgrade button to the right
     const upgradeIcon = w.document.querySelector('.upgrades-icon')
     if (upgradeIcon !== undefined) {
@@ -1327,19 +1342,6 @@ function init () {
 
       stats.parentElement.insertAdjacentElement('beforebegin', upgradeIcon)
     }
-
-    // add opr-tools preferences button
-    let oprtPreferencesButton = w.document.createElement('button')
-    oprtPreferencesButton.classList.add('btn', 'btn-sm', 'btn-success', 'pull-right')
-    oprtPreferencesButton.style.setProperty('margin-right', '10px')
-    oprtPreferencesButton.addEventListener('click', () => preferences.showPreferencesUI(w))
-    oprtPreferencesButton.title = 'OPR-Tools Preferences'
-
-    const prefCog = w.document.createElement('span')
-    prefCog.classList.add('glyphicon', 'glyphicon-cog')
-    oprtPreferencesButton.appendChild(prefCog)
-
-    stats.parentElement.insertAdjacentElement('beforebegin', oprtPreferencesButton)
 
     let perfBadge = null
     const imgSrc = stats.children[1].src
@@ -1908,6 +1910,9 @@ kbd {
 
 .opr-yellow {
     color: #F3EADA;
+}
+.upgrades-icon:hover {
+  color: rgb(200, 200, 200) !important;
 }
 
 @media(min-width:768px) {
