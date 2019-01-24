@@ -202,9 +202,9 @@ class Preferences {
       w.document.getElementById('export_all').addEventListener('click', () => {
         navigator.clipboard.writeText(inout.exportAll()).then(() => {
           alertify.success(`✔ Exported preferences to your clipboard!`)
-        },() => {
+        }, () => {
           // ugly alert as fallback
-          alertify.alert(inout.exportAll());
+          alertify.alert(inout.exportAll())
         })
       })
     }
@@ -1322,7 +1322,7 @@ function init () {
     // add opr-tools preferences button
     let oprtPreferencesButton = w.document.createElement('a')
     oprtPreferencesButton.classList.add('brand', 'upgrades-icon', 'pull-right')
-    oprtPreferencesButton.style.setProperty('cursor','pointer')
+    oprtPreferencesButton.style.setProperty('cursor', 'pointer')
     oprtPreferencesButton.style.setProperty('margin-right', '15px')
     oprtPreferencesButton.style.setProperty('color', 'rgb(157, 157, 157)')
     oprtPreferencesButton.addEventListener('click', () => preferences.showPreferencesUI(w))
@@ -1746,7 +1746,7 @@ const strings = {
     [OPRT.OPTIONS.REFRESH_NOTI_SOUND]: '↳ With sound notification',
     [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: 'Skip \'Analysis recorded\' dialog',
     [OPRT.OPTIONS.SCANNER_OFFSET_FEATURE]: 'Scanner offset',
-    [OPRT.OPTIONS.SCANNER_OFFSET_UI]: '↳ Display offset input field',
+    [OPRT.OPTIONS.SCANNER_OFFSET_UI]: '↳ Display offset input field'
   },
   changelog:
     `* New preferences menu`
