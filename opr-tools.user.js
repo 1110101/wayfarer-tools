@@ -176,16 +176,16 @@ class Preferences {
         optionsContainer.insertAdjacentElement('beforeEnd', div)
       }
 
-      optionsContainer.addEventListener('change', (event) => {
+      optionsContainer.addEventListener('change', exportFunction((event) => {
         this.set(event.target.name, event.target.checked)
         reloadButton.classList.remove('hide')
-      })
+      }))
 
-      reloadButton.addEventListener('click', () => {
+      reloadButton.addEventListener('click', exportFunction(() => {
         window.location.reload()
-      })
+      }))
 
-      w.document.getElementById('import_all').addEventListener('click', () => {
+      w.document.getElementById('import_all').addEventListener('click', exportFunction(() => {
         alertify.okBtn('Import').prompt('Paste here:',
           (value, event) => {
             event.preventDefault()
@@ -198,16 +198,22 @@ class Preferences {
             event.preventDefault()
           }
         )
-      })
+      }))
 
-      w.document.getElementById('export_all').addEventListener('click', () => {
-        navigator.clipboard.writeText(inout.exportAll()).then(() => {
-          alertify.success(`✔ Exported preferences to your clipboard!`)
-        }, () => {
-          // ugly alert as fallback
-          alertify.alert(inout.exportAll())
-        })
-      })
+      w.document.getElementById('export_all').addEventListener('click', exportFunction(() => {
+          if (navigator.clipboard !== undefined) {
+            navigator.clipboard.writeText(inout.exportAll()).then(() => {
+              alertify.success(`✔ Exported preferences to your clipboard!`)
+            }, () => {
+              // ugly alert as fallback
+              alertify.alert(inout.exportAll())
+            })
+          } else {
+            alertify.alert(inout.exportAll())
+          }
+        }
+      ))
+
     }
   }
 
@@ -578,14 +584,14 @@ function init () {
     }
     for (let imgSep in imgDups) {
       if (imgDups.hasOwnProperty(imgSep)) {
-        imgDups[imgSep].addEventListener('click', () => {
+        imgDups[imgSep].addEventListener('click', exportFunction(() => {
           const imgDup = w.document.querySelector('#content > img')
           if (imgDup !== null) {
             imgDup.removeEventListener('click', openFullImage)
             imgDup.addEventListener('click', openFullImage)
             imgDup.setAttribute('style', 'cursor: pointer;')
           }
-        })
+        }))
       }
     }
 
