@@ -61,7 +61,8 @@ const OPRT = {
     KEYBOARD_NAV: 'keyboard_nav',
     NORWAY_MAP_LAYER: 'norway_map_layer',
     PRESET_FEATURE: 'preset_feature',
-    SCANNER_OFFSET_PREF: 'scanner_offset_pref',
+    SCANNER_OFFSET_FEATURE: 'scanner_offset_feature',
+    SCANNER_OFFSET_UI: 'scanner_offset_ui',
     COMMENT_TEMPLATES: 'comment_templates',
     SKIP_ANALYZED_DIALOG: 'skip_analyzed_dialog',
 
@@ -112,7 +113,8 @@ class Preferences {
       [OPRT.OPTIONS.KEYBOARD_NAV]: true,
       [OPRT.OPTIONS.NORWAY_MAP_LAYER]: false,
       [OPRT.OPTIONS.PRESET_FEATURE]: true,
-      [OPRT.OPTIONS.SCANNER_OFFSET_PREF]: false,
+      [OPRT.OPTIONS.SCANNER_OFFSET_FEATURE]: false,
+      [OPRT.OPTIONS.SCANNER_OFFSET_UI]: false,
       [OPRT.OPTIONS.COMMENT_TEMPLATES]: true,
       [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: true,
       [OPRT.OPTIONS.REFRESH]: true,
@@ -1406,7 +1408,7 @@ ${Math.round(nextBadgeProcess)}%
 value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(processedPercent)}%"/></p>`)
 
     // ** opr-scanner offset
-    if (accepted < 10000 && preferences.get(OPRT.OPTIONS.SCANNER_OFFSET_PREF)) {
+    if (accepted < 10000 && preferences.get(OPRT.OPTIONS.SCANNER_OFFSET_UI)) {
       lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `
 <p id='scannerOffsetContainer'>
 <span style="margin-left: 5px" class="ingress-mid-blue pull-left">Scanner offset:</span>
@@ -1738,7 +1740,8 @@ const strings = {
     [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: '↳ With desktop notification',
     [OPRT.OPTIONS.REFRESH_NOTI_SOUND]: '↳ With sound notification',
     [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: 'Skip \'Analysis accepted\' dialog',
-    [OPRT.OPTIONS.SCANNER_OFFSET_PREF]: 'Scanner offset'
+    [OPRT.OPTIONS.SCANNER_OFFSET_FEATURE]: 'Scanner offset',
+    [OPRT.OPTIONS.SCANNER_OFFSET_UI]: '↳ Display offset input field',
   },
   changelog:
     `* New preferences menu`
