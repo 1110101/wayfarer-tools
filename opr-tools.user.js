@@ -607,7 +607,7 @@ function init () {
     a.appendChild(span)
     a.className = 'translate-title button btn btn-default pull-right'
     a.target = 'translate'
-    a.style.padding = '0px 4px'
+    a.style.setProperty('padding', '0px 4px')
     a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(content)}`
     link.insertAdjacentElement('afterend', a)
 
@@ -620,7 +620,7 @@ function init () {
       a.appendChild(span)
       a.className = 'translate-description button btn btn-default pull-right'
       a.target = 'translate'
-      a.style.padding = '0px 4px'
+      a.style.setProperty('padding', '0px 4px')
       a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(description)}`
       const br = w.document.querySelectorAll('#descriptionDiv br')[2]
       br.insertAdjacentElement('afterend', a)
@@ -644,7 +644,7 @@ function init () {
       _showLowQualityModal()
       setTimeout(() => {
         let rejectReasonTA = w.document.querySelector('textarea[ng-model="answerCtrl2.rejectComment"]')
-        rejectReasonTA.style['max-width'] = '100%'
+        rejectReasonTA.style.setProperty('max-width', '100%')
       }, 10)
     })
 
@@ -681,9 +681,9 @@ function init () {
       }
 
       function highlight () {
-        starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none' }, w))
+        starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.setProperty('border', 'none') }, w))
         if (currentSelectable <= maxItems - 2) {
-          starsAndSubmitButtons[currentSelectable].style.border = cloneInto('1px dashed #ebbc4a', w)
+          starsAndSubmitButtons[currentSelectable].style.setProperty('border', '1px dashed #ebbc4a')
           submitAndNext.blur()
           submitButton.blur()
         } else if (currentSelectable === 6) {
@@ -878,9 +878,9 @@ function init () {
         a.appendChild(span)
         a.className = 'translate-title button btn btn-default pull-right'
         a.target = 'translate'
-        a.style.padding = '0px 4px'
+        a.style.setProperty('padding', '0px 4px')
         a.href = `https://translate.google.com/#auto/${browserLocale.split('-')[0]}/${encodeURIComponent(content)}`
-        titleEditBox.querySelector('p').style.display = 'inline-block'
+        titleEditBox.querySelector('p').style.setProperty('display', 'inline-block')
         titleEditBox.insertAdjacentElement('beforeEnd', a)
       }
     }
@@ -895,8 +895,8 @@ function init () {
       a.appendChild(span)
       a.className = 'translate-title button btn btn-default'
       a.target = 'translate'
-      a.style.padding = '0px 4px'
-      a.style.marginLeft = '14px'
+      a.style.setProperty('padding', '0px 4px')
+      a.style.setProperty('margin-left', '14px')
       a.href = `https://translate.google.com/#auto/${browserLocale.split('-')[0]}/${encodeURIComponent(content)}`
       titleDiv.insertAdjacentElement('beforeend', a)
     }
@@ -912,8 +912,8 @@ function init () {
         a.appendChild(span)
         a.className = 'translate-title button btn btn-default'
         a.target = 'translate'
-        a.style.padding = '0px 4px'
-        a.style.marginLeft = '14px'
+        a.style.setProperty('padding', '0px 4px')
+        a.style.setProperty('margin-left', '14px')
         a.href = `https://translate.google.com/#auto/${browserLocale.split('-')[0]}/${encodeURIComponent(content)}`
         titleDiv.insertAdjacentElement('beforeEnd', a)
       }
@@ -953,20 +953,20 @@ function init () {
       /* EDIT PORTAL */
       function highlight () {
         let el = editDiv.querySelector('h3[ng-show="subCtrl.pageData.locationEdits.length > 1"]')
-        el.style.border = 'none'
+        el.style.setProperty('border', 'none')
 
-        starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.border = 'none' }, w))
+        starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.setProperty('border', 'none') }, w))
         if (hasLocationEdit && currentSelectable === maxItems - 3) {
-          el.style.borderLeft = cloneInto('4px dashed #ebbc4a', w)
-          el.style.borderTop = cloneInto('4px dashed #ebbc4a', w)
-          el.style.borderRight = cloneInto('4px dashed #ebbc4a', w)
-          el.style.padding = cloneInto('16px', w)
-          el.style.marginBottom = cloneInto('0', w)
+          el.style.setProperty('border-left', '4px dashed #ebbc4a')
+          el.style.setProperty('border-top', '4px dashed #ebbc4a')
+          el.style.setProperty('border-right', '4px dashed #ebbc4a')
+          el.style.setProperty('padding', '16px')
+          el.style.setProperty('margin-bottom', '0')
           submitAndNext.blur()
           submitButton.blur()
         } else if (currentSelectable < maxItems - 2) {
-          starsAndSubmitButtons[currentSelectable].style.borderLeft = cloneInto('4px dashed #ebbc4a', w)
-          starsAndSubmitButtons[currentSelectable].style.paddingLeft = cloneInto('16px', w)
+          starsAndSubmitButtons[currentSelectable].style.setProperty('border-left', '4px dashed #ebbc4a')
+          starsAndSubmitButtons[currentSelectable].style.setProperty('padding-left', '16px')
           submitAndNext.blur()
           submitButton.blur()
         } else if (currentSelectable === maxItems - 2) {
@@ -1292,7 +1292,7 @@ function init () {
       let newSubmitDiv = w.document.createElement('div')
       const classificationRow = w.document.querySelector('.classification-row')
       newSubmitDiv.className = 'col-xs-12 col-sm-6'
-      submitDiv[0].style.marginTop = 16
+      submitDiv[0].style.setProperty('margin-top', '16px')
       newSubmitDiv.appendChild(submitDiv[0])
       newSubmitDiv.appendChild(submitDiv[1])
       classificationRow.insertAdjacentElement('afterend', newSubmitDiv)
@@ -1583,7 +1583,7 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
 
     let countdownEnd = subController.countdownDate
     let countdownDisplay = document.getElementById('countdownDisplay')
-    countdownDisplay.style.color = 'white'
+    countdownDisplay.style.setProperty('color', 'white')
 
     // Update the count down every 1 second
     let counterInterval = setInterval(function () {
@@ -1602,9 +1602,9 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
         // If the count down is finished, write some text
         clearInterval(counterInterval)
         countdownDisplay.innerText = 'EXPIRED'
-        countdownDisplay.style.color = 'red'
+        countdownDisplay.style.setProperty('color', 'red')
       } else if (distance < 90000) {
-        countdownDisplay.style.color = 'red'
+        countdownDisplay.style.setProperty('color', 'red')
       }
     }, 1000)
   }
