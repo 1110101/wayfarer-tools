@@ -1349,8 +1349,8 @@ function init () {
     if (upgradeIcon !== undefined) {
       upgradeIcon.parentElement.removeChild(upgradeIcon)
 
-      upgradeIcon.style.paddingRight = '20px'
-      upgradeIcon.style.color = '#9d9d9d'
+      upgradeIcon.style.setProperty('margin-right', '20px')
+      upgradeIcon.style.setProperty('color', '#9d9d9d')
       upgradeIcon.classList.add('pull-right')
 
       stats.parentElement.insertAdjacentElement('beforebegin', upgradeIcon)
