@@ -289,7 +289,7 @@ function init () {
     if (tryNumber === 0) {
       clearInterval(initWatcher)
       w.document.getElementById('NewSubmissionController')
-        .insertAdjacentHTML('afterBegin', `
+      .insertAdjacentHTML('afterBegin', `
 <div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
 `)
       addRefreshContainer()
@@ -396,7 +396,7 @@ function init () {
             let i = 1
             // adds keyboard numbers to lowquality sub-list
             mutationRecord.addedNodes[0].querySelectorAll('label.sub-group')
-              .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
+            .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
           }
           // skip "Your analysis has been recorded" dialog
           if (preferences.get(OPRT.OPTIONS.SKIP_ANALYZED_DIALOG) && mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
@@ -830,6 +830,7 @@ function init () {
 
       highlight()
     }
+
     /* endregion keyboard nav */
 
     modifyNewPage = () => {} // eslint-disable-line
@@ -1443,17 +1444,17 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
     let cbxRefreshSound = w.document.createElement('input')
     let cbxRefreshDesktop = w.document.createElement('input')
 
-    cbxRefresh.id = OPRT.REFRESH
+    cbxRefresh.id = OPRT.OPTIONS.REFRESH
     cbxRefresh.type = 'checkbox'
-    cbxRefresh.checked = preferences.get(OPRT.REFRESH) === 'true'
+    cbxRefresh.checked = preferences.get(OPRT.OPTIONS.REFRESH) === 'true'
 
-    cbxRefreshSound.id = OPRT.REFRESH_NOTI_SOUND
+    cbxRefreshSound.id = OPRT.OPTIONS.REFRESH_NOTI_SOUND
     cbxRefreshSound.type = 'checkbox'
-    cbxRefreshSound.checked = preferences.get(OPRT.REFRESH_NOTI_SOUND) === 'true'
+    cbxRefreshSound.checked = preferences.get(OPRT.OPTIONS.REFRESH_NOTI_SOUND) === 'true'
 
-    cbxRefreshDesktop.id = OPRT.REFRESH_NOTI_DESKTOP
+    cbxRefreshDesktop.id = OPRT.OPTIONS.REFRESH_NOTI_DESKTOP
     cbxRefreshDesktop.type = 'checkbox'
-    cbxRefreshDesktop.checked = preferences.get(OPRT.REFRESH_NOTI_DESKTOP) === 'true'
+    cbxRefreshDesktop.checked = preferences.get(OPRT.OPTIONS.REFRESH_NOTI_DESKTOP) === 'true'
 
     let refreshPanel = w.document.createElement('div')
     refreshPanel.className = 'panel panel-ingress'
@@ -1535,12 +1536,12 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
       if (w.document.hidden) { // if tab in background: flash favicon
         let flag = true
 
-        if (preferences.get(OPRT.REFRESH_NOTI_SOUND) === 'true') {
+        if (preferences.get(OPRT.OPTIONS.REFRESH_NOTI_SOUND) === 'true') {
           let audio = document.createElement('audio')
           audio.src = NOTIFICATION_SOUND
           audio.autoplay = true
         }
-        if (preferences.get(OPRT.REFRESH_NOTI_DESKTOP) === 'true') {
+        if (preferences.get(OPRT.OPTIONS.REFRESH_NOTI_DESKTOP) === 'true') {
           GM_notification({
             'title': 'OPR - New Portal Analysis Available',
             'text': 'by OPR-Tools',
