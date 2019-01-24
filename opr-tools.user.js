@@ -1324,7 +1324,7 @@ function init () {
     let oprtPreferencesButton = w.document.createElement('a')
     oprtPreferencesButton.classList.add('brand', 'upgrades-icon', 'pull-right')
     oprtPreferencesButton.style.setProperty('cursor', 'pointer')
-    oprtPreferencesButton.style.setProperty('margin-right', '15px')
+    oprtPreferencesButton.style.setProperty('margin-right', '20px')
     oprtPreferencesButton.style.setProperty('color', 'rgb(157, 157, 157)')
     oprtPreferencesButton.addEventListener('click', () => preferences.showPreferencesUI(w))
     oprtPreferencesButton.title = 'OPR-Tools Preferences'
@@ -1746,6 +1746,7 @@ const strings = {
     [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: '↳ With desktop notification',
     [OPRT.OPTIONS.REFRESH_NOTI_SOUND]: '↳ With sound notification',
     [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: 'Skip \'Analysis recorded\' dialog',
+
     [OPRT.OPTIONS.SCANNER_OFFSET_FEATURE]: 'Scanner offset',
     [OPRT.OPTIONS.SCANNER_OFFSET_UI]: '↳ Display offset input field'
   },
