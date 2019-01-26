@@ -49,7 +49,7 @@ SOFTWARE.
 
 */
 
-/* globals screen, MutationObserver, addEventListener, localStorage, MutationObserver, GM_notification, unsafeWindow, exportFunction, cloneInto, angular, google, alertify, proj4 */
+/* globals screen, MutationObserver, addEventListener, localStorage, MutationObserver, GM_addStyle, GM_notification, unsafeWindow, angular, google, alertify, proj4 */
 
 const OPRT = {
 
@@ -84,28 +84,11 @@ const OPRT = {
   FROM_REFRESH: 'from_refresh' // sessionStorage
 }
 
-/* eslint-disable */
-
-// polyfill for ViolentMonkey
-if (typeof exportFunction !== 'function') {
-  exportFunction = (func, scope, options) => {
-    if (options && options.defineAs) {
-      scope[options.defineAs] = func
-    }
-    return func
-  }
-}
-if (typeof cloneInto !== 'function') {
-  cloneInto = obj => obj
-}
-
 function addGlobalStyle (css) {
   GM_addStyle(css)
 
   addGlobalStyle = () => {} // noop after first run
 }
-
-/* eslint-enable */
 
 class Preferences {
   constructor () {
@@ -176,16 +159,16 @@ class Preferences {
         optionsContainer.insertAdjacentElement('beforeEnd', div)
       }
 
-      optionsContainer.addEventListener('change', exportFunction((event) => {
+      optionsContainer.addEventListener('change', (event) => {
         this.set(event.target.name, event.target.checked)
         reloadButton.classList.remove('hide')
-      }))
+      })
 
-      reloadButton.addEventListener('click', exportFunction(() => {
+      reloadButton.addEventListener('click', () => {
         window.location.reload()
-      }))
+      })
 
-      w.document.getElementById('import_all').addEventListener('click', exportFunction(() => {
+      w.document.getElementById('import_all').addEventListener('click', () => {
         alertify.okBtn('Import').prompt('Paste here:',
           (value, event) => {
             event.preventDefault()
@@ -198,9 +181,9 @@ class Preferences {
             event.preventDefault()
           }
         )
-      }))
+      })
 
-      w.document.getElementById('export_all').addEventListener('click', exportFunction(() => {
+      w.document.getElementById('export_all').addEventListener('click', () => {
           if (navigator.clipboard !== undefined) {
             navigator.clipboard.writeText(inout.exportAll()).then(() => {
               alertify.success(`✔ Exported preferences to your clipboard!`)
@@ -212,7 +195,7 @@ class Preferences {
             alertify.alert(inout.exportAll())
           }
         }
-      ))
+      )
     }
   }
 
@@ -430,13 +413,13 @@ function init () {
       addCustomPresetButtons()
 
       // we have to inject the tooltip to angular
-      w.$injector.invoke(cloneInto(['$compile', ($compile) => {
+      w.$injector.invoke(['$compile', ($compile) => {
         let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById('descriptionDiv')))
         w.document.getElementById('addPreset').insertAdjacentElement('beforebegin', compiledSubmit[0])
-      }], w, { cloneFunctions: true }))
+      }])
 
       // click listener for +preset button
-      w.document.getElementById('addPreset').addEventListener('click', exportFunction(event => {
+      w.document.getElementById('addPreset').addEventListener('click', event => {
         alertify.okBtn('Save').prompt('New preset name:',
           (value, event) => {
             event.preventDefault()
@@ -450,9 +433,9 @@ function init () {
             event.preventDefault()
           }
         )
-      }), w, false)
+      })
 
-      let clickListener = exportFunction(event => {
+      let clickListener = event => {
         const source = event.target || event.srcElement
         let value = source.id
         if (value === '' || event.target.nodeName !== 'BUTTON') {
@@ -494,7 +477,7 @@ function init () {
         w.$rootScope.$apply()
 
         alertify.success(`✔ Applied <i>${preset.label}</i>`)
-      }, w)
+      }
 
       w.document.getElementById('customPresets').addEventListener('click', clickListener, false)
     }
@@ -514,15 +497,15 @@ function init () {
       }
     }
 
-    filmstrip.addEventListener('wheel', exportFunction(scrollHorizontally, w), false)
-    filmstrip.addEventListener('DOMMouseScroll', exportFunction(scrollHorizontally, w), false)
+    filmstrip.addEventListener('wheel', scrollHorizontally, false)
+    filmstrip.addEventListener('DOMMouseScroll', scrollHorizontally, false)
 
     // hotfix for #27 not sure if it works
     let _initMap = subController.initMap
-    subController.initMap = exportFunction(() => {
+    subController.initMap = () => {
       _initMap()
       mapMarker(subController.markers)
-    })
+    }
 
     mapOriginCircle(subController.map2)
     mapMarker(subController.markers)
@@ -531,16 +514,16 @@ function init () {
 
     // hook resetStreetView() and re-apply map types and options to first map. not needed for duplicates because resetMap() just resets the position
     let _resetStreetView = subController.resetStreetView
-    subController.resetStreetView = exportFunction(() => {
+    subController.resetStreetView = () => {
       _resetStreetView()
       mapOriginCircle(subController.map2)
       mapTypes(subController.map2, true)
-    }, w)
+    }
 
     // adding a green 40m circle around the new location marker that updates on dragEnd
     let draggableMarkerCircle
     let _showDraggableMarker = subController.showDraggableMarker
-    subController.showDraggableMarker = exportFunction(() => {
+    subController.showDraggableMarker = () => {
       _showDraggableMarker()
 
       w.getService('NewSubmissionDataService')
@@ -559,7 +542,7 @@ function init () {
           })
         } else draggableMarkerCircle.setCenter(newLocMarker.position)
       })
-    })
+    }
 
     document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin', '<small class="pull-left"><span style="color:#ebbc4a">Circle:</span> 40m</small>')
 
@@ -583,14 +566,14 @@ function init () {
     }
     for (let imgSep in imgDups) {
       if (imgDups.hasOwnProperty(imgSep)) {
-        imgDups[imgSep].addEventListener('click', exportFunction(() => {
+        imgDups[imgSep].addEventListener('click', () => {
           const imgDup = w.document.querySelector('#content > img')
           if (imgDup !== null) {
             imgDup.removeEventListener('click', openFullImage)
             imgDup.addEventListener('click', openFullImage)
             imgDup.setAttribute('style', 'cursor: pointer;')
           }
-        }))
+        })
       }
     }
 
@@ -639,13 +622,13 @@ function init () {
 
     // Fix rejectComment width
     let _showLowQualityModal = ansController.showLowQualityModal
-    ansController.showLowQualityModal = exportFunction(() => {
+    ansController.showLowQualityModal = () => {
       _showLowQualityModal()
       setTimeout(() => {
         let rejectReasonTA = w.document.querySelector('textarea[ng-model="answerCtrl2.rejectComment"]')
         rejectReasonTA.style.setProperty('max-width', '100%')
       }, 10)
-    })
+    }
 
     /* region keyboard nav */
     if (preferences.get(OPRT.OPTIONS.KEYBOARD_NAV)) {
@@ -663,13 +646,13 @@ function init () {
 
       // Reset when modal is closed
       let _resetLowQuality = ansController.resetLowQuality
-      ansController.resetLowQuality = exportFunction(() => {
+      ansController.resetLowQuality = () => {
         _resetLowQuality()
         selectedReasonGroup = -1
         selectedReasonSubGroup = -1
         currentSelectable = 0
         highlight()
-      })
+      }
 
       // a list of all 6 star button rows, and the two submit buttons
       let starsAndSubmitButtons
@@ -680,7 +663,7 @@ function init () {
       }
 
       function highlight () {
-        starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.setProperty('border', 'none') }, w))
+        starsAndSubmitButtons.forEach((element) => { element.style.setProperty('border', 'none') })
         if (currentSelectable <= maxItems - 2) {
           starsAndSubmitButtons[currentSelectable].style.setProperty('border', '1px dashed #ebbc4a')
           submitAndNext.blur()
@@ -954,7 +937,7 @@ function init () {
         let el = editDiv.querySelector('h3[ng-show="subCtrl.pageData.locationEdits.length > 1"]')
         el.style.setProperty('border', 'none')
 
-        starsAndSubmitButtons.forEach(exportFunction((element) => { element.style.setProperty('border', 'none') }, w))
+        starsAndSubmitButtons.forEach((element) => { element.style.setProperty('border', 'none') })
         if (hasLocationEdit && currentSelectable === maxItems - 3) {
           el.style.setProperty('border-left', '4px dashed #ebbc4a')
           el.style.setProperty('border-top', '4px dashed #ebbc4a')
@@ -1098,21 +1081,21 @@ function init () {
     }
 
     let submitAndNext = submitButton.cloneNode(false)
-    submitButton.addEventListener('click', exportFunction(() => {
+    submitButton.addEventListener('click', () => {
       bodyObserver.disconnect()
-    }))
+    })
     submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`
     submitAndNext.title = 'Submit and go to next review'
-    submitAndNext.addEventListener('click', exportFunction(() => {
-      exportFunction(() => {
+    submitAndNext.addEventListener('click', () => {
+      ansController.openSubmissionCompleteModal = () => {
         window.location.assign('/recon')
-      }, ansController, { defineAs: 'openSubmissionCompleteModal' })
-    }, w))
+      }
+    })
 
-    w.$injector.invoke(cloneInto(['$compile', ($compile) => {
+    w.$injector.invoke(['$compile', ($compile) => {
       let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv))
       submitDiv.querySelector('button').insertAdjacentElement('beforeBegin', compiledSubmit[0])
-    }], w, { cloneFunctions: true }))
+    }])
     return { submitButton, submitAndNext }
   }
 
@@ -1142,7 +1125,7 @@ function init () {
     const buttons = w.document.getElementsByClassName('textButton')
     for (let b in buttons) {
       if (buttons.hasOwnProperty(b)) {
-        buttons[b].addEventListener('click', exportFunction(event => {
+        buttons[b].addEventListener('click', event => {
           const source = event.target || event.srcElement
           let text = textBox.value
           if (text.length > 0) {
@@ -1185,7 +1168,7 @@ function init () {
           textBox.dispatchEvent(new Event('change')) // eslint-disable-line no-undef
 
           event.target.blur()
-        }, w), false)
+        }, false)
       }
     }
   }
@@ -1245,7 +1228,7 @@ function init () {
         style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
       }
     }
-    map.setOptions(cloneInto(mapOptions, w))
+    map.setOptions(mapOptions)
 
     // register custom map types
     types.forEach(t => {
@@ -1424,10 +1407,10 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
 </p>`)
 
       // we have to inject the tooltip to angular
-      w.$injector.invoke(cloneInto(['$compile', ($compile) => {
+      w.$injector.invoke(['$compile', ($compile) => {
         let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`)(w.$scope(stats))
         w.document.getElementById('scannerOffsetContainer').insertAdjacentElement('afterbegin', compiledSubmit[0])
-      }], w, { cloneFunctions: true }));
+      }]);
 
       ['change', 'keyup', 'cut', 'paste', 'input'].forEach(e => {
         w.document.getElementById('scannerOffset').addEventListener(e, (event) => {
