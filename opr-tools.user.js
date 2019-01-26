@@ -75,7 +75,8 @@ const OPRT = {
   VAR_PREFIX: 'oprt_var', // used in import/export **only**
   VAR: { // will be included in import/export
     SCANNER_OFFSET: 'scanner_offset',
-    MAP_TYPE: 'map_type',
+    MAP_TYPE_1: 'map_type_1',
+    MAP_TYPE_2: 'map_type_2',
     CUSTOM_PRESETS: 'custom_presets'
   },
 
@@ -277,7 +278,7 @@ function init () {
     if (tryNumber === 0) {
       clearInterval(initWatcher)
       w.document.getElementById('NewSubmissionController')
-        .insertAdjacentHTML('afterBegin', `
+      .insertAdjacentHTML('afterBegin', `
 <div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
 `)
       addRefreshContainer()
@@ -384,7 +385,7 @@ function init () {
             let i = 1
             // adds keyboard numbers to lowquality sub-list
             mutationRecord.addedNodes[0].querySelectorAll('label.sub-group')
-              .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
+            .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
           }
           // skip "Your analysis has been recorded" dialog
           if (preferences.get(OPRT.OPTIONS.SKIP_ANALYZED_DIALOG) && mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
@@ -1248,16 +1249,21 @@ function init () {
       }
     })
 
-    // track current selection for main position map
+    // track current selection for position map
+    let mapType
     if (isMainMap) {
-      // save selection when changed
-      map.addListener('maptypeid_changed', function () {
-        w.localStorage.setItem(OPRT.PREFIX + OPRT.VAR.MAP_TYPE, map.getMapTypeId())
-      })
-
-      // get map type saved from last use or fall back to default
-      map.setMapTypeId(w.localStorage.getItem(OPRT.PREFIX + OPRT.VAR.MAP_TYPE) || defaultMapType)
+      mapType = OPRT.PREFIX + OPRT.VAR.MAP_TYPE_1
+    } else {
+      mapType = OPRT.PREFIX + OPRT.VAR.MAP_TYPE_2
     }
+
+    // save selection when changed
+    map.addListener('maptypeid_changed', function () {
+      w.localStorage.setItem(mapType, map.getMapTypeId())
+    })
+
+    // get map type saved from last use or fall back to default
+    map.setMapTypeId(w.localStorage.getItem(mapType) || defaultMapType)
   }
 
   // move submit button to right side of classification-div. don't move on mobile devices / small width
