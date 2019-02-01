@@ -521,8 +521,9 @@ function init () {
       mapTypes(subController.map2, true)
     }
 
-    // adding a green 40m circle around the new location marker that updates on dragEnd
+    // adding a green 40m circle and a smaller 20m circle around the new location marker that updates on dragEnd
     let draggableMarkerCircle
+    let draggableMarkerCircleSmall
     let _showDraggableMarker = subController.showDraggableMarker
     subController.showDraggableMarker = () => {
       _showDraggableMarker()
@@ -543,9 +544,23 @@ function init () {
           })
         } else draggableMarkerCircle.setCenter(newLocMarker.position)
       })
+
+      google.maps.event.addListener(newLocMarker, 'dragend', function () {
+        if (draggableMarkerCircle == null) {
+          draggableMarkerCircle = new google.maps.Circle({
+            map: subController.map2,
+            center: newLocMarker.position,
+            radius: 20,
+            strokeColor: '#4CCF50',
+            strokeOpacity: 1,
+            strokeWeight: 2,
+            fillOpacity: 0
+          })
+        } else draggableMarkerCircle.setCenter(newLocMarker.position)
+      })
     }
 
-    document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin', '<small class="pull-left"><span style="color:#ebbc4a">Circle:</span> 40m</small>')
+    document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin', '<small class="pull-left"><span style="color:#ebbc4a">Outer circle:</span> 40m, <span style="color:#effc4a">inner circle:</span> 20m</small>')
 
     // move portal rating to the right side. don't move on mobile devices / small width
     if (screen.availWidth > 768) {
@@ -1174,14 +1189,24 @@ function init () {
     }
   }
 
-  // adding a 40m circle around the portal (capture range)
+  // adding a 40m circle and a smaller 20m circle around the portal (capture range)
   function mapOriginCircle (map) {
     // noinspection JSUnusedLocalSymbols
-    const circle = new google.maps.Circle({ // eslint-disable-line no-unused-vars
+    const circle40 = new google.maps.Circle({ // eslint-disable-line no-unused-vars
       map: map,
       center: map.center,
       radius: 40,
       strokeColor: '#ebbc4a',
+      strokeOpacity: 0.8,
+      strokeWeight: 1.5,
+      fillOpacity: 0
+    })
+
+    const circle20 = new google.maps.Circle({ // eslint-disable-line no-unused-vars
+      map: map,
+      center: map.center,
+      radius: 20,
+      strokeColor: '#eddc4a',
       strokeOpacity: 0.8,
       strokeWeight: 1.5,
       fillOpacity: 0
