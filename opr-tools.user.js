@@ -145,6 +145,12 @@ class Preferences {
       let reloadButton = w.document.getElementById('oprt_reload')
 
       for (let item in this.options) {
+        // remove unknown or removed options
+        if (strings.options[item] === undefined) {
+          this.remove(item)
+          continue
+        }
+
         const div = w.document.createElement('div')
         div.classList.add('checkbox')
         const label = w.document.createElement('label')
@@ -209,6 +215,11 @@ class Preferences {
 
   get (key) {
     return this.options[key]
+  }
+
+  remove (key) {
+    delete this.options[key]
+    localStorage.setItem(OPRT.PREFERENCES, JSON.stringify(this.options))
   }
 
   exportPrefs () {
@@ -1749,7 +1760,6 @@ const strings = {
     [OPRT.OPTIONS.REFRESH]: 'Periodically refresh opr if no analysis is available',
     [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: '↳ With desktop notification',
     [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: 'Skip \'Analysis recorded\' dialog',
-
     [OPRT.OPTIONS.SCANNER_OFFSET_FEATURE]: 'Scanner offset',
     [OPRT.OPTIONS.SCANNER_OFFSET_UI]: '↳ Display offset input field'
   },
