@@ -1764,7 +1764,14 @@ const strings = {
     [OPRT.OPTIONS.SCANNER_OFFSET_UI]: '↳ Display offset input field'
   },
   changelog:
-    `* New preferences menu`
+    `Version 1.0.0!
+<br>* New preferences menu
+<br>- Enable or disable some not so often needed features.
+<br>
+<br>* Refresh notification: removed sound option
+<br>* Added new 20m circle around candidate location, thanks @aenariel
+<br>* Remembering selected layer type of duplicate map
+    `
 }
 
 const GLOBAL_CSS = `
