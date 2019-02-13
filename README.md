@@ -1,6 +1,6 @@
 # OPR-Tools
 
-[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com) [![OPR-Tools Telegram Channel](https://img.shields.io/badge/OPR_Tools_Channel--blue.svg?logo=telegram&style=social)](https://t.me/oprtools)
 
 Userscript for [Ingress Operation Portal Recon](https://opr.ingress.com/recon)
 
