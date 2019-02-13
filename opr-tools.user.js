@@ -118,12 +118,14 @@ class Preferences {
 <section id="oprt_sidepanel_container" style="
     background: black;
     border-left: 2px gold inset;
+    border-top: 2px gold inset;
+    border-bottom: 2px gold inset;
     position: absolute;
     right: 0;
-    height: 95%;
+    height: 90%;
     padding: 0 20px;
     z-index: 10;
-    width: 400px;
+    width: 400px;    
     ">
   <div class="row">
     <div class="col-lg-12">
@@ -139,6 +141,9 @@ class Preferences {
   <div id="oprt_options"></div>
   <a id="oprt_reload" class="btn btn-danger hide"><span class="glyphicon glyphicon-refresh"></span>
  Reload to apply changes</a>
+ 
+ <div style="position: absolute; bottom: 0; left: 0; margin:20px;"><a href="https://t.me/oprtools">${TG_SVG} OPR-Tools Telegram channel</a></div>
+ 
 </section>`)
 
       let optionsContainer = w.document.getElementById('oprt_options')
@@ -2046,4 +2051,32 @@ RTVsU1VmVC2h3sP9aREFdxQ5xuzQdaT2yoPpPbPs0+vXaNfqzJfDZnoXArsUbejMCnvLRdvi626b
 1sgLyrJjc/TKZd6o1WlIEjPAjKTAPwIehOptmCbfGB1OGd1YvYsq+EXHhonB81XF98deUhI76BVV
 C3hAtiXjKLhaQMEBJkSJyZRHzDTlvp8mvKCoD4y0/81zdxH13LCBBUXVc8MGhAH8DbSoM60j+Fv6
 AAAAAElFTkSuQmCC`
+
+// TG SVG Icon from https://commons.wikimedia.org/wiki/File:Telegram_logo.svg
+const TG_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" style="
+    width: 16px;
+    height: 16px;
+">
+<defs>
+	<linearGradient id="b" x1="0.6667" y1="0.1667" x2="0.4167" y2="0.75">
+		<stop stop-color="#37aee2" offset="0"></stop>
+		<stop stop-color="#1e96c8" offset="1"></stop>
+	</linearGradient>
+	<linearGradient id="w" x1="0.6597" y1="0.4369" x2="0.8512" y2="0.8024">
+		<stop stop-color="#eff7fc" offset="0"></stop>
+		<stop stop-color="#fff" offset="1"></stop>
+	</linearGradient>
+</defs>
+<circle cx="120" cy="120" r="120" fill="url(#b)"></circle>
+<path fill="#c8daea" d="m98 175c-3.8876 0-3.227-1.4679-4.5678-5.1695L82
+132.2059 170 80"></path>
+<path fill="#a9c9dd" d="m98 175c3 0 4.3255-1.372
+6-3l16-15.558-19.958-12.035"></path>
+<path fill="url(#w)" d="m100.04 144.41 48.36 35.729c5.5185 3.0449 9.5014
+1.4684
+10.876-5.1235l19.685-92.763c2.0154-8.0802-3.0801-11.745-8.3594-9.3482l-115.59
+ 44.571c-7.8901 3.1647-7.8441 7.5666-1.4382 9.528l29.663
+  9.2583 68.673-43.325c3.2419-1.9659 6.2173-0.90899 3.7752 1.2584"></path>
+</svg>`
 // endregion
