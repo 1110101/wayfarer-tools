@@ -194,17 +194,17 @@ class Preferences {
       })
 
       w.document.getElementById('export_all').addEventListener('click', () => {
-          if (navigator.clipboard !== undefined) {
-            navigator.clipboard.writeText(inout.exportAll()).then(() => {
-              alertify.success(`✔ Exported preferences to your clipboard!`)
-            }, () => {
-              // ugly alert as fallback
-              alertify.alert(inout.exportAll())
-            })
-          } else {
+        if (navigator.clipboard !== undefined) {
+          navigator.clipboard.writeText(inout.exportAll()).then(() => {
+            alertify.success(`✔ Exported preferences to your clipboard!`)
+          }, () => {
+            // ugly alert as fallback
             alertify.alert(inout.exportAll())
-          }
+          })
+        } else {
+          alertify.alert(inout.exportAll())
         }
+      }
       )
     }
   }
@@ -292,7 +292,7 @@ function init () {
     if (tryNumber === 0) {
       clearInterval(initWatcher)
       w.document.getElementById('NewSubmissionController')
-      .insertAdjacentHTML('afterBegin', `
+        .insertAdjacentHTML('afterBegin', `
 <div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
 `)
       addRefreshContainer()
@@ -399,7 +399,7 @@ function init () {
             let i = 1
             // adds keyboard numbers to lowquality sub-list
             mutationRecord.addedNodes[0].querySelectorAll('label.sub-group')
-            .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
+              .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
           }
           // skip "Your analysis has been recorded" dialog
           if (preferences.get(OPRT.OPTIONS.SKIP_ANALYZED_DIALOG) && mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
@@ -492,7 +492,6 @@ function init () {
         w.$rootScope.$apply()
 
         alertify.success(`✔ Applied <i>${preset.label}</i>`)
-
       }
 
       w.document.getElementById('customPresets').addEventListener('click', clickListener, false)
@@ -561,8 +560,8 @@ function init () {
       })
 
       google.maps.event.addListener(newLocMarker, 'dragend', function () {
-        if (draggableMarkerCircle == null) {
-          draggableMarkerCircle = new google.maps.Circle({
+        if (draggableMarkerCircleSmall == null) {
+          draggableMarkerCircleSmall = new google.maps.Circle({
             map: subController.map2,
             center: newLocMarker.position,
             radius: 20,
@@ -571,7 +570,7 @@ function init () {
             strokeWeight: 2,
             fillOpacity: 0
           })
-        } else draggableMarkerCircle.setCenter(newLocMarker.position)
+        } else draggableMarkerCircleSmall.setCenter(newLocMarker.position)
       })
     }
 
@@ -1131,7 +1130,6 @@ function init () {
   }
 
   function commentTemplates () {
-
     // add text buttons
     const textButtons = `
 <button id='photo' class='button btn btn-default textButton' data-tooltip='Indicates a low quality photo'>Photo</button>
