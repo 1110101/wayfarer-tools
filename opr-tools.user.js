@@ -481,7 +481,7 @@ function init () {
         let nodes = whatController.getWhatAutocomplete()
         for (let i = 0; i < nodes.length; i++) {
           if (nodes[i].id === preset.nodeId) {
-            whatController.whatNode = nodes[i]
+            whatController.setWhatAutocompleteNode(nodes[i])
             break
           }
         }
