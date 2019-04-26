@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR tools
-// @version         0.27.3
+// @version         0.27.4
 // @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -1328,10 +1328,11 @@ function init () {
   // expand automatically the "What is it?" filter text box
   function expandWhatIsItBox () {
     try {
-      const f = w.document.querySelector('#WhatIsItController > div > p > span.ingress-mid-blue.text-center')
+      const whatController = w.$scope(w.document.getElementById('WhatIsItController')).whatCtrl
       setTimeout(() => {
-        f.click()
-      }, 250)
+        whatController.showWhat = true
+        w.$rootScope.$apply()
+      }, 50)
     } catch (err) {}
   }
 
