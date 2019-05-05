@@ -294,7 +294,7 @@ function init () {
       clearInterval(initWatcher)
       w.document.getElementById('NewSubmissionController')
       .insertAdjacentHTML('afterBegin', `
-<div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
+<div id="oprt_init_failed" class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
 `)
       addRefreshContainer()
       return
@@ -425,9 +425,9 @@ function init () {
     /* region presets start */
     if (preferences.get(OPRT.OPTIONS.PRESET_FEATURE)) {
       const customPresetUI = `
-<div class="row" id="presets"><div class="col-xs-12">
+<div class="row" id="oprt_custom_presets_row"><div class="col-xs-12">
   <div>Presets&nbsp;<button class="button btn btn-default btn-xs" id="addPreset">+</button></div>
-  <div class='btn-group' id="customPresets"></div>
+  <div class='btn-group' id="oprt_custom_presets"></div>
 </div></div>`
 
       w.document.querySelector('form[name="answers"] div.row').insertAdjacentHTML('afterend', customPresetUI)
@@ -501,7 +501,7 @@ function init () {
         alertify.success(`✔ Applied <i>${preset.label}</i>`)
       }
 
-      w.document.getElementById('customPresets').addEventListener('click', clickListener, false)
+      w.document.getElementById('oprt_custom_presets').addEventListener('click', clickListener, false)
     }
     /* endregion presets end */
 
@@ -586,7 +586,7 @@ function init () {
 
     if (preferences.get(OPRT.OPTIONS.MAP_CIRCLE_40) || preferences.get(OPRT.OPTIONS.MAP_CIRCLE_20)) {
       document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin',
-        `<small class="pull-left">
+        `<small id="oprt_map_legend" class="pull-left">
                 ${preferences.get(OPRT.OPTIONS.MAP_CIRCLE_40) ? '<span style="color:#ebbc4a">outer circle:</span> 40m' : ''}
                 ${preferences.get(OPRT.OPTIONS.MAP_CIRCLE_20) ? '<span style="color:#effc4a">inner circle:</span> 20m' : ''}
             </small>`)
@@ -637,6 +637,7 @@ function init () {
     a.target = 'translate'
     a.style.setProperty('padding', '0px 4px')
     a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(content)}`
+    a.id = 'oprt_translate_title'
     link.insertAdjacentElement('afterend', a)
 
     const description = w.document.querySelector('#descriptionDiv').innerHTML.split('<br>')[3].trim()
@@ -650,6 +651,7 @@ function init () {
       a.target = 'translate'
       a.style.setProperty('padding', '0px 4px')
       a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(description)}`
+      a.id = 'oprt_translate_desc'
       const br = w.document.querySelectorAll('#descriptionDiv br')[2]
       br.insertAdjacentElement('afterend', a)
     }
@@ -1141,7 +1143,7 @@ function init () {
 <li><a target='hitta' href='https://www.hitta.se/kartan!~${newPortalData.lat},${newPortalData.lng},18z/tileLayer!l=1'>SE - Hitta.se</a></li>
 <li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=17&l=nautical'>SE - Eniro Sjökort</a></li>
 `
-    targetElement.insertAdjacentHTML(where, `<div><div class='btn-group'>${mapButtons}<div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${mapDropdown}</div>`)
+    targetElement.insertAdjacentHTML(where, `<div><div id="oprt_map_button_group" class='btn-group'>${mapButtons}<div class='button btn btn-default dropdown'><span class='caret'></span><ul id="oprt_map_dropdown" class='dropdown-content dropdown-menu'>${mapDropdown}</div>`)
   }
 
   // add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
@@ -1185,8 +1187,8 @@ function init () {
     const textBox = w.document.querySelector('#submitDiv + .text-center > textarea')
 
     w.document.querySelector('#submitDiv + .text-center').insertAdjacentHTML('beforeend', `
-<div class='btn-group dropup'>${textButtons}
-<div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${textDropdown}</ul>
+<div id="oprt_comment_button_group" class='btn-group dropup'>${textButtons}
+<div class='button btn btn-default dropdown'><span class='caret'></span><ul id="oprt_comment_button_dropdown" class='dropdown-content dropdown-menu'>${textDropdown}</ul>
 </div></div><div class="hidden-xs"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></div>
 `)
 
@@ -1685,7 +1687,7 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
     for (const customPreset of oprtCustomPresets) {
       customPresetOptions += `<button class='button btn btn-default customPresetButton' id='${customPreset.uid}'>${customPreset.label}</button>`
     }
-    w.document.getElementById('customPresets').innerHTML = customPresetOptions
+    w.document.getElementById('oprt_custom_presets').innerHTML = customPresetOptions
   }
 
   function getCustomPresets (w) {
