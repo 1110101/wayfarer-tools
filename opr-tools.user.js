@@ -64,7 +64,6 @@ const OPRT = {
     SCANNER_OFFSET_FEATURE: 'scanner_offset_feature',
     SCANNER_OFFSET_UI: 'scanner_offset_ui',
     COMMENT_TEMPLATES: 'comment_templates',
-    SKIP_ANALYZED_DIALOG: 'skip_analyzed_dialog',
 
     REFRESH: 'refresh',
     REFRESH_NOTI_DESKTOP: 'refresh_noti_desktop'
@@ -100,7 +99,6 @@ class Preferences {
       [OPRT.OPTIONS.SCANNER_OFFSET_FEATURE]: false,
       [OPRT.OPTIONS.SCANNER_OFFSET_UI]: false,
       [OPRT.OPTIONS.COMMENT_TEMPLATES]: true,
-      [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: true,
       [OPRT.OPTIONS.REFRESH]: true,
       [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: true
     }
@@ -139,7 +137,7 @@ class Preferences {
     </div>
   </div>
   <div id="oprt_options"></div>
-  <a id="oprt_reload" class="btn btn-danger hide"><span class="glyphicon glyphicon-refresh"></span>
+  <a id="oprt_reload" class="btn btn-warning hide"><span class="glyphicon glyphicon-refresh"></span>
  Reload to apply changes</a>
  
  <div style="position: absolute; bottom: 0; left: 0; margin:20px;"><a href="https://t.me/oprtools">${TG_SVG} OPR-Tools Telegram Channel</a></div>
@@ -194,17 +192,17 @@ class Preferences {
       })
 
       w.document.getElementById('export_all').addEventListener('click', () => {
-        if (navigator.clipboard !== undefined) {
-          navigator.clipboard.writeText(inout.exportAll()).then(() => {
-            alertify.success(`✔ Exported preferences to your clipboard!`)
-          }, () => {
-            // ugly alert as fallback
+          if (navigator.clipboard !== undefined) {
+            navigator.clipboard.writeText(inout.exportAll()).then(() => {
+              alertify.success(`✔ Exported preferences to your clipboard!`)
+            }, () => {
+              // ugly alert as fallback
+              alertify.alert(inout.exportAll())
+            })
+          } else {
             alertify.alert(inout.exportAll())
-          })
-        } else {
-          alertify.alert(inout.exportAll())
+          }
         }
-      }
       )
     }
   }
@@ -292,7 +290,7 @@ function init () {
     if (tryNumber === 0) {
       clearInterval(initWatcher)
       w.document.getElementById('NewSubmissionController')
-        .insertAdjacentHTML('afterBegin', `
+      .insertAdjacentHTML('afterBegin', `
 <div class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
 `)
       addRefreshContainer()
@@ -382,14 +380,17 @@ function init () {
   }
 
   function modifyNewPage (ansController, subController, whatController, newPortalData) {
+
+    let skipDialog = false
+
     mapButtons(newPortalData, w.document.getElementById('descriptionDiv'), 'beforeEnd')
 
     // mutation observer
     const bodyObserver = new MutationObserver(mutationList => {
       for (let mutationRecord of mutationList) {
-        // we just want addednodes with (class:modal). null and undefined check for performance reasons
+        // we just want added nodes with (class:modal). null and undefined check for performance reasons
         if (mutationRecord.addedNodes.length > 0 && mutationRecord.addedNodes[0].className === 'modal fade ng-isolate-scope') {
-          // adds keyboard-numbers to lowquality sub-sub-lists
+          // adds keyboard-numbers to low quality sub-sub-lists
           let sublistItems = mutationRecord.addedNodes[0].querySelectorAll('ul.sub-group-list')
           if (sublistItems !== undefined) {
             sublistItems.forEach(el => {
@@ -397,13 +398,16 @@ function init () {
               el.querySelectorAll('li > a').forEach(el2 => { el2.insertAdjacentHTML('afterbegin', `<kbd>${i++}</kbd> `) })
             })
             let i = 1
-            // adds keyboard numbers to lowquality sub-list
+            // adds keyboard numbers to low quality sub-list
             mutationRecord.addedNodes[0].querySelectorAll('label.sub-group')
-              .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
+            .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
           }
           // skip "Your analysis has been recorded" dialog
-          if (preferences.get(OPRT.OPTIONS.SKIP_ANALYZED_DIALOG) && mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
-            w.document.location.href = '/recon'
+          if (skipDialog) {
+            if (mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
+              w.document.location.href = '/recon'
+              return
+            }
           }
         }
       }
@@ -429,7 +433,7 @@ function init () {
 
       // we have to inject the tooltip to angular
       w.$injector.invoke(['$compile', ($compile) => {
-        let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById('descriptionDiv')))
+        let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(ansController))
         w.document.getElementById('addPreset').insertAdjacentElement('beforebegin', compiledSubmit[0])
       }])
 
@@ -657,6 +661,34 @@ function init () {
       setTimeout(() => {
         let rejectReasonTA = w.document.querySelector('textarea[ng-model="answerCtrl2.rejectComment"]')
         rejectReasonTA.style.setProperty('max-width', '100%')
+
+        w.$injector.invoke(['$compile', ($compile) => {
+          let target = w.document.querySelector('.modal-body button:last-child')
+          let compiledSubmit = $compile(`<button id="submitAndSkipLowQuality" class="button" ng-click="answerCtrl2.confirmLowQuality()" ng-disabled="!(answerCtrl2.readyToSubmitSpam())" disabled="disabled">
+                        <span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span></button>`)(w.$scope(target))
+          target.insertAdjacentElement('beforebegin', compiledSubmit[0])
+          w.document.getElementById('submitAndSkipLowQuality').addEventListener('click', () => {
+            skipDialog = true
+          })
+        }])
+
+      }, 10)
+    }
+
+    /* global markDuplicatePressed */
+    let _markDuplicatePressed = markDuplicatePressed
+    markDuplicatePressed = (guid) => {
+      _markDuplicatePressed(guid)
+      setTimeout(() => {
+        w.$injector.invoke(['$compile', ($compile) => {
+          let target = w.document.querySelector('.modal-body button:last-child')
+          let compiledSubmit = $compile(`<button id="submitAndSkipDuplicate" class="button" ng-click="answerCtrl2.confirmDuplicate()">
+                      <span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span></button>`)(w.$scope(target))
+          target.insertAdjacentElement('beforebegin', compiledSubmit[0])
+          w.document.getElementById('submitAndSkipDuplicate').addEventListener('click', () => {
+            skipDialog = true
+          })
+        }])
       }, 10)
     }
 
@@ -1097,7 +1129,6 @@ function init () {
 <li><a target='hitta' href='https://www.hitta.se/kartan!~${newPortalData.lat},${newPortalData.lng},18z/tileLayer!l=1'>SE - Hitta.se</a></li>
 <li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=17&l=nautical'>SE - Eniro Sjökort</a></li>
 `
-
     targetElement.insertAdjacentHTML(where, `<div><div class='btn-group'>${mapButtons}<div class='button btn btn-default dropdown'><span class='caret'></span><ul class='dropdown-content dropdown-menu'>${mapDropdown}</div>`)
   }
 
@@ -1105,10 +1136,6 @@ function init () {
   function quickSubmitButton (submitDiv, ansController, bodyObserver) {
     let submitButton = submitDiv.querySelector('button')
     submitButton.classList.add('btn', 'btn-warning')
-
-    if (!preferences.get(OPRT.OPTIONS.SKIP_ANALYZED_DIALOG)) { // quick hack, meh
-      return { submitButton, submitAndNext: submitButton } // eslint-disable-line
-    }
 
     let submitAndNext = submitButton.cloneNode(false)
     submitButton.addEventListener('click', () => {
@@ -1758,12 +1785,11 @@ setTimeout(() => {
 const strings = {
   options: {
     [OPRT.OPTIONS.COMMENT_TEMPLATES]: 'Comment templates',
-    [OPRT.OPTIONS.KEYBOARD_NAV]: 'Keyboard Navigation',
-    [OPRT.OPTIONS.NORWAY_MAP_LAYER]: 'Norwegian Map Layer',
+    [OPRT.OPTIONS.KEYBOARD_NAV]: 'Keyboard navigation',
+    [OPRT.OPTIONS.NORWAY_MAP_LAYER]: 'Norwegian map layer',
     [OPRT.OPTIONS.PRESET_FEATURE]: 'Presets',
     [OPRT.OPTIONS.REFRESH]: 'Periodically refresh opr if no analysis is available',
     [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: '↳ With desktop notification',
-    [OPRT.OPTIONS.SKIP_ANALYZED_DIALOG]: 'Skip \'Analysis recorded\' dialog',
     [OPRT.OPTIONS.SCANNER_OFFSET_FEATURE]: 'Scanner offset',
     [OPRT.OPTIONS.SCANNER_OFFSET_UI]: '↳ Display offset input field'
   },
@@ -1773,9 +1799,8 @@ const strings = {
 <br>- Enable or disable some not so often needed features.
 <br>
 <br>* Refresh notification: removed sound option
-<br>* Added new 20m circle around candidate location, thanks @aenariel
-<br>* Remembering selected layer type of duplicate map
-    `
+<br>* Added new 20m circle around candidate location, thanks to @aenariel
+<br>* Remembering selected layer type of duplicate map`
 }
 
 const GLOBAL_CSS = `
