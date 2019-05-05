@@ -64,6 +64,8 @@ const OPRT = {
     SCANNER_OFFSET_FEATURE: 'scanner_offset_feature',
     SCANNER_OFFSET_UI: 'scanner_offset_ui',
     COMMENT_TEMPLATES: 'comment_templates',
+    MAP_CIRCLE_20: 'map_circle_20',
+    MAP_CIRCLE_40: 'map_circle_40',
 
     REFRESH: 'refresh',
     REFRESH_NOTI_DESKTOP: 'refresh_noti_desktop'
@@ -100,7 +102,9 @@ class Preferences {
       [OPRT.OPTIONS.SCANNER_OFFSET_UI]: false,
       [OPRT.OPTIONS.COMMENT_TEMPLATES]: true,
       [OPRT.OPTIONS.REFRESH]: true,
-      [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: true
+      [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: true,
+      [OPRT.OPTIONS.MAP_CIRCLE_20]: false,
+      [OPRT.OPTIONS.MAP_CIRCLE_40]: true
     }
     this.loadOptions()
   }
@@ -140,8 +144,7 @@ class Preferences {
   <a id="oprt_reload" class="btn btn-warning hide"><span class="glyphicon glyphicon-refresh"></span>
  Reload to apply changes</a>
  
- <div style="position: absolute; bottom: 0; left: 0; margin:20px;"><a href="https://t.me/oprtools">${TG_SVG} OPR-Tools Telegram Channel</a></div>
- 
+ <div style="position: absolute; bottom: 0; left: 0; margin:20px;"><a href="https://t.me/oprtools">${TG_SVG} OPR-Tools Telegram Channel</a></div> 
 </section>`)
 
       let optionsContainer = w.document.getElementById('oprt_options')
@@ -548,37 +551,46 @@ function init () {
 
       w.getService('NewSubmissionDataService')
       let newLocMarker = w.NewSubmissionDataService.getNewLocationMarker()
+      if (preferences.get(OPRT.OPTIONS.MAP_CIRCLE_40)) {
+        google.maps.event.addListener(newLocMarker, 'dragend', function () {
+          if (draggableMarkerCircle == null) {
+            draggableMarkerCircle = new google.maps.Circle({
+              map: subController.map2,
+              center: newLocMarker.position,
+              radius: 40,
+              strokeColor: '#4CAF50', // material green 500
+              strokeOpacity: 1,
+              strokeWeight: 2,
+              fillOpacity: 0
+            })
+          } else draggableMarkerCircle.setCenter(newLocMarker.position)
+        })
+      }
 
-      google.maps.event.addListener(newLocMarker, 'dragend', function () {
-        if (draggableMarkerCircle == null) {
-          draggableMarkerCircle = new google.maps.Circle({
-            map: subController.map2,
-            center: newLocMarker.position,
-            radius: 40,
-            strokeColor: '#4CAF50', // material green 500
-            strokeOpacity: 1,
-            strokeWeight: 2,
-            fillOpacity: 0
-          })
-        } else draggableMarkerCircle.setCenter(newLocMarker.position)
-      })
-
-      google.maps.event.addListener(newLocMarker, 'dragend', function () {
-        if (draggableMarkerCircleSmall == null) {
-          draggableMarkerCircleSmall = new google.maps.Circle({
-            map: subController.map2,
-            center: newLocMarker.position,
-            radius: 20,
-            strokeColor: '#4CCF50',
-            strokeOpacity: 1,
-            strokeWeight: 2,
-            fillOpacity: 0
-          })
-        } else draggableMarkerCircleSmall.setCenter(newLocMarker.position)
-      })
+      if (preferences.get(OPRT.OPTIONS.MAP_CIRCLE_20)) {
+        google.maps.event.addListener(newLocMarker, 'dragend', function () {
+          if (draggableMarkerCircleSmall == null) {
+            draggableMarkerCircleSmall = new google.maps.Circle({
+              map: subController.map2,
+              center: newLocMarker.position,
+              radius: 20,
+              strokeColor: '#4CCF50',
+              strokeOpacity: 1,
+              strokeWeight: 2,
+              fillOpacity: 0
+            })
+          } else draggableMarkerCircleSmall.setCenter(newLocMarker.position)
+        })
+      }
     }
 
-    document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin', '<small class="pull-left"><span style="color:#ebbc4a">Outer circle:</span> 40m, <span style="color:#effc4a">inner circle:</span> 20m</small>')
+    if (preferences.get(OPRT.OPTIONS.MAP_CIRCLE_40) || preferences.get(OPRT.OPTIONS.MAP_CIRCLE_20)) {
+      document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin',
+        `<small class="pull-left">
+                ${preferences.get(OPRT.OPTIONS.MAP_CIRCLE_40) ? '<span style="color:#ebbc4a">outer circle:</span> 40m' : ''}
+                ${preferences.get(OPRT.OPTIONS.MAP_CIRCLE_20) ? '<span style="color:#effc4a">inner circle:</span> 20m' : ''}
+            </small>`)
+    }
 
     // move portal rating to the right side. don't move on mobile devices / small width
     if (screen.availWidth > 768) {
@@ -1232,25 +1244,29 @@ function init () {
   // adding a 40m circle and a smaller 20m circle around the portal (capture range)
   function mapOriginCircle (map) {
     // noinspection JSUnusedLocalSymbols
-    const circle40 = new google.maps.Circle({ // eslint-disable-line no-unused-vars
-      map: map,
-      center: map.center,
-      radius: 40,
-      strokeColor: '#ebbc4a',
-      strokeOpacity: 0.8,
-      strokeWeight: 1.5,
-      fillOpacity: 0
-    })
+    if (preferences.get(OPRT.OPTIONS.MAP_CIRCLE_40)) {
+      const circle40 = new google.maps.Circle({ // eslint-disable-line no-unused-vars
+        map: map,
+        center: map.center,
+        radius: 40,
+        strokeColor: '#ebbc4a',
+        strokeOpacity: 0.8,
+        strokeWeight: 1.5,
+        fillOpacity: 0
+      })
+    }
 
-    const circle20 = new google.maps.Circle({ // eslint-disable-line no-unused-vars
-      map: map,
-      center: map.center,
-      radius: 20,
-      strokeColor: '#eddc4a',
-      strokeOpacity: 0.8,
-      strokeWeight: 1.5,
-      fillOpacity: 0
-    })
+    if (preferences.get(OPRT.OPTIONS.MAP_CIRCLE_20)) {
+      const circle20 = new google.maps.Circle({ // eslint-disable-line no-unused-vars
+        map: map,
+        center: map.center,
+        radius: 20,
+        strokeColor: '#eddc4a',
+        strokeOpacity: 0.8,
+        strokeWeight: 1.5,
+        fillOpacity: 0
+      })
+    }
   }
 
   // replace map markers with a nice circle
@@ -1787,11 +1803,13 @@ const strings = {
     [OPRT.OPTIONS.COMMENT_TEMPLATES]: 'Comment templates',
     [OPRT.OPTIONS.KEYBOARD_NAV]: 'Keyboard navigation',
     [OPRT.OPTIONS.NORWAY_MAP_LAYER]: 'Norwegian map layer',
-    [OPRT.OPTIONS.PRESET_FEATURE]: 'Presets',
+    [OPRT.OPTIONS.PRESET_FEATURE]: 'Rating presets',
     [OPRT.OPTIONS.REFRESH]: 'Periodically refresh opr if no analysis is available',
     [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: '↳ With desktop notification',
     [OPRT.OPTIONS.SCANNER_OFFSET_FEATURE]: 'Scanner offset',
-    [OPRT.OPTIONS.SCANNER_OFFSET_UI]: '↳ Display offset input field'
+    [OPRT.OPTIONS.SCANNER_OFFSET_UI]: '↳ Display offset input field',
+    [OPRT.OPTIONS.MAP_CIRCLE_20]: 'Show 20 meter circle around candidate location (minimum portal distance)',
+    [OPRT.OPTIONS.MAP_CIRCLE_40]: 'Show 40 meter circle around candidate location (capture range)'
   },
   changelog:
     `Version 1.0.0!
