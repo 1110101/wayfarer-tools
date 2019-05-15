@@ -881,6 +881,8 @@ function init () {
         } else if (numkey !== null && event.shiftKey) {
           try {
             w.document.getElementsByClassName('customPresetButton')[numkey - 1].click()
+            currentSelectable = 6
+            highlight()
           } catch (e) {
             // ignore
           }
