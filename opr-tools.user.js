@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name            OPR tools
-// @version         0.27.4
+// @name            OPR-Tools
+// @version         1.0.0
 // @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -53,7 +53,7 @@ SOFTWARE.
 
 const OPRT = {
 
-  VERSION: 2701,
+  VERSION: 10000,
 
   PREFERENCES: 'oprt_prefs',
 
@@ -131,7 +131,7 @@ class Preferences {
     ">
   <div class="row">
     <div class="col-lg-12">
-      <h4 class="gold">OPR Tools Preferences</h4>
+      <h4 class="gold">OPR-Tools Preferences</h4>
     </div>
     <div class="col-lg-12">
       <div class="btn-group" role="group">
@@ -1669,7 +1669,7 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
       w.localStorage.setItem(OPRT.PREFIX + OPRT.VERSION_CHECK, OPRT.VERSION)
 
       const changelogString = `
-        <h4><span class="glyphicon glyphicon-asterisk"></span> OPR Tools was updated:</h4>
+        <h4><span class="glyphicon glyphicon-asterisk"></span> OPR-Tools was updated:</h4>
         <div>${strings.changelog}</div>      
       `
       // show changelog
