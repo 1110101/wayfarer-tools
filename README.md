@@ -1,14 +1,15 @@
 # OPR-Tools
 
-[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com) [![OPR-Tools Telegram Channel](https://img.shields.io/badge/OPR_Tools_Channel--blue.svg?logo=telegram&style=social)](https://t.me/oprtools)
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com) [![OPR-Tools Telegram Channel](https://img.shields.io/badge/OPR_Tools_Telegram_Channel--blue.svg?logo=telegram&style=social)](https://t.me/oprtools)
 
-Userscript for [Ingress Operation Portal Recon](https://opr.ingress.com/recon)
+Userscript for [Ingress - Operation Portal Recon](https://opr.ingress.com/recon)
 
-> Userscript manager such as [Tampermonkey](https://tampermonkey.net/) required.
+## Installation
+
+OPR-Tools is tested with Chrome and Firefox. You need a userscript manager like [Tampermonkey](https://tampermonkey.net/) (You already have one if you use IITC). OPR-Tools does not work with Greasemonkey for Firefox.
 
 > **Download:** https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 
- OPR-Tools is not compatible with Greasemonkey for Firefox.
 
 ![](./image/opr-tools-1.png)
 ![](./image/opr-tools-3.png)
@@ -25,7 +26,7 @@ Userscript for [Ingress Operation Portal Recon](https://opr.ingress.com/recon)
 - Changed portal markers to small circles, inspired by IITC style
 - Made "Nearby portals" list and map scrollable with mouse wheel
 - Refresh page if no portal analysis available
-- Displays a 40m capture circle around the candidates location
+- Displays a 20m and 40m capture circle around the candidates location
 - Expiration timer in navigation bar
 - **Keyboard navigation**
 
