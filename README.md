@@ -46,3 +46,34 @@ You can use keyboard to fully control the page as follows:
 | Shift, Backspace, Numpad - |              Previous field              |
 |       Esc, Numpad /        |               First field                |
 |           \^, Numpad *     |        Skip Portal (if possible)         |
+
+## Development
+
+To make development a little bit easier and to use real IDEs instead of tampermonkeys built-in editor, you can checkout this repository and create a meta-file for tampermonkey.
+1. Enable "Access to File-URLs" for tampermonkey ( `chrome://extensions/?id=dhdgffkkebhmkfjojejmpbldmpobfkfo` copy and paste this url)
+2. Replace *<FILE LINK HERE>* with a file:/// url to your local copy of `opr-tools.user.js`, for example `file:///D:/Coding/opr-tools/opr-tools.user.js`
+3. Copy the next block, create a new and empty script in tampermonkey, paste and save it.
+
+```// ==UserScript==
+// @name            OPR-Tools
+// @version         999.0.0
+// @description     OPR enhancements
+// @homepageURL     https://gitlab.com/1110101/opr-tools
+// @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
+// @match           https://opr.ingress.com/
+// @match           https://opr.ingress.com/?login=true
+// @match           https://opr.ingress.com/recon
+// @match           https://opr.ingress.com/help
+// @match           https://opr.ingress.com/faq
+// @match           https://opr.ingress.com/guide
+// @match           https://opr.ingress.com/settings
+// @match           https://opr.ingress.com/upgrades*
+// @grant           unsafeWindow
+// @grant           GM_notification
+// @grant           GM_addStyle
+// @require         https://cdnjs.cloudflare.com/ajax/libs/alertifyjs-alertify.js/1.0.11/js/alertify.js
+// @require         https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.4/proj4.js
+// @require         *<FILE LINK HERE>*
+
+// ==/UserScript==```
+
