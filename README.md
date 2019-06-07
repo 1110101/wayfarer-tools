@@ -51,7 +51,7 @@ You can use keyboard to fully control the page as follows:
 
 To make development a little bit easier and to use real IDEs instead of tampermonkeys built-in editor, you can checkout this repository and create a meta-file for tampermonkey.
 1. Enable "Access to File-URLs" for tampermonkey ( `chrome://extensions/?id=dhdgffkkebhmkfjojejmpbldmpobfkfo` copy and paste this url)
-2. Replace *<FILE LINK HERE>* with a file:/// url to your local copy of `opr-tools.user.js`, for example `file:///D:/Coding/opr-tools/opr-tools.user.js`
+2. Replace *\<FILE LINK HERE\>* with a file:/// url to your local copy of `opr-tools.user.js`, for example `file:///D:/Coding/opr-tools/opr-tools.user.js`
 3. Copy the next block, create a new and empty script in tampermonkey, paste and save it.
 
 ```// ==UserScript==
