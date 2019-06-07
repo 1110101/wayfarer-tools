@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR-Tools
-// @version         1.0.0
+// @version         1.1.0
 // @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -53,7 +53,7 @@ SOFTWARE.
 
 const OPRT = {
 
-  VERSION: 10000,
+  VERSION: 10100,
 
   PREFERENCES: 'oprt_prefs',
 
@@ -87,8 +87,8 @@ const OPRT = {
 
 function addGlobalStyle (css) {
   GM_addStyle(css)
-
-  addGlobalStyle = () => {} // noop after first run
+  // noop after first run
+  addGlobalStyle = () => {} // eslint-disable-line no-func-assign
 }
 
 class Preferences {
@@ -195,17 +195,17 @@ class Preferences {
       })
 
       w.document.getElementById('export_all').addEventListener('click', () => {
-          if (navigator.clipboard !== undefined) {
-            navigator.clipboard.writeText(inout.exportAll()).then(() => {
-              alertify.success(`✔ Exported preferences to your clipboard!`)
-            }, () => {
-              // ugly alert as fallback
-              alertify.alert(inout.exportAll())
-            })
-          } else {
+        if (navigator.clipboard !== undefined) {
+          navigator.clipboard.writeText(inout.exportAll()).then(() => {
+            alertify.success(`✔ Exported preferences to your clipboard!`)
+          }, () => {
+            // ugly alert as fallback
             alertify.alert(inout.exportAll())
-          }
+          })
+        } else {
+          alertify.alert(inout.exportAll())
         }
+      }
       )
     }
   }
@@ -293,7 +293,7 @@ function init () {
     if (tryNumber === 0) {
       clearInterval(initWatcher)
       w.document.getElementById('NewSubmissionController')
-      .insertAdjacentHTML('afterBegin', `
+        .insertAdjacentHTML('afterBegin', `
 <div id="oprt_init_failed" class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
 `)
       addRefreshContainer()
@@ -383,7 +383,6 @@ function init () {
   }
 
   function modifyNewPage (ansController, subController, whatController, newPortalData) {
-
     let skipDialog = false
 
     mapButtons(newPortalData, w.document.getElementById('descriptionDiv'), 'beforeEnd')
@@ -403,7 +402,7 @@ function init () {
             let i = 1
             // adds keyboard numbers to low quality sub-list
             mutationRecord.addedNodes[0].querySelectorAll('label.sub-group')
-            .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
+              .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
           }
           // skip "Your analysis has been recorded" dialog
           if (skipDialog) {
@@ -656,6 +655,21 @@ function init () {
       br.insertAdjacentElement('afterend', a)
     }
 
+    const supportingStatement = w.document.querySelector('p[ng-click="subCtrl.showSupportingStatementModal()"]')
+    if (supportingStatement != null && supportingStatement.innerText !== '') {
+      a = w.document.createElement('a')
+      span = w.document.createElement('span')
+      span.className = 'glyphicon glyphicon-book'
+      span.innerHTML = ' '
+      a.appendChild(span)
+      a.className = 'translate-supporting button btn btn-default pull-right'
+      a.target = 'translate'
+      a.style.setProperty('padding', '0px 4px')
+      a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(supportingStatement.innerText)}`
+      a.id = 'oprt_translate_support'
+      supportingStatement.insertAdjacentElement('beforebegin', a)
+    }
+
     // automatically open the first listed possible duplicate
     try {
       const e = w.document.querySelector('#map-filmstrip > ul > li:nth-child(1) > img')
@@ -685,13 +699,12 @@ function init () {
             skipDialog = true
           })
         }])
-
       }, 10)
     }
 
     /* global markDuplicatePressed */
     let _markDuplicatePressed = markDuplicatePressed
-    markDuplicatePressed = (guid) => {
+    markDuplicatePressed = (guid) => { // eslint-disable-line no-global-assign
       _markDuplicatePressed(guid)
       setTimeout(() => {
         w.$injector.invoke(['$compile', ($compile) => {
@@ -1814,7 +1827,11 @@ const strings = {
     [OPRT.OPTIONS.MAP_CIRCLE_40]: 'Show 40 meter circle around candidate location (capture range)'
   },
   changelog:
-    `Version 1.0.0!
+    `
+Version 1.1.0
+<br>* Added translate button to supporting text
+<br><br>
+Version 1.0.0
 <br>* New preferences menu
 <br>- Enable or disable some not so often needed features.
 <br>
@@ -2103,14 +2120,14 @@ const TG_SVG = `
     height: 16px;
 ">
 <defs>
-	<linearGradient id="b" x1="0.6667" y1="0.1667" x2="0.4167" y2="0.75">
-		<stop stop-color="#37aee2" offset="0"></stop>
-		<stop stop-color="#1e96c8" offset="1"></stop>
-	</linearGradient>
-	<linearGradient id="w" x1="0.6597" y1="0.4369" x2="0.8512" y2="0.8024">
-		<stop stop-color="#eff7fc" offset="0"></stop>
-		<stop stop-color="#fff" offset="1"></stop>
-	</linearGradient>
+  <linearGradient id="b" x1="0.6667" y1="0.1667" x2="0.4167" y2="0.75">
+    <stop stop-color="#37aee2" offset="0"></stop>
+    <stop stop-color="#1e96c8" offset="1"></stop>
+  </linearGradient>
+  <linearGradient id="w" x1="0.6597" y1="0.4369" x2="0.8512" y2="0.8024">
+    <stop stop-color="#eff7fc" offset="0"></stop>
+    <stop stop-color="#fff" offset="1"></stop>
+  </linearGradient>
 </defs>
 <circle cx="120" cy="120" r="120" fill="url(#b)"></circle>
 <path fill="#c8daea" d="m98 175c-3.8876 0-3.227-1.4679-4.5678-5.1695L82
