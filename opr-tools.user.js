@@ -12,15 +12,13 @@
 // @downloadURL     https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 // @updateURL       https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 // @supportURL      https://gitlab.com/1110101/opr-tools/issues
-// @require         https://cdnjs.cloudflare.com/ajax/libs/alertifyjs-alertify.js/1.0.11/js/alertify.js
-// @require         https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.4/proj4.js
 
 // ==/UserScript==
 
 // source https://gitlab.com/1110101/opr-tools
 // merge-requests welcome
 
-/*
+/*!
 MIT License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -43,7 +41,12 @@ SOFTWARE.
 
 */
 
-/* globals screen, MutationObserver, addEventListener, localStorage, MutationObserver, GM_addStyle, GM_notification, unsafeWindow, angular, google, alertify, proj4 */
+/* globals screen, MutationObserver, addEventListener, localStorage, MutationObserver, GM_addStyle, GM_notification, unsafeWindow, angular, google  */
+
+const alertifyUrl = 'https://glcdn.githack.com/1110101/opr-tools/raw/experimental/webpack/externals/alertify.1.0.11_module.js'
+const alertifyName = 'alertify1011_module'
+const proj4Url = 'https://glcdn.githack.com/1110101/opr-tools/raw/experimental/webpack/externals/proj4.2.5.0_module.js'
+const proj4Name = 'proj4250_module'
 
 const WFRT = {
 
@@ -83,12 +86,6 @@ const WFRT = {
   VERSION_CHECK: 'version_check', // outside var, because it should not get exported
 
   FROM_REFRESH: 'from_refresh' // sessionStorage
-}
-
-function addGlobalStyle (css) {
-  GM_addStyle(css)
-  // noop after first run
-  addGlobalStyle = () => {} // eslint-disable-line no-func-assign
 }
 
 class Preferences {
@@ -181,33 +178,37 @@ class Preferences {
       })
 
       w.document.getElementById('import_all').addEventListener('click', () => {
-        alertify.okBtn('Import').prompt('Paste here:',
-          (value, event) => {
-            event.preventDefault()
-            if (value === 'undefined' || value === '') {
-              return
+        import(/* webpackIgnore: true */alertifyUrl).then(module => {
+          module[alertifyName].okBtn('Import').prompt('Paste here:',
+            (value, event) => {
+              event.preventDefault()
+              if (value === 'undefined' || value === '') {
+                return
+              }
+              inout.importFromString(value)
+              module[alertifyName].success(`✔ Imported preferences`)
+            }, event => {
+              event.preventDefault()
             }
-            inout.importFromString(value)
-            alertify.success(`✔ Imported preferences`)
-          }, event => {
-            event.preventDefault()
-          }
-        )
+          )
+        })
       })
 
       w.document.getElementById('export_all').addEventListener('click', () => {
-          if (navigator.clipboard !== undefined) {
-            navigator.clipboard.writeText(inout.exportAll()).then(() => {
-              alertify.success(`✔ Exported preferences to your clipboard!`)
-            }, () => {
-              // ugly alert as fallback
-              alertify.alert(inout.exportAll())
-            })
-          } else {
-            alertify.alert(inout.exportAll())
+        import(/* webpackIgnore: true */alertifyUrl).then(module => {
+            if (navigator.clipboard !== undefined) {
+              navigator.clipboard.writeText(inout.exportAll()).then(() => {
+                module[alertifyName].success(`✔ Exported preferences to your clipboard!`)
+              }, () => {
+                // ugly alert as fallback
+                module[alertifyName].alert(inout.exportAll())
+              })
+            } else {
+              module[alertifyName].alert(inout.exportAll())
+            }
           }
-        }
-      )
+        )
+      })
     }
   }
 
@@ -326,7 +327,7 @@ function init () {
       }
     }
     tryNumber--
-  }, 1000)
+  }, 500)
 
   function initAngular () {
     const el = w.document.querySelector('[ng-app="portalApp"]')
@@ -452,19 +453,21 @@ function init () {
 
       // click listener for +preset button
       w.document.getElementById('addPreset').addEventListener('click', event => {
-        alertify.okBtn('Save').prompt('New preset name:',
-          (value, event) => {
-            event.preventDefault()
-            if (value === 'undefined' || value === '') {
-              return
+        import(/* webpackIgnore: true */alertifyUrl).then(module => {
+          module[alertifyName].okBtn('Save').prompt('New preset name:',
+            (value, event) => {
+              event.preventDefault()
+              if (value === 'undefined' || value === '') {
+                return
+              }
+              saveCustomPreset(value, ansController, whatController)
+              module[alertifyName].success(`✔ Created preset <i>${value}</i>`)
+              addCustomPresetButtons()
+            }, event => {
+              event.preventDefault()
             }
-            saveCustomPreset(value, ansController, whatController)
-            alertify.success(`✔ Created preset <i>${value}</i>`)
-            addCustomPresetButtons()
-          }, event => {
-            event.preventDefault()
-          }
-        )
+          )
+        })
       })
 
       let clickListener = event => {
@@ -477,7 +480,9 @@ function init () {
         let preset = wfrtCustomPresets.find(item => item.uid === value)
 
         if (event.shiftKey) {
-          alertify.log(`Deleted preset <i>${preset.label}</i>`)
+          import(/* webpackIgnore: true */alertifyUrl).then(module => {
+            module[alertifyName].log(`Deleted preset <i>${preset.label}</i>`)
+          })
           w.document.getElementById(preset.uid).remove()
           deleteCustomPreset(preset)
           return
@@ -507,8 +512,9 @@ function init () {
         // update ui
         event.target.blur()
         w.$rootScope.$apply()
-
-        alertify.success(`✔ Applied <i>${preset.label}</i>`)
+        import(/* webpackIgnore: true */alertifyUrl).then(module => {
+          module[alertifyName].success(`✔ Applied <i>${preset.label}</i>`)
+        })
       }
 
       w.document.getElementById('wfrt_custom_presets').addEventListener('click', clickListener, false)
@@ -1136,10 +1142,6 @@ function init () {
 
   // add map buttons
   function mapButtons (newPortalData, targetElement, where) {
-    // coordinate format conversion
-    const coordUtm33 = proj4('+proj=longlat', '+proj=utm +zone=33', [newPortalData.lng, newPortalData.lat])
-    const coordUtm35 = proj4('+proj=longlat', '+proj=utm +zone=35', [newPortalData.lng, newPortalData.lat])
-    const coordPuwg92 = proj4('+proj=longlat', '+proj=tmerc +lat_0=0 +lon_0=19 +k=0.9993 +x_0=500000 +y_0=-5300000 +ellps=GRS80 +units=m +no_defs', [newPortalData.lng, newPortalData.lat])
 
     const mapButtons = `
 <a class='btn btn-default' target='intel' href='https://intel.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=17'>Intel</a>
@@ -1159,23 +1161,64 @@ function init () {
 <li><a target='bayernatlas' href='https://geoportal.bayern.de/bayernatlas/index.html?X=${newPortalData.lat}&Y=${newPortalData.lng}&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>
 <li><a target='pegel' href='http://opr.pegel.dk/?17/${newPortalData.lat}/${newPortalData.lng}'>DK - SDFE Orthophotos</a></li>
 <li><a target='kortforsyningen' href='https://skraafoto.kortforsyningen.dk/oblivisionjsoff/index.aspx?project=Denmark&lon=${newPortalData.lng}&lat=${newPortalData.lat}'>DK - Kortforsyningen Skråfoto</a></li>
-<li><a target='maanmittauslaitos' href='https://asiointi.maanmittauslaitos.fi/karttapaikka/?lang=en&share=customMarker&n=${coordUtm35[1].toFixed(3)}&e=${coordUtm35[0].toFixed(3)}&title=${encodeURIComponent(newPortalData.title)}&desc=&zoom=11&layers=%5B%7B%22id%22%3A2%2C%22opacity%22%3A100%7D%5D'>FI - Maanmittauslaitos</a></li>
-<li><a target='paikkatietoikkuna' href='https://kartta.paikkatietoikkuna.fi/?zoomLevel=11&coord=${coordUtm35[0].toFixed(3)}_${coordUtm35[1].toFixed(3)}&mapLayers=801+100+default&uuid=90246d84-3958-fd8c-cb2c-2510cccca1d3&showMarker=true'>FI - Paikkatietoikkuna</a></li>
+<li><a target='maanmittauslaitos' href='#'>FI - Maanmittauslaitos</a></li>
+<li><a target='paikkatietoikkuna' href='#'>FI - Paikkatietoikkuna</a></li>
 <li><a target='kakao' href='http://map.kakao.com/?map_type=TYPE_SKYVIEW&map_hybrid=true&q=${newPortalData.lat}%2C${newPortalData.lng}'>KR - Kakao map</a></li>
 <li><a target='naver' href='http://map.naver.com/?menu=location&lat=${newPortalData.lat}&lng=${newPortalData.lng}&dLevel=14&title=CandidatePortalLocation'>KR - Naver map</a></li>
-<li><a target='kartverket' href='http://norgeskart.no/#!?project=seeiendom&layers=1002,1014&zoom=17&lat=${coordUtm33[1].toFixed(2)}&lon=${coordUtm33[0].toFixed(2)}&sok=${newPortalData.lat},${newPortalData.lng}'>NO - Kartverket</a></li>
+<li><a target='kartverket' href='#'>NO - Kartverket</a></li>
 <li><a target='kulturminnesok' href='https://www.kulturminnesok.no/search?lat=${newPortalData.lat}&lng=${newPortalData.lng}'>NO - Kulturminnesøk</a></li>
-<li><a target='norgeibilder' href='https://norgeibilder.no/?x=${Math.round(coordUtm33[0])}&y=${Math.round(coordUtm33[1])}&level=16&utm=33'>NO - Norge i Bilder</a></li>
+<li><a target='norgeibilder' href='#'>NO - Norge i Bilder</a></li>
 <li><a target='finnno' href='http://kart.finn.no/?lng=${newPortalData.lng}&lat=${newPortalData.lat}&zoom=17&mapType=normap&markers=${newPortalData.lng},${newPortalData.lat},r,'>NO - Finn Kart</a></li>
 <li><a target='toposvalbard' href='http://toposvalbard.npolar.no/?lat=${newPortalData.lat}&long=${newPortalData.lng}&zoom=17&layer=map'>NO - Polarinstituttet, Svalbard</a></li>
-<li><a target='geoportal_pl' href='http://mapy.geoportal.gov.pl/imap/?actions=acShowWgButtonPanel_kraj_ORTO&bbox=${coordPuwg92[0] - 127},${coordPuwg92[1] - 63},${coordPuwg92[0] + 127},${coordPuwg92[1] + 63}'>PL - GeoPortal</a></li>
+<li><a target='geoportal_pl' href='#'>PL - GeoPortal</a></li>
 <li><a target='yandex' href='https://yandex.ru/maps/?ll=${newPortalData.lng},${newPortalData.lat}&z=18&mode=whatshere&whatshere%5Bpoint%5D=${newPortalData.lng},${newPortalData.lat}&whatshere%5Bzoom%5D=18'>RU - Yandex</a></li>
 <li><a target='2GIS' href='https://2gis.ru/geo/${newPortalData.lng},${newPortalData.lat}?queryState=center/${newPortalData.lng},${newPortalData.lat}/zoom/13'>RU - 2GIS</a></li>
-<li><a target='lantmateriet' href='https://kso.etjanster.lantmateriet.se/?e=${Math.round(coordUtm33[0])}&n=${Math.round(coordUtm33[1])}&z=13'>SE - Läntmateriet</a></li>
+<li><a target='lantmateriet' href='#'>SE - Läntmateriet</a></li>
 <li><a target='hitta' href='https://www.hitta.se/kartan!~${newPortalData.lat},${newPortalData.lng},18z/tileLayer!l=1'>SE - Hitta.se</a></li>
 <li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=17&l=nautical'>SE - Eniro Sjökort</a></li>
 `
     targetElement.insertAdjacentHTML(where, `<div id="wfrt_map_button_group" class='btn-group dropup'>${mapButtons}<div class='btn btn-default dropdown'><span class='caret'></span><ul id="wfrt_map_dropdown" class='dropdown-content dropdown-menu'>${mapDropdown}</div></div>`)
+
+    w.document.getElementById('oprt_map_button_group').addEventListener('click', event => {
+
+      if (event.target.target == 'maanmittauslaitos') {
+        event.preventDefault()
+        import(/* webpackIgnore: true */proj4Url).then(module => {
+          const coordUtm35 = module[proj4Name]('+proj=longlat', '+proj=utm +zone=35', [newPortalData.lng, newPortalData.lat])
+          window.open(`https://asiointi.maanmittauslaitos.fi/karttapaikka/?lang=en&share=customMarker&n=${coordUtm35[1].toFixed(3)}&e=${coordUtm35[0].toFixed(3)}&title=${encodeURIComponent(newPortalData.title)}&desc=&zoom=11&layers=%5B%7B%22id%22%3A2%2C%22opacity%22%3A100%7D%5D`, 'maanmittauslaitos')
+        })
+      } else if (event.target.target == 'norgeibilder') {
+        event.preventDefault()
+        import(/* webpackIgnore: true */proj4Url).then(module => {
+          const coordUtm33 = module[proj4Name]('+proj=longlat', '+proj=utm +zone=33', [newPortalData.lng, newPortalData.lat])
+          window.open(`https://norgeibilder.no/?x=${Math.round(coordUtm33[0])}&y=${Math.round(coordUtm33[1])}&level=16&utm=33`, 'norgeibilder')
+        })
+      } else if (event.target.target == 'geoportal_pl') {
+        event.preventDefault()
+        import(/* webpackIgnore: true */proj4Url).then(module => {
+          const coordPuwg92 = module[proj4Name]('+proj=longlat', '+proj=tmerc +lat_0=0 +lon_0=19 +k=0.9993 +x_0=500000 +y_0=-5300000 +ellps=GRS80 +units=m +no_defs', [newPortalData.lng, newPortalData.lat])
+          window.open(`http://mapy.geoportal.gov.pl/imap/?actions=acShowWgButtonPanel_kraj_ORTO&bbox=${coordPuwg92[0] - 127},${coordPuwg92[1] - 63},${coordPuwg92[0] + 127},${coordPuwg92[1] + 63}`, 'geoportal_pl')
+        })
+      } else if (event.target.target == 'lantmateriet') {
+        event.preventDefault()
+        import(/* webpackIgnore: true */proj4Url).then(module => {
+          const coordUtm33 = module[proj4Name]('+proj=longlat', '+proj=utm +zone=33', [newPortalData.lng, newPortalData.lat])
+          window.open(`https://kso.etjanster.lantmateriet.se/?e=${Math.round(coordUtm33[0])}&n=${Math.round(coordUtm33[1])}&z=13`, 'lantmateriet')
+        })
+      } else if (event.target.target == 'paikkatietoikkuna') {
+        event.preventDefault()
+        import(/* webpackIgnore: true */proj4Url).then(module => {
+          const coordUtm35 = module[proj4Name]('+proj=longlat', '+proj=utm +zone=35', [newPortalData.lng, newPortalData.lat])
+          window.open(`https://kartta.paikkatietoikkuna.fi/?zoomLevel=11&coord=${coordUtm35[0].toFixed(3)}_${coordUtm35[1].toFixed(3)}&mapLayers=801+100+default&uuid=90246d84-3958-fd8c-cb2c-2510cccca1d3&showMarker=true`, 'paikkatietoikkuna')
+        })
+      } else if (event.target.target == 'kartverket') {
+        event.preventDefault()
+        import(/* webpackIgnore: true */proj4Url).then(module => {
+          const coordUtm33 = module[proj4Name]('+proj=longlat', '+proj=utm +zone=33', [newPortalData.lng, newPortalData.lat])
+          window.open(`http://norgeskart.no/#!?project=seeiendom&layers=1002,1014&zoom=17&lat=${coordUtm33[1].toFixed(2)}&lon=${coordUtm33[0].toFixed(2)}&sok=${newPortalData.lat},${newPortalData.lng}`, 'kartverket')
+        })
+      }
+    })
   }
 
   // add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
@@ -1682,10 +1725,12 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected + duplicated} (C
         <div>${strings.changelog}</div>
       `
       // show changelog
-      alertify.closeLogOnClick(false).logPosition('bottom right').delay(0).log(changelogString, (ev) => {
-        ev.preventDefault()
-        ev.target.closest('div.default.show').remove()
-      }).reset()
+      import(/* webpackIgnore: true */alertifyUrl).then(module => {
+        module[alertifyName].closeLogOnClick(false).logPosition('bottom right').delay(0).log(changelogString, (ev) => {
+          ev.preventDefault()
+          ev.target.closest('div.default.show').remove()
+        }).reset()
+      })
     }
   }
 
@@ -1792,10 +1837,12 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected + duplicated} (C
     </tbody>
     </table>`
 
-    alertify.closeLogOnClick(false).logPosition('bottom right').delay(0).log(helpString, (ev) => {
-      ev.preventDefault()
-      ev.target.closest('div.default.show').remove()
-    }).reset()
+    import(/* webpackIgnore: true */alertifyUrl).then(module => {
+      module[alertifyName].closeLogOnClick(false).logPosition('bottom right').delay(0).log(helpString, (ev) => {
+        ev.preventDefault()
+        ev.target.closest('div.default.show').remove()
+      }).reset()
+    })
   }
 
   function roundToPrecision (num, precision) {
@@ -1805,6 +1852,12 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected + duplicated} (C
     shifter = Math.pow(10, precision)
     return Math.round(num * shifter) / shifter
   }
+}
+
+function addGlobalStyle (css) {
+  GM_addStyle(css)
+  // noop after first run
+  addGlobalStyle = () => {} // eslint-disable-line no-func-assign
 }
 
 setTimeout(() => {
