@@ -655,6 +655,21 @@ function init () {
       br.insertAdjacentElement('afterend', a)
     }
 
+    const supportingStatement = w.document.querySelector('p[ng-click="subCtrl.showSupportingStatementModal()"]')
+    if (supportingStatement != null && supportingStatement.innerText !== '') {
+      a = w.document.createElement('a')
+      span = w.document.createElement('span')
+      span.className = 'glyphicon glyphicon-book'
+      span.innerHTML = ' '
+      a.appendChild(span)
+      a.className = 'translate-supporting button btn btn-default pull-right'
+      a.target = 'translate'
+      a.style.setProperty('padding', '0px 4px')
+      a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(supportingStatement.innerText)}`
+      a.id = 'oprt_translate_support'
+      supportingStatement.insertAdjacentElement('beforebegin', a)
+    }
+
     // automatically open the first listed possible duplicate
     try {
       const e = w.document.querySelector('#map-filmstrip > ul > li:nth-child(1) > img')
