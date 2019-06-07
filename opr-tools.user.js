@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR-Tools
-// @version         1.0.0
+// @version         1.1.0
 // @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -53,7 +53,7 @@ SOFTWARE.
 
 const OPRT = {
 
-  VERSION: 10000,
+  VERSION: 10100,
 
   PREFERENCES: 'oprt_prefs',
 
@@ -1827,7 +1827,11 @@ const strings = {
     [OPRT.OPTIONS.MAP_CIRCLE_40]: 'Show 40 meter circle around candidate location (capture range)'
   },
   changelog:
-    `Version 1.0.0!
+    `
+Version 1.1.0
+<br>* Added translate button to supporting text
+<br><br>
+Version 1.0.0
 <br>* New preferences menu
 <br>- Enable or disable some not so often needed features.
 <br>
