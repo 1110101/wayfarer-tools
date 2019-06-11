@@ -894,8 +894,10 @@ function init () {
         } else if (numkey !== null && event.shiftKey) {
           try {
             w.document.getElementsByClassName('customPresetButton')[numkey - 1].click()
-            currentSelectable = 6
-            highlight()
+            if (!document.getElementById('submitFF').disabled) {
+              currentSelectable = 6
+              highlight()
+            }
           } catch (e) {
             // ignore
           }
@@ -1172,6 +1174,7 @@ function init () {
     })
     submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`
     submitAndNext.title = 'Submit and go to next review'
+    submitAndNext.id = 'submitFF'
     submitAndNext.addEventListener('click', () => {
       ansController.openSubmissionCompleteModal = () => {
         window.location.assign('/recon')
