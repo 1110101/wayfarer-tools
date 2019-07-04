@@ -593,14 +593,18 @@ function init () {
 
     // move portal rating to the right side. don't move on mobile devices / small width
     if (screen.availWidth > 768) {
-      let nodeToMove = w.document.querySelector('div[class="btn-group"]').parentElement
+      const qualityPanel = w.document.querySelector('div[class="btn-group"]').parentElement
       if (subController.hasSupportingImageOrStatement) {
         const descDiv = w.document.getElementById('descriptionDiv')
-        const scorePanel = descDiv.querySelector('div.text-center.hidden-xs')
-        scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
+        const panelBlock = descDiv.querySelector('div.text-center.hidden-xs')
+        panelBlock.style['padding-top'] = ''
+        panelBlock.style['padding-bottom'] = '20px'
+        panelBlock.insertBefore(qualityPanel, panelBlock.firstChild)
+        const photoSection = w.document.querySelector('.col-xs-12.col-sm-4')
+        photoSection.insertAdjacentElement('beforeend', panelBlock)
       } else {
-        const scorePanel = w.document.querySelector('div[class~="pull-right"]')
-        scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
+        const panelBlock = w.document.querySelector('div[class~="pull-right"]')
+        panelBlock.insertBefore(qualityPanel, panelBlock.firstChild)
       }
     }
 
