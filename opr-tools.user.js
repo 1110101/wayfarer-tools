@@ -1846,6 +1846,8 @@ Version 1.2.0
 <br>* Scanner offset is now saved correctly and can be exported.
 <br>- Your current setting will be lost.
 <br>* All maps are now zoom level 18. OSM button is back.
+<br>* Evaluation stars at prime are now moved to the left.
+<br>- This frees space for center-based info plugins and just looks better.
 <br><br>
 Version 1.1.0
 <br>* Added translate button to supporting text
