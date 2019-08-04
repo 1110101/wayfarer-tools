@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR-Tools
-// @version         1.1.0
+// @version         1.2.0
 // @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -53,7 +53,7 @@ SOFTWARE.
 
 const OPRT = {
 
-  VERSION: 10100,
+  VERSION: 10200,
 
   PREFERENCES: 'oprt_prefs',
 
@@ -1841,6 +1841,12 @@ const strings = {
   },
   changelog:
     `
+Version 1.2.0
+<br>* Preferences import is now fully functional.
+<br>* Scanner offset is now saved correctly and can be exported.
+<br>- Your current setting will be lost.
+<br>* All maps are now zoom level 18. OSM button is back.
+<br><br>
 Version 1.1.0
 <br>* Added translate button to supporting text
 <br><br>
