@@ -1135,38 +1135,38 @@ function init () {
     const coordPuwg92 = proj4('+proj=longlat', '+proj=tmerc +lat_0=0 +lon_0=19 +k=0.9993 +x_0=500000 +y_0=-5300000 +ellps=GRS80 +units=m +no_defs', [newPortalData.lng, newPortalData.lat])
 
     const mapButtons = `
-<a class='button btn btn-default' target='intel' href='https://intel.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=17'>Intel</a>
-<a class='button btn btn-default' target='wikimapia' href='http://wikimapia.org/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=16'>Wikimapia</a>
+<a class='button btn btn-default' target='intel' href='https://intel.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=18'>Intel</a>
+<a class='button btn btn-default' target='wikimapia' href='http://wikimapia.org/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=18'>Wikimapia</a>
+<a class='button btn btn-default' target='wikimapia' href='https://www.openstreetmap.org/?mlat=${newPortalData.lat}&mlon=${newPortalData.lng}&zoom=18'>OSM</a>
 `
 
     // more map buttons in a dropdown menu
     const mapDropdown = `
-<li><a target='osm' href='https://www.openstreetmap.org/?mlat=${newPortalData.lat}&mlon=${newPortalData.lng}&zoom=16'>OSM</a></li>
-<li><a target='bing' href='https://bing.com/maps/default.aspx?cp=${newPortalData.lat}~${newPortalData.lng}&lvl=16&style=a'>bing</a></li>
-<li><a target='heremaps' href='https://wego.here.com/?map=${newPortalData.lat},${newPortalData.lng},17,satellite'>HERE maps</a></li>
+<li><a target='bing' href='https://bing.com/maps/default.aspx?cp=${newPortalData.lat}~${newPortalData.lng}&lvl=18&style=a'>bing</a></li>
+<li><a target='heremaps' href='https://wego.here.com/?map=${newPortalData.lat},${newPortalData.lng},18,satellite'>HERE maps</a></li>
 <li><a targeT='zoomearth' href='https://zoom.earth/#${newPortalData.lat},${newPortalData.lng},18z,sat'>Zoom Earth</a></li>
 <li role='separator' class='divider'></li>
 <li><a target='swissgeo' href='http://map.geo.admin.ch/?swisssearch=${newPortalData.lat},${newPortalData.lng}'>CH - Swiss Geo Map</a></li>
-<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (ortofoto)</a></li>
-<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&m3d=1&height=180&yaw=-279.39&pitch=-40.7&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (orto+3D)</a></li>
-<li><a target='kompass' href='http://maps.kompass.de/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=17'>DE - Kompass.maps</a></li>
-<li><a target='bayernatlas' href='https://geoportal.bayern.de/bayernatlas/index.html?X=${newPortalData.lat}&Y=${newPortalData.lng}&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>
-<li><a target='pegel' href='http://opr.pegel.dk/?17/${newPortalData.lat}/${newPortalData.lng}'>DK - SDFE Orthophotos</a></li>
+<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=18&base=ophoto&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (ortofoto)</a></li>
+<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=18&base=ophoto&m3d=1&height=180&yaw=-279.39&pitch=-40.7&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (orto+3D)</a></li>
+<li><a target='kompass' href='http://maps.kompass.de/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=18'>DE - Kompass.maps</a></li>
+<li><a target='bayernatlas' href='https://geoportal.bayern.de/bayernatlas/index.html?X=${newPortalData.lat}&Y=${newPortalData.lng}&zoom=18&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>
+<li><a target='pegel' href='http://opr.pegel.dk/?18/${newPortalData.lat}/${newPortalData.lng}'>DK - SDFE Orthophotos</a></li>
 <li><a target='kortforsyningen' href='https://skraafoto.kortforsyningen.dk/oblivisionjsoff/index.aspx?project=Denmark&lon=${newPortalData.lng}&lat=${newPortalData.lat}'>DK - Kortforsyningen Skråfoto</a></li>
-<li><a target='maanmittauslaitos' href='https://asiointi.maanmittauslaitos.fi/karttapaikka/?lang=en&share=customMarker&n=${coordUtm35[1].toFixed(3)}&e=${coordUtm35[0].toFixed(3)}&title=${encodeURIComponent(newPortalData.title)}&desc=&zoom=11&layers=%5B%7B%22id%22%3A2%2C%22opacity%22%3A100%7D%5D'>FI - Maanmittauslaitos</a></li>
-<li><a target='paikkatietoikkuna' href='https://kartta.paikkatietoikkuna.fi/?zoomLevel=11&coord=${coordUtm35[0].toFixed(3)}_${coordUtm35[1].toFixed(3)}&mapLayers=801+100+default&uuid=90246d84-3958-fd8c-cb2c-2510cccca1d3&showMarker=true'>FI - Paikkatietoikkuna</a></li>
+<li><a target='maanmittauslaitos' href='https://asiointi.maanmittauslaitos.fi/karttapaikka/?lang=en&share=customMarker&n=${coordUtm35[1].toFixed(3)}&e=${coordUtm35[0].toFixed(3)}&title=${encodeURIComponent(newPortalData.title)}&desc=&zoom=18&layers=%5B%7B%22id%22%3A2%2C%22opacity%22%3A100%7D%5D'>FI - Maanmittauslaitos</a></li>
+<li><a target='paikkatietoikkuna' href='https://kartta.paikkatietoikkuna.fi/?zoomLevel=18&coord=${coordUtm35[0].toFixed(3)}_${coordUtm35[1].toFixed(3)}&mapLayers=801+100+default&uuid=90246d84-3958-fd8c-cb2c-2510cccca1d3&showMarker=true'>FI - Paikkatietoikkuna</a></li>
 <li><a target='kakao' href='http://map.daum.net/link/map/${newPortalData.lat},${newPortalData.lng}'>KR - Kakao map</a></li>
-<li><a target='naver' href='http://map.naver.com/?menu=location&lat=${newPortalData.lat}&lng=${newPortalData.lng}&dLevel=14&title=CandidatePortalLocation'>KR - Naver map</a></li>
-<li><a target='kartverket' href='http://norgeskart.no/#!?project=seeiendom&layers=1002,1014&zoom=17&lat=${coordUtm33[1].toFixed(2)}&lon=${coordUtm33[0].toFixed(2)}&sok=${newPortalData.lat},${newPortalData.lng}'>NO - Kartverket</a></li>
-<li><a target='norgeibilder' href='https://norgeibilder.no/?x=${Math.round(coordUtm33[0])}&y=${Math.round(coordUtm33[1])}&level=16&utm=33'>NO - Norge i Bilder</a></li>
-<li><a target='finnno' href='http://kart.finn.no/?lng=${newPortalData.lng}&lat=${newPortalData.lat}&zoom=17&mapType=normap&markers=${newPortalData.lng},${newPortalData.lat},r,'>NO - Finn Kart</a></li>
-<li><a target='toposvalbard' href='http://toposvalbard.npolar.no/?lat=${newPortalData.lat}&long=${newPortalData.lng}&zoom=17&layer=map'>NO - Polarinstituttet, Svalbard</a></li>
+<li><a target='naver' href='http://map.naver.com/?menu=location&lat=${newPortalData.lat}&lng=${newPortalData.lng}&dLevel=18&title=CandidatePortalLocation'>KR - Naver map</a></li>
+<li><a target='kartverket' href='http://norgeskart.no/#!?project=seeiendom&layers=1002,1014&zoom=18&lat=${coordUtm33[1].toFixed(2)}&lon=${coordUtm33[0].toFixed(2)}&sok=${newPortalData.lat},${newPortalData.lng}'>NO - Kartverket</a></li>
+<li><a target='norgeibilder' href='https://norgeibilder.no/?x=${Math.round(coordUtm33[0])}&y=${Math.round(coordUtm33[1])}&level=18&utm=33'>NO - Norge i Bilder</a></li>
+<li><a target='finnno' href='http://kart.finn.no/?lng=${newPortalData.lng}&lat=${newPortalData.lat}&zoom=18&mapType=normap&markers=${newPortalData.lng},${newPortalData.lat},r,'>NO - Finn Kart</a></li>
+<li><a target='toposvalbard' href='http://toposvalbard.npolar.no/?lat=${newPortalData.lat}&long=${newPortalData.lng}&zoom=18&layer=map'>NO - Polarinstituttet, Svalbard</a></li>
 <li><a target='geoportal_pl' href='http://mapy.geoportal.gov.pl/imap/?actions=acShowWgButtonPanel_kraj_ORTO&bbox=${coordPuwg92[0] - 127},${coordPuwg92[1] - 63},${coordPuwg92[0] + 127},${coordPuwg92[1] + 63}'>PL - GeoPortal</a></li>
 <li><a target='yandex' href='https://yandex.ru/maps/?ll=${newPortalData.lng},${newPortalData.lat}&z=18&mode=whatshere&whatshere%5Bpoint%5D=${newPortalData.lng},${newPortalData.lat}&whatshere%5Bzoom%5D=18'>RU - Yandex</a></li>
-<li><a target='2GIS' href='https://2gis.ru/geo/${newPortalData.lng},${newPortalData.lat}?queryState=center/${newPortalData.lng},${newPortalData.lat}/zoom/13'>RU - 2GIS</a></li>
-<li><a target='lantmateriet' href='https://kso.etjanster.lantmateriet.se/?e=${Math.round(coordUtm33[0])}&n=${Math.round(coordUtm33[1])}&z=13'>SE - Läntmateriet</a></li>
+<li><a target='2GIS' href='https://2gis.ru/geo/${newPortalData.lng},${newPortalData.lat}?queryState=center/${newPortalData.lng},${newPortalData.lat}/zoom/18'>RU - 2GIS</a></li>
+<li><a target='lantmateriet' href='https://kso.etjanster.lantmateriet.se/?e=${Math.round(coordUtm33[0])}&n=${Math.round(coordUtm33[1])}&z=18'>SE - Läntmateriet</a></li>
 <li><a target='hitta' href='https://www.hitta.se/kartan!~${newPortalData.lat},${newPortalData.lng},18z/tileLayer!l=1'>SE - Hitta.se</a></li>
-<li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=17&l=nautical'>SE - Eniro Sjökort</a></li>
+<li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=18&l=nautical'>SE - Eniro Sjökort</a></li>
 `
     targetElement.insertAdjacentHTML(where, `<div><div id="oprt_map_button_group" class='btn-group'>${mapButtons}<div class='button btn btn-default dropdown'><span class='caret'></span><ul id="oprt_map_dropdown" class='dropdown-content dropdown-menu'>${mapDropdown}</div>`)
   }
