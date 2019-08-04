@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            OPR-Tools
-// @version         1.1.0
+// @version         1.2.0
 // @description     OPR enhancements
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -53,7 +53,7 @@ SOFTWARE.
 
 const OPRT = {
 
-  VERSION: 10100,
+  VERSION: 10200,
 
   PREFERENCES: 'oprt_prefs',
 
@@ -236,6 +236,7 @@ class Preferences {
     try {
       this.options = JSON.parse(string)
       localStorage.setItem(OPRT.PREFERENCES, JSON.stringify(this.options))
+      // console.log(`${OPRT.PREFERENCES}: ${JSON.stringify(this.options)}`)
     } catch (e) {
       throw new Error('Could not import preferences!')
     }
@@ -251,14 +252,17 @@ class InOut {
     let exportObject = {}
     for (const item in OPRT.VAR) {
       exportObject[OPRT.VAR[item]] = localStorage.getItem(OPRT.PREFIX + OPRT.VAR[item])
+      // console.log(`${OPRT.PREFIX + OPRT.VAR[item]}: ${localStorage.getItem(OPRT.PREFIX + OPRT.VAR[item])}`)
     }
     return exportObject
   }
 
-  static importVars (string) {
-    let importObject = JSON.parse(string)
-    for (const item of importObject) {
-      localStorage.setItem(OPRT.PREFIX + item, importObject[item])
+  static importVars (importObject) {
+    for (const item in OPRT.VAR) {
+      if (importObject[OPRT.VAR[item]] != null) {
+        localStorage.setItem(OPRT.PREFIX + OPRT.VAR[item], importObject[OPRT.VAR[item]])
+        // console.log(`${OPRT.PREFIX + OPRT.VAR[item]}: ${importObject[OPRT.VAR[item]]}`)
+      }
     }
   }
 
@@ -268,7 +272,7 @@ class InOut {
 
       if (json.hasOwnProperty(OPRT.PREFERENCES)) { this.preferences.importPrefs(json[OPRT.PREFERENCES]) }
 
-      if (json.hasOwnProperty(OPRT.VAR)) { InOut.importVars(json[OPRT.VAR]) }
+      if (json.hasOwnProperty(OPRT.VAR_PREFIX)) { InOut.importVars(json[OPRT.VAR_PREFIX]) }
     } catch (e) {
       throw new Error('Import failed')
     }
@@ -593,14 +597,18 @@ function init () {
 
     // move portal rating to the right side. don't move on mobile devices / small width
     if (screen.availWidth > 768) {
-      let nodeToMove = w.document.querySelector('div[class="btn-group"]').parentElement
+      const qualityPanel = w.document.querySelector('div[class="btn-group"]').parentElement
       if (subController.hasSupportingImageOrStatement) {
         const descDiv = w.document.getElementById('descriptionDiv')
-        const scorePanel = descDiv.querySelector('div.text-center.hidden-xs')
-        scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
+        const panelBlock = descDiv.querySelector('div.text-center.hidden-xs')
+        panelBlock.style['padding-top'] = ''
+        panelBlock.style['padding-bottom'] = '20px'
+        panelBlock.insertBefore(qualityPanel, panelBlock.firstChild)
+        const photoSection = w.document.querySelector('.col-xs-12.col-sm-4')
+        photoSection.insertAdjacentElement('beforeend', panelBlock)
       } else {
-        const scorePanel = w.document.querySelector('div[class~="pull-right"]')
-        scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
+        const panelBlock = w.document.querySelector('div[class~="pull-right"]')
+        panelBlock.insertBefore(qualityPanel, panelBlock.firstChild)
       }
     }
 
@@ -894,6 +902,10 @@ function init () {
         } else if (numkey !== null && event.shiftKey) {
           try {
             w.document.getElementsByClassName('customPresetButton')[numkey - 1].click()
+            if (!document.getElementById('submitFF').disabled) {
+              currentSelectable = 6
+              highlight()
+            }
           } catch (e) {
             // ignore
           }
@@ -1123,38 +1135,38 @@ function init () {
     const coordPuwg92 = proj4('+proj=longlat', '+proj=tmerc +lat_0=0 +lon_0=19 +k=0.9993 +x_0=500000 +y_0=-5300000 +ellps=GRS80 +units=m +no_defs', [newPortalData.lng, newPortalData.lat])
 
     const mapButtons = `
-<a class='button btn btn-default' target='intel' href='https://intel.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=17'>Intel</a>
-<a class='button btn btn-default' target='wikimapia' href='http://wikimapia.org/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=16'>Wikimapia</a>
+<a class='button btn btn-default' target='intel' href='https://intel.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=18'>Intel</a>
+<a class='button btn btn-default' target='wikimapia' href='http://wikimapia.org/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=18'>Wikimapia</a>
+<a class='button btn btn-default' target='wikimapia' href='https://www.openstreetmap.org/?mlat=${newPortalData.lat}&mlon=${newPortalData.lng}&zoom=18'>OSM</a>
 `
 
     // more map buttons in a dropdown menu
     const mapDropdown = `
-<li><a target='osm' href='https://www.openstreetmap.org/?mlat=${newPortalData.lat}&mlon=${newPortalData.lng}&zoom=16'>OSM</a></li>
-<li><a target='bing' href='https://bing.com/maps/default.aspx?cp=${newPortalData.lat}~${newPortalData.lng}&lvl=16&style=a'>bing</a></li>
-<li><a target='heremaps' href='https://wego.here.com/?map=${newPortalData.lat},${newPortalData.lng},17,satellite'>HERE maps</a></li>
+<li><a target='bing' href='https://bing.com/maps/default.aspx?cp=${newPortalData.lat}~${newPortalData.lng}&lvl=18&style=a'>bing</a></li>
+<li><a target='heremaps' href='https://wego.here.com/?map=${newPortalData.lat},${newPortalData.lng},18,satellite'>HERE maps</a></li>
 <li><a targeT='zoomearth' href='https://zoom.earth/#${newPortalData.lat},${newPortalData.lng},18z,sat'>Zoom Earth</a></li>
 <li role='separator' class='divider'></li>
 <li><a target='swissgeo' href='http://map.geo.admin.ch/?swisssearch=${newPortalData.lat},${newPortalData.lng}'>CH - Swiss Geo Map</a></li>
-<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (ortofoto)</a></li>
-<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&m3d=1&height=180&yaw=-279.39&pitch=-40.7&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (orto+3D)</a></li>
-<li><a target='kompass' href='http://maps.kompass.de/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=17'>DE - Kompass.maps</a></li>
-<li><a target='bayernatlas' href='https://geoportal.bayern.de/bayernatlas/index.html?X=${newPortalData.lat}&Y=${newPortalData.lng}&zoom=14&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>
-<li><a target='pegel' href='http://opr.pegel.dk/?17/${newPortalData.lat}/${newPortalData.lng}'>DK - SDFE Orthophotos</a></li>
+<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=18&base=ophoto&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (ortofoto)</a></li>
+<li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=18&base=ophoto&m3d=1&height=180&yaw=-279.39&pitch=-40.7&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (orto+3D)</a></li>
+<li><a target='kompass' href='http://maps.kompass.de/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=18'>DE - Kompass.maps</a></li>
+<li><a target='bayernatlas' href='https://geoportal.bayern.de/bayernatlas/index.html?X=${newPortalData.lat}&Y=${newPortalData.lng}&zoom=18&lang=de&bgLayer=luftbild&topic=ba&catalogNodes=122'>DE - BayernAtlas</a></li>
+<li><a target='pegel' href='http://opr.pegel.dk/?18/${newPortalData.lat}/${newPortalData.lng}'>DK - SDFE Orthophotos</a></li>
 <li><a target='kortforsyningen' href='https://skraafoto.kortforsyningen.dk/oblivisionjsoff/index.aspx?project=Denmark&lon=${newPortalData.lng}&lat=${newPortalData.lat}'>DK - Kortforsyningen Skråfoto</a></li>
-<li><a target='maanmittauslaitos' href='https://asiointi.maanmittauslaitos.fi/karttapaikka/?lang=en&share=customMarker&n=${coordUtm35[1].toFixed(3)}&e=${coordUtm35[0].toFixed(3)}&title=${encodeURIComponent(newPortalData.title)}&desc=&zoom=11&layers=%5B%7B%22id%22%3A2%2C%22opacity%22%3A100%7D%5D'>FI - Maanmittauslaitos</a></li>
-<li><a target='paikkatietoikkuna' href='https://kartta.paikkatietoikkuna.fi/?zoomLevel=11&coord=${coordUtm35[0].toFixed(3)}_${coordUtm35[1].toFixed(3)}&mapLayers=801+100+default&uuid=90246d84-3958-fd8c-cb2c-2510cccca1d3&showMarker=true'>FI - Paikkatietoikkuna</a></li>
+<li><a target='maanmittauslaitos' href='https://asiointi.maanmittauslaitos.fi/karttapaikka/?lang=en&share=customMarker&n=${coordUtm35[1].toFixed(3)}&e=${coordUtm35[0].toFixed(3)}&title=${encodeURIComponent(newPortalData.title)}&desc=&zoom=18&layers=%5B%7B%22id%22%3A2%2C%22opacity%22%3A100%7D%5D'>FI - Maanmittauslaitos</a></li>
+<li><a target='paikkatietoikkuna' href='https://kartta.paikkatietoikkuna.fi/?zoomLevel=18&coord=${coordUtm35[0].toFixed(3)}_${coordUtm35[1].toFixed(3)}&mapLayers=801+100+default&uuid=90246d84-3958-fd8c-cb2c-2510cccca1d3&showMarker=true'>FI - Paikkatietoikkuna</a></li>
 <li><a target='kakao' href='http://map.daum.net/link/map/${newPortalData.lat},${newPortalData.lng}'>KR - Kakao map</a></li>
-<li><a target='naver' href='http://map.naver.com/?menu=location&lat=${newPortalData.lat}&lng=${newPortalData.lng}&dLevel=14&title=CandidatePortalLocation'>KR - Naver map</a></li>
-<li><a target='kartverket' href='http://norgeskart.no/#!?project=seeiendom&layers=1002,1014&zoom=17&lat=${coordUtm33[1].toFixed(2)}&lon=${coordUtm33[0].toFixed(2)}&sok=${newPortalData.lat},${newPortalData.lng}'>NO - Kartverket</a></li>
-<li><a target='norgeibilder' href='https://norgeibilder.no/?x=${Math.round(coordUtm33[0])}&y=${Math.round(coordUtm33[1])}&level=16&utm=33'>NO - Norge i Bilder</a></li>
-<li><a target='finnno' href='http://kart.finn.no/?lng=${newPortalData.lng}&lat=${newPortalData.lat}&zoom=17&mapType=normap&markers=${newPortalData.lng},${newPortalData.lat},r,'>NO - Finn Kart</a></li>
-<li><a target='toposvalbard' href='http://toposvalbard.npolar.no/?lat=${newPortalData.lat}&long=${newPortalData.lng}&zoom=17&layer=map'>NO - Polarinstituttet, Svalbard</a></li>
+<li><a target='naver' href='http://map.naver.com/?menu=location&lat=${newPortalData.lat}&lng=${newPortalData.lng}&dLevel=18&title=CandidatePortalLocation'>KR - Naver map</a></li>
+<li><a target='kartverket' href='http://norgeskart.no/#!?project=seeiendom&layers=1002,1014&zoom=18&lat=${coordUtm33[1].toFixed(2)}&lon=${coordUtm33[0].toFixed(2)}&sok=${newPortalData.lat},${newPortalData.lng}'>NO - Kartverket</a></li>
+<li><a target='norgeibilder' href='https://norgeibilder.no/?x=${Math.round(coordUtm33[0])}&y=${Math.round(coordUtm33[1])}&level=18&utm=33'>NO - Norge i Bilder</a></li>
+<li><a target='finnno' href='http://kart.finn.no/?lng=${newPortalData.lng}&lat=${newPortalData.lat}&zoom=18&mapType=normap&markers=${newPortalData.lng},${newPortalData.lat},r,'>NO - Finn Kart</a></li>
+<li><a target='toposvalbard' href='http://toposvalbard.npolar.no/?lat=${newPortalData.lat}&long=${newPortalData.lng}&zoom=18&layer=map'>NO - Polarinstituttet, Svalbard</a></li>
 <li><a target='geoportal_pl' href='http://mapy.geoportal.gov.pl/imap/?actions=acShowWgButtonPanel_kraj_ORTO&bbox=${coordPuwg92[0] - 127},${coordPuwg92[1] - 63},${coordPuwg92[0] + 127},${coordPuwg92[1] + 63}'>PL - GeoPortal</a></li>
 <li><a target='yandex' href='https://yandex.ru/maps/?ll=${newPortalData.lng},${newPortalData.lat}&z=18&mode=whatshere&whatshere%5Bpoint%5D=${newPortalData.lng},${newPortalData.lat}&whatshere%5Bzoom%5D=18'>RU - Yandex</a></li>
-<li><a target='2GIS' href='https://2gis.ru/geo/${newPortalData.lng},${newPortalData.lat}?queryState=center/${newPortalData.lng},${newPortalData.lat}/zoom/13'>RU - 2GIS</a></li>
-<li><a target='lantmateriet' href='https://kso.etjanster.lantmateriet.se/?e=${Math.round(coordUtm33[0])}&n=${Math.round(coordUtm33[1])}&z=13'>SE - Läntmateriet</a></li>
+<li><a target='2GIS' href='https://2gis.ru/geo/${newPortalData.lng},${newPortalData.lat}?queryState=center/${newPortalData.lng},${newPortalData.lat}/zoom/18'>RU - 2GIS</a></li>
+<li><a target='lantmateriet' href='https://kso.etjanster.lantmateriet.se/?e=${Math.round(coordUtm33[0])}&n=${Math.round(coordUtm33[1])}&z=18'>SE - Läntmateriet</a></li>
 <li><a target='hitta' href='https://www.hitta.se/kartan!~${newPortalData.lat},${newPortalData.lng},18z/tileLayer!l=1'>SE - Hitta.se</a></li>
-<li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=17&l=nautical'>SE - Eniro Sjökort</a></li>
+<li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=18&l=nautical'>SE - Eniro Sjökort</a></li>
 `
     targetElement.insertAdjacentHTML(where, `<div><div id="oprt_map_button_group" class='btn-group'>${mapButtons}<div class='button btn btn-default dropdown'><span class='caret'></span><ul id="oprt_map_dropdown" class='dropdown-content dropdown-menu'>${mapDropdown}</div>`)
   }
@@ -1170,6 +1182,7 @@ function init () {
     })
     submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`
     submitAndNext.title = 'Submit and go to next review'
+    submitAndNext.id = 'submitFF'
     submitAndNext.addEventListener('click', () => {
       ansController.openSubmissionCompleteModal = () => {
         window.location.assign('/recon')
@@ -1403,7 +1416,7 @@ function init () {
     let oprtScannerOffset = 0
     if (preferences.get(OPRT.OPTIONS.SCANNER_OFFSET_FEATURE)) {
       // get scanner offset from localStorage
-      oprtScannerOffset = parseInt(w.localStorage.getItem(OPRT.SCANNER_OFFSET)) || 0
+      oprtScannerOffset = parseInt(w.localStorage.getItem(OPRT.PREFIX + OPRT.VAR.SCANNER_OFFSET)) || 0
     }
     const lastPlayerStatLine = w.document.querySelector('#player_stats:not(.visible-xs) div')
     const stats = w.document.querySelector('#player_stats:not(.visible-xs) div')
@@ -1517,7 +1530,7 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
 
       ['change', 'keyup', 'cut', 'paste', 'input'].forEach(e => {
         w.document.getElementById('scannerOffset').addEventListener(e, (event) => {
-          w.localStorage.setItem(OPRT.SCANNER_OFFSET, event.target.value)
+          w.localStorage.setItem(OPRT.PREFIX + OPRT.VAR.SCANNER_OFFSET, event.target.value)
         })
       })
       // **
@@ -1828,6 +1841,14 @@ const strings = {
   },
   changelog:
     `
+Version 1.2.0
+<br>* Preferences import is now fully functional.
+<br>* Scanner offset is now saved correctly and can be exported.
+<br>- Your current setting will be lost.
+<br>* All maps are now zoom level 18. OSM button is back.
+<br>* Evaluation stars at prime are now moved to the left.
+<br>- This frees space for center-based info plugins and just looks better.
+<br><br>
 Version 1.1.0
 <br>* Added translate button to supporting text
 <br><br>
