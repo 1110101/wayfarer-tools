@@ -236,6 +236,7 @@ class Preferences {
     try {
       this.options = JSON.parse(string)
       localStorage.setItem(OPRT.PREFERENCES, JSON.stringify(this.options))
+      // console.log(`${OPRT.PREFERENCES}: ${JSON.stringify(this.options)}`)
     } catch (e) {
       throw new Error('Could not import preferences!')
     }
@@ -251,14 +252,17 @@ class InOut {
     let exportObject = {}
     for (const item in OPRT.VAR) {
       exportObject[OPRT.VAR[item]] = localStorage.getItem(OPRT.PREFIX + OPRT.VAR[item])
+      // console.log(`${OPRT.PREFIX + OPRT.VAR[item]}: ${localStorage.getItem(OPRT.PREFIX + OPRT.VAR[item])}`)
     }
     return exportObject
   }
 
-  static importVars (string) {
-    let importObject = JSON.parse(string)
-    for (const item of importObject) {
-      localStorage.setItem(OPRT.PREFIX + item, importObject[item])
+  static importVars (importObject) {
+    for (const item in OPRT.VAR) {
+      if (importObject[OPRT.VAR[item]] != null) {
+        localStorage.setItem(OPRT.PREFIX + OPRT.VAR[item], importObject[OPRT.VAR[item]])
+        // console.log(`${OPRT.PREFIX + OPRT.VAR[item]}: ${importObject[OPRT.VAR[item]]}`)
+      }
     }
   }
 
@@ -268,7 +272,7 @@ class InOut {
 
       if (json.hasOwnProperty(OPRT.PREFERENCES)) { this.preferences.importPrefs(json[OPRT.PREFERENCES]) }
 
-      if (json.hasOwnProperty(OPRT.VAR)) { InOut.importVars(json[OPRT.VAR]) }
+      if (json.hasOwnProperty(OPRT.VAR_PREFIX)) { InOut.importVars(json[OPRT.VAR_PREFIX]) }
     } catch (e) {
       throw new Error('Import failed')
     }
@@ -1412,7 +1416,7 @@ function init () {
     let oprtScannerOffset = 0
     if (preferences.get(OPRT.OPTIONS.SCANNER_OFFSET_FEATURE)) {
       // get scanner offset from localStorage
-      oprtScannerOffset = parseInt(w.localStorage.getItem(OPRT.SCANNER_OFFSET)) || 0
+      oprtScannerOffset = parseInt(w.localStorage.getItem(OPRT.PREFIX + OPRT.VAR.SCANNER_OFFSET)) || 0
     }
     const lastPlayerStatLine = w.document.querySelector('#player_stats:not(.visible-xs) div')
     const stats = w.document.querySelector('#player_stats:not(.visible-xs) div')
@@ -1526,7 +1530,7 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
 
       ['change', 'keyup', 'cut', 'paste', 'input'].forEach(e => {
         w.document.getElementById('scannerOffset').addEventListener(e, (event) => {
-          w.localStorage.setItem(OPRT.SCANNER_OFFSET, event.target.value)
+          w.localStorage.setItem(OPRT.PREFIX + OPRT.VAR.SCANNER_OFFSET, event.target.value)
         })
       })
       // **
