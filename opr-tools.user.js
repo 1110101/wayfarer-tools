@@ -1,17 +1,10 @@
 // ==UserScript==
-// @name            OPR-Tools
-// @version         1.1.0
-// @description     OPR enhancements
+// @name            Wayfarer-Tools
+// @version         2.0.0
+// @description     formerly known as OPR-Tools 
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
-// @match           https://opr.ingress.com/
-// @match           https://opr.ingress.com/?login=true
-// @match           https://opr.ingress.com/recon
-// @match           https://opr.ingress.com/help
-// @match           https://opr.ingress.com/faq
-// @match           https://opr.ingress.com/guide
-// @match           https://opr.ingress.com/settings
-// @match           https://opr.ingress.com/upgrades*
+// @match           https://wayfarer.nianticlabs.com/review
 // @grant           unsafeWindow
 // @grant           GM_notification
 // @grant           GM_addStyle
@@ -51,11 +44,11 @@ SOFTWARE.
 
 /* globals screen, MutationObserver, addEventListener, localStorage, MutationObserver, GM_addStyle, GM_notification, unsafeWindow, angular, google, alertify, proj4 */
 
-const OPRT = {
+const WFRT = {
 
-  VERSION: 10100,
+  VERSION: 20000,
 
-  PREFERENCES: 'oprt_prefs',
+  PREFERENCES: 'wfrt_prefs',
 
   OPTIONS: {
     KEYBOARD_NAV: 'keyboard_nav',
@@ -71,8 +64,8 @@ const OPRT = {
     REFRESH_NOTI_DESKTOP: 'refresh_noti_desktop'
   },
 
-  PREFIX: 'oprt_',
-  VAR_PREFIX: 'oprt_var', // used in import/export **only**
+  PREFIX: 'wfrt_',
+  VAR_PREFIX: 'wfrt_var', // used in import/export **only**
   VAR: { // will be included in import/export
     SCANNER_OFFSET: 'scanner_offset',
     MAP_TYPE_1: 'map_type_1',
@@ -95,29 +88,29 @@ class Preferences {
   constructor () {
     this.options = {}
     this.defaults = {
-      [OPRT.OPTIONS.KEYBOARD_NAV]: true,
-      [OPRT.OPTIONS.NORWAY_MAP_LAYER]: false,
-      [OPRT.OPTIONS.PRESET_FEATURE]: true,
-      [OPRT.OPTIONS.SCANNER_OFFSET_FEATURE]: false,
-      [OPRT.OPTIONS.SCANNER_OFFSET_UI]: false,
-      [OPRT.OPTIONS.COMMENT_TEMPLATES]: true,
-      [OPRT.OPTIONS.REFRESH]: true,
-      [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: true,
-      [OPRT.OPTIONS.MAP_CIRCLE_20]: false,
-      [OPRT.OPTIONS.MAP_CIRCLE_40]: true
+      [WFRT.OPTIONS.KEYBOARD_NAV]: true,
+      [WFRT.OPTIONS.NORWAY_MAP_LAYER]: false,
+      [WFRT.OPTIONS.PRESET_FEATURE]: true,
+      [WFRT.OPTIONS.SCANNER_OFFSET_FEATURE]: false,
+      [WFRT.OPTIONS.SCANNER_OFFSET_UI]: false,
+      [WFRT.OPTIONS.COMMENT_TEMPLATES]: true,
+      [WFRT.OPTIONS.REFRESH]: true,
+      [WFRT.OPTIONS.REFRESH_NOTI_DESKTOP]: true,
+      [WFRT.OPTIONS.MAP_CIRCLE_20]: false,
+      [WFRT.OPTIONS.MAP_CIRCLE_40]: true
     }
     this.loadOptions()
   }
 
   showPreferencesUI (w) {
     let inout = new InOut(this)
-    let pageContainer = w.document.querySelector('body > div.container')
-    let oprtPreferences = w.document.querySelector('#oprt_sidepanel_container')
+    let pageContainer = w.document.querySelector('#content-container')
+    let wfrtPreferences = w.document.querySelector('#wfrt_sidepanel_container')
 
-    if (oprtPreferences !== null) oprtPreferences.classList.toggle('hide')
+    if (wfrtPreferences !== null) wfrtPreferences.classList.toggle('hide')
     else {
       pageContainer.insertAdjacentHTML('afterbegin', `
-<section id="oprt_sidepanel_container" style="
+<section id="wfrt_sidepanel_container" style="
     background: black;
     border-left: 2px gold inset;
     border-top: 2px gold inset;
@@ -131,7 +124,7 @@ class Preferences {
     ">
   <div class="row">
     <div class="col-lg-12">
-      <h4 class="gold">OPR-Tools Preferences</h4>
+      <h4 class="gold">Wayfarer-Tools Preferences</h4>
     </div>
     <div class="col-lg-12">
       <div class="btn-group" role="group">
@@ -140,15 +133,15 @@ class Preferences {
       </div>
     </div>
   </div>
-  <div id="oprt_options"></div>
-  <a id="oprt_reload" class="btn btn-warning hide"><span class="glyphicon glyphicon-refresh"></span>
+  <div id="wfrt_options"></div>
+  <a id="wfrt_reload" class="btn btn-warning hide"><span class="glyphicon glyphicon-refresh"></span>
  Reload to apply changes</a>
  
- <div style="position: absolute; bottom: 0; left: 0; margin:20px;"><a href="https://t.me/oprtools">${TG_SVG} OPR-Tools Telegram Channel</a></div> 
+ <div style="position: absolute; bottom: 0; left: 0; margin:20px;"><a href="https://t.me/oprtools">${TG_SVG} Wayfarer-Tools Telegram Channel</a></div> 
 </section>`)
 
-      let optionsContainer = w.document.getElementById('oprt_options')
-      let reloadButton = w.document.getElementById('oprt_reload')
+      let optionsContainer = w.document.getElementById('wfrt_options')
+      let reloadButton = w.document.getElementById('wfrt_reload')
 
       for (let item in this.options) {
         // remove unknown or removed options
@@ -195,28 +188,28 @@ class Preferences {
       })
 
       w.document.getElementById('export_all').addEventListener('click', () => {
-        if (navigator.clipboard !== undefined) {
-          navigator.clipboard.writeText(inout.exportAll()).then(() => {
-            alertify.success(`✔ Exported preferences to your clipboard!`)
-          }, () => {
-            // ugly alert as fallback
+          if (navigator.clipboard !== undefined) {
+            navigator.clipboard.writeText(inout.exportAll()).then(() => {
+              alertify.success(`✔ Exported preferences to your clipboard!`)
+            }, () => {
+              // ugly alert as fallback
+              alertify.alert(inout.exportAll())
+            })
+          } else {
             alertify.alert(inout.exportAll())
-          })
-        } else {
-          alertify.alert(inout.exportAll())
+          }
         }
-      }
       )
     }
   }
 
   loadOptions () {
-    Object.assign(this.options, this.defaults, JSON.parse(localStorage.getItem(OPRT.PREFERENCES)))
+    Object.assign(this.options, this.defaults, JSON.parse(localStorage.getItem(WFRT.PREFERENCES)))
   }
 
   set (key, value) {
     this.options[key] = value
-    localStorage.setItem(OPRT.PREFERENCES, JSON.stringify(this.options))
+    localStorage.setItem(WFRT.PREFERENCES, JSON.stringify(this.options))
   }
 
   get (key) {
@@ -225,7 +218,7 @@ class Preferences {
 
   remove (key) {
     delete this.options[key]
-    localStorage.setItem(OPRT.PREFERENCES, JSON.stringify(this.options))
+    localStorage.setItem(WFRT.PREFERENCES, JSON.stringify(this.options))
   }
 
   exportPrefs () {
@@ -235,7 +228,7 @@ class Preferences {
   importPrefs (string) {
     try {
       this.options = JSON.parse(string)
-      localStorage.setItem(OPRT.PREFERENCES, JSON.stringify(this.options))
+      localStorage.setItem(WFRT.PREFERENCES, JSON.stringify(this.options))
     } catch (e) {
       throw new Error('Could not import preferences!')
     }
@@ -249,8 +242,8 @@ class InOut {
 
   static exportVars () {
     let exportObject = {}
-    for (const item in OPRT.VAR) {
-      exportObject[OPRT.VAR[item]] = localStorage.getItem(OPRT.PREFIX + OPRT.VAR[item])
+    for (const item in WFRT.VAR) {
+      exportObject[WFRT.VAR[item]] = localStorage.getItem(WFRT.PREFIX + WFRT.VAR[item])
     }
     return exportObject
   }
@@ -258,7 +251,7 @@ class InOut {
   static importVars (string) {
     let importObject = JSON.parse(string)
     for (const item of importObject) {
-      localStorage.setItem(OPRT.PREFIX + item, importObject[item])
+      localStorage.setItem(WFRT.PREFIX + item, importObject[item])
     }
   }
 
@@ -266,16 +259,16 @@ class InOut {
     try {
       let json = JSON.parse(string)
 
-      if (json.hasOwnProperty(OPRT.PREFERENCES)) { this.preferences.importPrefs(json[OPRT.PREFERENCES]) }
+      if (json.hasOwnProperty(WFRT.PREFERENCES)) { this.preferences.importPrefs(json[WFRT.PREFERENCES]) }
 
-      if (json.hasOwnProperty(OPRT.VAR)) { InOut.importVars(json[OPRT.VAR]) }
+      if (json.hasOwnProperty(WFRT.VAR)) { InOut.importVars(json[WFRT.VAR]) }
     } catch (e) {
       throw new Error('Import failed')
     }
   }
 
   exportAll () {
-    return JSON.stringify(Object.assign({}, { [OPRT.PREFERENCES]: this.preferences.exportPrefs() }, { [OPRT.VAR_PREFIX]: InOut.exportVars() }))
+    return JSON.stringify(Object.assign({}, { [WFRT.PREFERENCES]: this.preferences.exportPrefs() }, { [WFRT.VAR_PREFIX]: InOut.exportVars() }))
   }
 }
 
@@ -283,7 +276,7 @@ function init () {
   const w = typeof unsafeWindow === 'undefined' ? window : unsafeWindow
   let tryNumber = 15
 
-  let oprtCustomPresets
+  let wfrtCustomPresets
 
   let browserLocale = window.navigator.languages[0] || window.navigator.language || 'en'
 
@@ -293,8 +286,8 @@ function init () {
     if (tryNumber === 0) {
       clearInterval(initWatcher)
       w.document.getElementById('NewSubmissionController')
-        .insertAdjacentHTML('afterBegin', `
-<div id="oprt_init_failed" class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> OPR-Tools initialization failed, refresh page</strong></div>
+      .insertAdjacentHTML('afterBegin', `
+<div id="wfrt_init_failed" class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> Wayfarer-Tools initialization failed, refresh page</strong></div>
 `)
       addRefreshContainer()
       return
@@ -343,11 +336,13 @@ function init () {
     // adding CSS
     addGlobalStyle(GLOBAL_CSS)
 
-    modifyHeader()
+    // modifyHeader()
+
+    addOptionsButton()
 
     const subMissionDiv = w.document.getElementById('NewSubmissionController')
 
-    // check if subCtrl exists (should exists if we're on /recon)
+    // check if subCtrl exists (should exists if we're on /review)
     if (subMissionDiv !== null && w.$scope(subMissionDiv).subCtrl !== null) {
       const subController = w.$scope(subMissionDiv).subCtrl
       const newPortalData = subController.pageData
@@ -385,7 +380,7 @@ function init () {
   function modifyNewPage (ansController, subController, whatController, newPortalData) {
     let skipDialog = false
 
-    mapButtons(newPortalData, w.document.getElementById('descriptionDiv'), 'beforeEnd')
+    mapButtons(newPortalData, w.document.querySelector('#map-card .card__footer'), 'afterBegin')
 
     // mutation observer
     const bodyObserver = new MutationObserver(mutationList => {
@@ -402,12 +397,12 @@ function init () {
             let i = 1
             // adds keyboard numbers to low quality sub-list
             mutationRecord.addedNodes[0].querySelectorAll('label.sub-group')
-              .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
+            .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
           }
           // skip "Your analysis has been recorded" dialog
           if (skipDialog) {
-            if (mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
-              w.document.location.href = '/recon'
+            if (mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/review\']') !== null) {
+              w.document.location.href = '/review'
               return
             }
           }
@@ -416,26 +411,30 @@ function init () {
     })
     bodyObserver.observe(w.document.body, { childList: true })
 
-    let newSubmitDiv = moveSubmitButton()
+    // let newSubmitDiv = moveSubmitButton()
+    let newSubmitDiv = w.document.querySelector('.answer-btn-container.bottom-btns')
     let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController, bodyObserver)
 
-    if (preferences.get(OPRT.OPTIONS.COMMENT_TEMPLATES)) { commentTemplates() }
+    if (preferences.get(WFRT.OPTIONS.COMMENT_TEMPLATES)) { commentTemplates() }
 
     /* region presets start */
-    if (preferences.get(OPRT.OPTIONS.PRESET_FEATURE)) {
-      const customPresetUI = `
-<div class="row" id="oprt_custom_presets_row"><div class="col-xs-12">
-  <div>Presets&nbsp;<button class="button btn btn-default btn-xs" id="addPreset">+</button></div>
-  <div class='btn-group' id="oprt_custom_presets"></div>
-</div></div>`
+    if (preferences.get(WFRT.OPTIONS.PRESET_FEATURE)) {
+      const customPresetUI = `<div class="card" id="wfrt_custom_presets_card" style="
+    width: 100%;
+    height: auto;
+    min-height: unset;
+    margin-left: 15px;
+"><div class="card__body"><div>Presets&nbsp;<button class="button btn btn-default btn-xs" id="addPreset">+</button></div>
+  <div class='btn-group' id="wfrt_custom_presets"></div></div></div>
+`
 
-      w.document.querySelector('form[name="answers"] div.row').insertAdjacentHTML('afterend', customPresetUI)
+      w.document.querySelector('.card-row-container').insertAdjacentHTML('afterbegin', customPresetUI)
 
       addCustomPresetButtons()
 
       // we have to inject the tooltip to angular
       w.$injector.invoke(['$compile', ($compile) => {
-        let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(OPR-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById('descriptionDiv')))
+        let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign darkgray" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="(Wayfarer-Tools) Create your own presets for stuff like churches, playgrounds or crosses'.\nHowto: Answer every question you want included and click on the +Button.\n\nTo delete a preset shift-click it."></span>&nbsp; `)(w.$scope(document.getElementById('descriptionDiv')))
         w.document.getElementById('addPreset').insertAdjacentElement('beforebegin', compiledSubmit[0])
       }])
 
@@ -463,7 +462,7 @@ function init () {
           return
         }
 
-        let preset = oprtCustomPresets.find(item => item.uid === value)
+        let preset = wfrtCustomPresets.find(item => item.uid === value)
 
         if (event.shiftKey) {
           alertify.log(`Deleted preset <i>${preset.label}</i>`)
@@ -500,7 +499,7 @@ function init () {
         alertify.success(`✔ Applied <i>${preset.label}</i>`)
       }
 
-      w.document.getElementById('oprt_custom_presets').addEventListener('click', clickListener, false)
+      w.document.getElementById('wfrt_custom_presets').addEventListener('click', clickListener, false)
     }
     /* endregion presets end */
 
@@ -521,7 +520,6 @@ function init () {
     filmstrip.addEventListener('wheel', scrollHorizontally, false)
     filmstrip.addEventListener('DOMMouseScroll', scrollHorizontally, false)
 
-    // hotfix for #27 not sure if it works
     let _initMap = subController.initMap
     subController.initMap = () => {
       _initMap()
@@ -550,7 +548,7 @@ function init () {
 
       w.getService('NewSubmissionDataService')
       let newLocMarker = w.NewSubmissionDataService.getNewLocationMarker()
-      if (preferences.get(OPRT.OPTIONS.MAP_CIRCLE_40)) {
+      if (preferences.get(WFRT.OPTIONS.MAP_CIRCLE_40)) {
         google.maps.event.addListener(newLocMarker, 'dragend', function () {
           if (draggableMarkerCircle == null) {
             draggableMarkerCircle = new google.maps.Circle({
@@ -566,7 +564,7 @@ function init () {
         })
       }
 
-      if (preferences.get(OPRT.OPTIONS.MAP_CIRCLE_20)) {
+      if (preferences.get(WFRT.OPTIONS.MAP_CIRCLE_20)) {
         google.maps.event.addListener(newLocMarker, 'dragend', function () {
           if (draggableMarkerCircleSmall == null) {
             draggableMarkerCircleSmall = new google.maps.Circle({
@@ -583,26 +581,26 @@ function init () {
       }
     }
 
-    if (preferences.get(OPRT.OPTIONS.MAP_CIRCLE_40) || preferences.get(OPRT.OPTIONS.MAP_CIRCLE_20)) {
-      document.querySelector('#street-view + small').insertAdjacentHTML('beforeBegin',
-        `<small id="oprt_map_legend" class="pull-left">
-                ${preferences.get(OPRT.OPTIONS.MAP_CIRCLE_40) ? '<span style="color:#ebbc4a">outer circle:</span> 40m' : ''}
-                ${preferences.get(OPRT.OPTIONS.MAP_CIRCLE_20) ? '<span style="color:#effc4a">inner circle:</span> 20m' : ''}
+    if (preferences.get(WFRT.OPTIONS.MAP_CIRCLE_40) || preferences.get(WFRT.OPTIONS.MAP_CIRCLE_20)) {
+      document.querySelector('.flex-map-row').insertAdjacentHTML('beforeEnd',
+        `<small id="wfrt_map_legend">
+                ${preferences.get(WFRT.OPTIONS.MAP_CIRCLE_40) ? '<span style="color:#ebbc4a">outer circle:</span> 40m' : ''}
+                ${preferences.get(WFRT.OPTIONS.MAP_CIRCLE_20) ? '<span style="color:#effc4a">inner circle:</span> 20m' : ''}
             </small>`)
     }
 
-    // move portal rating to the right side. don't move on mobile devices / small width
-    if (screen.availWidth > 768) {
-      let nodeToMove = w.document.querySelector('div[class="btn-group"]').parentElement
-      if (subController.hasSupportingImageOrStatement) {
-        const descDiv = w.document.getElementById('descriptionDiv')
-        const scorePanel = descDiv.querySelector('div.text-center.hidden-xs')
-        scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
-      } else {
-        const scorePanel = w.document.querySelector('div[class~="pull-right"]')
-        scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
-      }
-    }
+    // // move portal rating to the right side. don't move on mobile devices / small width
+    // if (screen.availWidth > 768) {
+    //   let nodeToMove = w.document.querySelector('div[class="btn-group"]').parentElement
+    //   if (subController.hasSupportingImageOrStatement) {
+    //     const descDiv = w.document.getElementById('descriptionDiv')
+    //     const scorePanel = descDiv.querySelector('div.text-center.hidden-xs')
+    //     scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
+    //   } else {
+    //     const scorePanel = w.document.querySelector('div[class~="pull-right"]')
+    //     scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
+    //   }
+    // }
 
     // bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
     const imgDups = w.document.querySelectorAll('#map-filmstrip > ul > li > img')
@@ -625,8 +623,8 @@ function init () {
     // add translate buttons to title and description (if existing)
     let lang = 'en'
     try { lang = browserLocale.split('-')[0] } catch (e) {}
-    const link = w.document.querySelector('#descriptionDiv a')
-    const content = link.innerText.trim()
+    const titleContainer = w.document.querySelector('h1.title-description')
+    const content = titleContainer.innerText.trim()
     let a = w.document.createElement('a')
     let span = w.document.createElement('span')
     span.className = 'glyphicon glyphicon-book'
@@ -636,11 +634,11 @@ function init () {
     a.target = 'translate'
     a.style.setProperty('padding', '0px 4px')
     a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(content)}`
-    a.id = 'oprt_translate_title'
-    link.insertAdjacentElement('afterend', a)
+    a.id = 'wfrt_translate_title'
+    titleContainer.insertAdjacentElement('beforeend', a)
 
-    const description = w.document.querySelector('#descriptionDiv').innerHTML.split('<br>')[3].trim()
-    if (description !== '&lt;No description&gt;' && description !== '') {
+    const descContainer = w.document.querySelector('h4.title-description')
+    if (descContainer.innerText !== '&lt;No description&gt;' && descContainer.innerText !== '') {
       a = w.document.createElement('a')
       span = w.document.createElement('span')
       span.className = 'glyphicon glyphicon-book'
@@ -649,10 +647,11 @@ function init () {
       a.className = 'translate-description button btn btn-default pull-right'
       a.target = 'translate'
       a.style.setProperty('padding', '0px 4px')
-      a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(description)}`
-      a.id = 'oprt_translate_desc'
-      const br = w.document.querySelectorAll('#descriptionDiv br')[2]
-      br.insertAdjacentElement('afterend', a)
+      a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(descContainer)}`
+      a.id = 'wfrt_translate_desc'
+      // const br = w.document.querySelectorAll('#descriptionDiv br')
+      descContainer.insertAdjacentElement('beforeend', a)
+      descContainer.insertAdjacentHTML('beforebegin', '<hr>')
     }
 
     const supportingStatement = w.document.querySelector('p[ng-click="subCtrl.showSupportingStatementModal()"]')
@@ -666,7 +665,7 @@ function init () {
       a.target = 'translate'
       a.style.setProperty('padding', '0px 4px')
       a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(supportingStatement.innerText)}`
-      a.id = 'oprt_translate_support'
+      a.id = 'wfrt_translate_support'
       supportingStatement.insertAdjacentElement('beforebegin', a)
     }
 
@@ -720,7 +719,7 @@ function init () {
     }
 
     /* region keyboard nav */
-    if (preferences.get(OPRT.OPTIONS.KEYBOARD_NAV)) {
+    if (preferences.get(WFRT.OPTIONS.KEYBOARD_NAV)) {
       activateShortcuts()
     }
 
@@ -745,16 +744,17 @@ function init () {
 
       // a list of all 6 star button rows, and the two submit buttons
       let starsAndSubmitButtons
-      if (subController.hasSupportingImageOrStatement) {
-        starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .text-center.hidden-xs:not(.ng-hide) .btn-group, .big-submit-button')
-      } else {
-        starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .col-sm-4.hidden-xs .btn-group, .big-submit-button')
-      }
+      // if (subController.hasSupportingImageOrStatement) {
+      //   starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .text-center.hidden-xs:not(.ng-hide) .btn-group, .big-submit-button')
+      // } else {
+      starsAndSubmitButtons = w.document.querySelectorAll('.five-stars, #submitFF')
+
+      // }
 
       function highlight () {
         starsAndSubmitButtons.forEach((element) => { element.style.setProperty('border', 'none') })
         if (currentSelectable <= maxItems - 2) {
-          starsAndSubmitButtons[currentSelectable].style.setProperty('border', '1px dashed #ebbc4a')
+          starsAndSubmitButtons[currentSelectable].style.setProperty('border', '2px dashed #E47252')
           submitAndNext.blur()
           submitButton.blur()
         } else if (currentSelectable === 6) {
@@ -794,9 +794,9 @@ function init () {
         // do not do anything if a text area or a input with type text has focus
         if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
           return
-        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/review"]')) {
           // "analyze next" button
-          w.document.location.href = '/recon'
+          w.document.location.href = '/review'
           event.preventDefault()
         } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmLowQuality()"]')) {
           // submit low quality rating
@@ -928,24 +928,24 @@ function init () {
         // we just want addednodes with (class:modal). null and undefined check for performance reasons
         if (mutationRecord.addedNodes.length > 0 &&
           mutationRecord.addedNodes[0].className === 'modal fade ng-isolate-scope' &&
-          mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/recon\']') !== null) {
-          w.document.location.href = '/recon'
+          mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/review\']') !== null) {
+          w.document.location.href = '/review'
         }
       }
     })
     bodyObserver.observe(w.document.body, { childList: true })
 
-    let newSubmitDiv = moveSubmitButton()
+    let newSubmitDiv = w.document.querySelector('.answer-btn-container.bottom-btns')
     let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController, bodyObserver)
 
-    if (preferences.get(OPRT.OPTIONS.COMMENT_TEMPLATES)) { commentTemplates() }
+    if (preferences.get(WFRT.OPTIONS.COMMENT_TEMPLATES)) { commentTemplates() }
 
     mapTypes(subController.locationEditsMap, true)
 
     // add translation links to title and description edits
     if (newPortalData.titleEdits.length > 1 || newPortalData.descriptionEdits.length > 1) {
-      for (const titleEditBox of editDiv.querySelectorAll('.titleEditBox')) {
-        const content = titleEditBox.innerText.trim()
+      for (const titleEditBox of editDiv.querySelectorAll('.titleEditBox.ng-scope')) {
+        const contentSpan = titleEditBox.querySelector('.poi-edit-text')
         let a = w.document.createElement('a')
         let span = w.document.createElement('span')
         span.className = 'glyphicon glyphicon-book'
@@ -954,15 +954,14 @@ function init () {
         a.className = 'translate-title button btn btn-default pull-right'
         a.target = 'translate'
         a.style.setProperty('padding', '0px 4px')
-        a.href = `https://translate.google.com/#auto/${browserLocale.split('-')[0]}/${encodeURIComponent(content)}`
-        titleEditBox.querySelector('p').style.setProperty('display', 'inline-block')
-        titleEditBox.insertAdjacentElement('beforeEnd', a)
+        a.href = `https://translate.google.com/#auto/${browserLocale.split('-')[0]}/${encodeURIComponent(contentSpan.innerText.trim())}`
+        contentSpan.style.setProperty('display', 'inline-block')
+        contentSpan.insertAdjacentElement('beforeEnd', a)
       }
     }
 
     if (newPortalData.titleEdits.length <= 1) {
-      let titleDiv = editDiv.querySelector('div[ng-show="subCtrl.pageData.titleEdits.length <= 1"] h3')
-      const content = titleDiv.innerText.trim()
+      let titleDiv = editDiv.querySelector('div[ng-if="!answerCtrl.needsTitleEdit"]')
       let a = w.document.createElement('a')
       let span = w.document.createElement('span')
       span.className = 'glyphicon glyphicon-book'
@@ -972,12 +971,12 @@ function init () {
       a.target = 'translate'
       a.style.setProperty('padding', '0px 4px')
       a.style.setProperty('margin-left', '14px')
-      a.href = `https://translate.google.com/#auto/${browserLocale.split('-')[0]}/${encodeURIComponent(content)}`
+      a.href = `https://translate.google.com/#auto/${browserLocale.split('-')[0]}/${encodeURIComponent(titleDiv.innerText.trim())}`
       titleDiv.insertAdjacentElement('beforeend', a)
     }
 
     if (newPortalData.descriptionEdits.length <= 1) {
-      let titleDiv = editDiv.querySelector('div[ng-show="subCtrl.pageData.descriptionEdits.length <= 1"] p')
+      let titleDiv = editDiv.querySelector('div[ng-if="!answerCtrl.needsDescriptionEdit"]')
       const content = titleDiv.innerText.trim() || ''
       if (content !== '<No description>' && content !== '') {
         let a = w.document.createElement('a')
@@ -1004,7 +1003,7 @@ function init () {
     /* EDIT PORTAL */
     /* region keyboard navigation */
 
-    if (preferences.get(OPRT.OPTIONS.KEYBOARD_NAV)) {
+    if (preferences.get(WFRT.OPTIONS.KEYBOARD_NAV)) {
       activateShortcuts()
     }
 
@@ -1020,23 +1019,24 @@ function init () {
 
       // a list of all 6 star button rows, and the two submit buttons
       let starsAndSubmitButtons = w.document.querySelectorAll(
-        'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.titleEdits.length > 1"]:not(.ng-hide),' +
-        'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.descriptionEdits.length > 1"]:not(.ng-hide),' +
-        'div[ng-show="subCtrl.reviewType===\'EDIT\'"] > div[ng-show="subCtrl.pageData.locationEdits.length > 1"]:not(.ng-hide),' +
-        '.big-submit-button')
+        '.edit-container  div[ng-show="subCtrl.pageData.titleEdits.length > 1"]:not(.ng-hide),' +
+        '.edit-container div[ng-show="subCtrl.pageData.descriptionEdits.length > 1"]:not(.ng-hide),' +
+        '.edit-container div[ng-show="subCtrl.pageData.locationEdits.length > 1"]:not(.ng-hide),' +
+        '#submitFF')
 
       /* EDIT PORTAL */
       function highlight () {
-        let el = editDiv.querySelector('h3[ng-show="subCtrl.pageData.locationEdits.length > 1"]')
+        let el = editDiv.querySelector('.poi-edit-map-unable')
         el.style.setProperty('border', 'none')
 
         starsAndSubmitButtons.forEach((element) => { element.style.setProperty('border', 'none') })
         if (hasLocationEdit && currentSelectable === maxItems - 3) {
           el.style.setProperty('border-left', '4px dashed #ebbc4a')
           el.style.setProperty('border-top', '4px dashed #ebbc4a')
+          el.style.setProperty('border-bottom', '4px dashed #ebbc4a')
           el.style.setProperty('border-right', '4px dashed #ebbc4a')
-          el.style.setProperty('padding', '16px')
-          el.style.setProperty('margin-bottom', '0')
+          el.style.setProperty('padding', '8px')
+          // el.style.setProperty('margin-bottom', '0')
           submitAndNext.blur()
           submitButton.blur()
         } else if (currentSelectable < maxItems - 2) {
@@ -1081,9 +1081,9 @@ function init () {
         // do not do anything if a text area or a input with type text has focus
         if (w.document.querySelector('input[type=text]:focus') || w.document.querySelector('textarea:focus')) {
           return
-        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/recon"]')) {
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('a.button[href="/review"]')) {
           // "analyze next" button
-          w.document.location.href = '/recon'
+          w.document.location.href = '/review'
           event.preventDefault()
         } else if ((event.keyCode === 13 || event.keyCode === 32) && currentSelectable === maxItems) {
           // submit normal rating
@@ -1107,8 +1107,9 @@ function init () {
           if (hasLocationEdit && currentSelectable === maxItems - 3 && numkey <= mapMarkers.length) {
             google.maps.event.trigger(angular.element(document.getElementById('NewSubmissionController')).scope().getAllLocationMarkers()[numkey - 1], 'click')
           } else {
-            if (hasLocationEdit) numkey = 1
-            starsAndSubmitButtons[currentSelectable].querySelectorAll('.titleEditBox, input[type="checkbox"]')[numkey - 1].click()
+            if (hasLocationEdit)
+              numkey = 1
+            starsAndSubmitButtons[currentSelectable].querySelectorAll('.titleEditBox, input[type="radio"]')[numkey - 1].click()
             currentSelectable++
           }
         }
@@ -1128,9 +1129,8 @@ function init () {
 
     const mapButtons = `
 <a class='button btn btn-default' target='intel' href='https://intel.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=17'>Intel</a>
-<a class='button btn btn-default' target='wikimapia' href='http://wikimapia.org/#lat=${newPortalData.lat}&lon=${newPortalData.lng}&z=16'>Wikimapia</a>
+<a class='button btn btn-default' target='gmaps' href='https://www.google.com/maps/place/${newPortalData.lat},${newPortalData.lng}'>GMaps</a>
 `
-
     // more map buttons in a dropdown menu
     const mapDropdown = `
 <li><a target='osm' href='https://www.openstreetmap.org/?mlat=${newPortalData.lat}&mlon=${newPortalData.lng}&zoom=16'>OSM</a></li>
@@ -1160,13 +1160,13 @@ function init () {
 <li><a target='hitta' href='https://www.hitta.se/kartan!~${newPortalData.lat},${newPortalData.lng},18z/tileLayer!l=1'>SE - Hitta.se</a></li>
 <li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=17&l=nautical'>SE - Eniro Sjökort</a></li>
 `
-    targetElement.insertAdjacentHTML(where, `<div><div id="oprt_map_button_group" class='btn-group'>${mapButtons}<div class='button btn btn-default dropdown'><span class='caret'></span><ul id="oprt_map_dropdown" class='dropdown-content dropdown-menu'>${mapDropdown}</div>`)
+    targetElement.insertAdjacentHTML(where, `<div id="wfrt_map_button_group" class='btn-group dropup'>${mapButtons}<div class='button btn btn-default dropdown'><span class='caret'></span><ul id="wfrt_map_dropdown" class='dropdown-content dropdown-menu'>${mapDropdown}</div></div>`)
   }
 
   // add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
   function quickSubmitButton (submitDiv, ansController, bodyObserver) {
-    let submitButton = submitDiv.querySelector('button')
-    submitButton.classList.add('btn', 'btn-warning')
+    let submitButton = submitDiv.querySelector('button.button-primary')
+    // submitButton.classList.add('btn', 'btn-warning')
 
     let submitAndNext = submitButton.cloneNode(false)
     submitButton.addEventListener('click', () => {
@@ -1175,15 +1175,16 @@ function init () {
     submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`
     submitAndNext.title = 'Submit and go to next review'
     submitAndNext.id = 'submitFF'
+    submitAndNext.style.setProperty('margin-right', '16px')
     submitAndNext.addEventListener('click', () => {
       ansController.openSubmissionCompleteModal = () => {
-        window.location.assign('/recon')
+        window.location.assign('/review')
       }
     })
 
     w.$injector.invoke(['$compile', ($compile) => {
       let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv))
-      submitDiv.querySelector('button').insertAdjacentElement('beforeBegin', compiledSubmit[0])
+      submitDiv.querySelector('#submitDiv button').insertAdjacentElement('beforeBegin', compiledSubmit[0])
     }])
     return { submitButton, submitAndNext }
   }
@@ -1202,12 +1203,13 @@ function init () {
 <li><a class='textButton' id='emergencyway' data-tooltip='Obstructing emergency way'>Emergency Way</a></li>
 `
 
-    const textBox = w.document.querySelector('#submitDiv + .text-center > textarea')
+    const cardAdditionalText = w.document.getElementById('additional-comments-card')
+    const cardTextBox = cardAdditionalText.querySelector('textarea')
 
-    w.document.querySelector('#submitDiv + .text-center').insertAdjacentHTML('beforeend', `
-<div id="oprt_comment_button_group" class='btn-group dropup'>${textButtons}
-<div class='button btn btn-default dropdown'><span class='caret'></span><ul id="oprt_comment_button_dropdown" class='dropdown-content dropdown-menu'>${textDropdown}</ul>
-</div></div><div class="hidden-xs"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></div>
+    cardAdditionalText.insertAdjacentHTML('beforeend', `<div class="card__footer">
+<span id="wfrt_comment_button_group" class='btn-group dropup pull-left'>${textButtons}
+<span class='button btn btn-default dropdown'><span class='caret'></span><ul id="wfrt_comment_button_dropdown" class='dropdown-content dropdown-menu'>${textDropdown}</ul>
+</span></span><span class="hidden-xs pull-right"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></span></div>
 `)
 
     const buttons = w.document.getElementsByClassName('textButton')
@@ -1215,9 +1217,9 @@ function init () {
       if (buttons.hasOwnProperty(b)) {
         buttons[b].addEventListener('click', event => {
           const source = event.target || event.srcElement
-          let text = textBox.value
+          let text = cardTextBox.value
           if (text.length > 0) {
-            text += ',\n'
+            text += ', '
           }
           switch (source.id) {
             case 'photo':
@@ -1252,8 +1254,8 @@ function init () {
               break
           }
 
-          textBox.value = text
-          textBox.dispatchEvent(new Event('change')) // eslint-disable-line no-undef
+          cardTextBox.value = text
+          cardTextBox.dispatchEvent(new Event('change')) // eslint-disable-line no-undef
 
           event.target.blur()
         }, false)
@@ -1264,7 +1266,7 @@ function init () {
   // adding a 40m circle and a smaller 20m circle around the portal (capture range)
   function mapOriginCircle (map) {
     // noinspection JSUnusedLocalSymbols
-    if (preferences.get(OPRT.OPTIONS.MAP_CIRCLE_40)) {
+    if (preferences.get(WFRT.OPTIONS.MAP_CIRCLE_40)) {
       const circle40 = new google.maps.Circle({ // eslint-disable-line no-unused-vars
         map: map,
         center: map.center,
@@ -1276,7 +1278,7 @@ function init () {
       })
     }
 
-    if (preferences.get(OPRT.OPTIONS.MAP_CIRCLE_20)) {
+    if (preferences.get(WFRT.OPTIONS.MAP_CIRCLE_20)) {
       const circle20 = new google.maps.Circle({ // eslint-disable-line no-unused-vars
         map: map,
         center: map.center,
@@ -1310,7 +1312,7 @@ function init () {
       { provider: PROVIDERS.GOOGLE, id: 'satellite' },
       { provider: PROVIDERS.GOOGLE, id: 'hybrid' }]
 
-    if (preferences.get(OPRT.OPTIONS.NORWAY_MAP_LAYER)) {
+    if (preferences.get(WFRT.OPTIONS.NORWAY_MAP_LAYER)) {
       types.push({ provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`, code: 'topo4', label: 'NO - Topo' },
         { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster' },
         { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart' }
@@ -1353,9 +1355,9 @@ function init () {
     // track current selection for position map
     let mapType
     if (isMainMap) {
-      mapType = OPRT.PREFIX + OPRT.VAR.MAP_TYPE_1
+      mapType = WFRT.PREFIX + WFRT.VAR.MAP_TYPE_1
     } else {
-      mapType = OPRT.PREFIX + OPRT.VAR.MAP_TYPE_2
+      mapType = WFRT.PREFIX + WFRT.VAR.MAP_TYPE_2
     }
 
     // save selection when changed
@@ -1400,33 +1402,15 @@ function init () {
   }
 
   function modifyHeader () {
-    // shorten Operation Portal Recon to OPR to make more room
-    w.document.querySelector('.navbar-brand').innerHTML = 'OPR'
-
     // stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
 
-    let oprtScannerOffset = 0
-    if (preferences.get(OPRT.OPTIONS.SCANNER_OFFSET_FEATURE)) {
+    let wfrtScannerOffset = 0
+    if (preferences.get(WFRT.OPTIONS.SCANNER_OFFSET_FEATURE)) {
       // get scanner offset from localStorage
-      oprtScannerOffset = parseInt(w.localStorage.getItem(OPRT.SCANNER_OFFSET)) || 0
+      wfrtScannerOffset = parseInt(w.localStorage.getItem(WFRT.SCANNER_OFFSET)) || 0
     }
     const lastPlayerStatLine = w.document.querySelector('#player_stats:not(.visible-xs) div')
     const stats = w.document.querySelector('#player_stats:not(.visible-xs) div')
-
-    // add opr-tools preferences button
-    let oprtPreferencesButton = w.document.createElement('a')
-    oprtPreferencesButton.classList.add('brand', 'upgrades-icon', 'pull-right')
-    oprtPreferencesButton.style.setProperty('cursor', 'pointer')
-    oprtPreferencesButton.style.setProperty('margin-right', '20px')
-    oprtPreferencesButton.style.setProperty('color', 'rgb(157, 157, 157)')
-    oprtPreferencesButton.addEventListener('click', () => preferences.showPreferencesUI(w))
-    oprtPreferencesButton.title = 'OPR-Tools Preferences'
-
-    const prefCog = w.document.createElement('span')
-    prefCog.classList.add('glyphicon', 'glyphicon-cog')
-    oprtPreferencesButton.appendChild(prefCog)
-
-    stats.parentElement.insertAdjacentElement('beforebegin', oprtPreferencesButton)
 
     // move upgrade button to the right
     const upgradeIcon = w.document.querySelector('.upgrades-icon')
@@ -1461,7 +1445,7 @@ function init () {
     const accepted = parseInt(stats.children[5].children[2].innerText)
     const rejected = parseInt(stats.children[7].children[2].innerText)
 
-    const processed = accepted + rejected - oprtScannerOffset
+    const processed = accepted + rejected - wfrtScannerOffset
     const processedPercent = roundToPrecision(processed / reviewed * 100, 1)
 
     const acceptedPercent = roundToPrecision(accepted / (reviewed) * 100, 1)
@@ -1506,23 +1490,23 @@ ${Math.round(nextBadgeProcess)}%
     lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `<p><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 90%;" type="text"
 value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(processedPercent)}%"/></p>`)
 
-    // ** opr-scanner offset
-    if (accepted < 10000 && preferences.get(OPRT.OPTIONS.SCANNER_OFFSET_UI)) {
+    // ** wayfarer-scanner offset
+    if (accepted < 10000 && preferences.get(WFRT.OPTIONS.SCANNER_OFFSET_UI)) {
       lastPlayerStatLine.insertAdjacentHTML('beforeEnd', `
 <p id='scannerOffsetContainer'>
 <span style="margin-left: 5px" class="ingress-mid-blue pull-left">Scanner offset:</span>
-<input id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="${oprtScannerOffset}">
+<input id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="${wfrtScannerOffset}">
 </p>`)
 
       // we have to inject the tooltip to angular
       w.$injector.invoke(['$compile', ($compile) => {
-        let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="Use negative values, if scanner is ahead of OPR"></span>`)(w.$scope(stats))
+        let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="Use negative values, if scanner is ahead of Wayfarer"></span>`)(w.$scope(stats))
         w.document.getElementById('scannerOffsetContainer').insertAdjacentElement('afterbegin', compiledSubmit[0])
       }]);
 
       ['change', 'keyup', 'cut', 'paste', 'input'].forEach(e => {
         w.document.getElementById('scannerOffset').addEventListener(e, (event) => {
-          w.localStorage.setItem(OPRT.SCANNER_OFFSET, event.target.value)
+          w.localStorage.setItem(WFRT.SCANNER_OFFSET, event.target.value)
         })
       })
       // **
@@ -1531,17 +1515,35 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
     modifyHeader = () => {} // eslint-disable-line
   }
 
+  function addOptionsButton () {
+    // add wayfarer-tools preferences button
+    let wfrtPreferencesButton = w.document.createElement('a')
+    wfrtPreferencesButton.classList.add('brand', 'upgrades-icon', 'pull-right')
+    wfrtPreferencesButton.style.setProperty('cursor', 'pointer')
+    wfrtPreferencesButton.style.setProperty('margin-right', '20px')
+    wfrtPreferencesButton.style.setProperty('margin-left', '20px')
+    wfrtPreferencesButton.style.setProperty('color', 'rgb(157, 157, 157)')
+    wfrtPreferencesButton.addEventListener('click', () => preferences.showPreferencesUI(w))
+    wfrtPreferencesButton.title = 'Wayfarer-Tools Preferences'
+
+    const prefCog = w.document.createElement('span')
+    prefCog.classList.add('glyphicon', 'glyphicon-cog')
+    wfrtPreferencesButton.appendChild(prefCog)
+
+    w.document.querySelector('.header .inner-container:last-of-type').insertAdjacentElement('afterbegin', wfrtPreferencesButton)
+  }
+
   function addRefreshContainer () {
     let cbxRefresh = w.document.createElement('input')
     let cbxRefreshDesktop = w.document.createElement('input')
 
-    cbxRefresh.id = OPRT.OPTIONS.REFRESH
+    cbxRefresh.id = WFRT.OPTIONS.REFRESH
     cbxRefresh.type = 'checkbox'
-    cbxRefresh.checked = preferences.get(OPRT.OPTIONS.REFRESH) === 'true'
+    cbxRefresh.checked = preferences.get(WFRT.OPTIONS.REFRESH) === 'true'
 
-    cbxRefreshDesktop.id = OPRT.OPTIONS.REFRESH_NOTI_DESKTOP
+    cbxRefreshDesktop.id = WFRT.OPTIONS.REFRESH_NOTI_DESKTOP
     cbxRefreshDesktop.type = 'checkbox'
-    cbxRefreshDesktop.checked = preferences.get(OPRT.OPTIONS.REFRESH_NOTI_DESKTOP) === 'true'
+    cbxRefreshDesktop.checked = preferences.get(WFRT.OPTIONS.REFRESH_NOTI_DESKTOP) === 'true'
 
     let refreshPanel = w.document.createElement('div')
     refreshPanel.className = 'panel panel-ingress'
@@ -1556,7 +1558,7 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
     })
 
     refreshPanel.innerHTML = `
-<div class='panel-heading'><span class='glyphicon glyphicon-refresh'></span> Refresh <sup>beta</sup> <a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success pull-right'>OPR-Tools</span></a></div>
+<div class='panel-heading'><span class='glyphicon glyphicon-refresh'></span> Refresh <sup>beta</sup> <a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success pull-right'>Wayfarer-Tools</span></a></div>
 <div id='cbxDiv' class='panel-body bg-primary' style='background:black;'></div>`
 
     refreshPanel.querySelector('#cbxDiv').insertAdjacentElement('afterbegin', appendCheckbox(cbxRefreshDesktop, 'Desktop notification'))
@@ -1593,12 +1595,12 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
     let time = getRandomIntInclusive(5, 10) * 60000
 
     refreshIntervalID = setInterval(() => {
-      reloadOPR()
+      reloadWayfarer()
     }, time)
 
-    function reloadOPR () {
+    function reloadWayfarer () {
       clearInterval(refreshIntervalID)
-      w.sessionStorage.setItem(OPRT.FROM_REFRESH, 'true')
+      w.sessionStorage.setItem(WFRT.FROM_REFRESH, 'true')
       w.document.location.reload()
     }
 
@@ -1615,17 +1617,17 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
   }
 
   function checkIfAutorefresh () {
-    if (w.sessionStorage.getItem(OPRT.FROM_REFRESH)) {
+    if (w.sessionStorage.getItem(WFRT.FROM_REFRESH)) {
       // reset flag
-      w.sessionStorage.removeItem(OPRT.FROM_REFRESH)
+      w.sessionStorage.removeItem(WFRT.FROM_REFRESH)
 
       if (w.document.hidden) { // if tab in background: flash favicon
         let flag = true
 
-        if (preferences.get(OPRT.OPTIONS.REFRESH_NOTI_DESKTOP) === 'true') {
+        if (preferences.get(WFRT.OPTIONS.REFRESH_NOTI_DESKTOP) === 'true') {
           GM_notification({
-            'title': 'OPR - New Portal Analysis Available',
-            'text': 'by OPR-Tools',
+            'title': 'Wayfarer - New Wayspot Analysis Available',
+            'text': 'by Wayfarer-Tools',
             'image': 'https://gitlab.com/uploads/-/system/project/avatar/3311015/opr-tools.png'
           })
         }
@@ -1652,11 +1654,11 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
   }
 
   function startExpirationTimer (subController) {
-    w.document.querySelector('ul.nav.navbar-nav > li:nth-child(7)').insertAdjacentHTML('afterbegin', '<a><span id="countdownDisplay"></span></a>')
+    w.document.querySelector('.header .inner-container:last-of-type').insertAdjacentHTML('afterbegin', '<span id="countdownDisplay"></span>')
 
     let countdownEnd = subController.countdownDate
     let countdownDisplay = document.getElementById('countdownDisplay')
-    countdownDisplay.style.setProperty('color', 'white')
+    countdownDisplay.style.setProperty('color', 'black')
 
     // Update the count down every 1 second
     let counterInterval = setInterval(function () {
@@ -1683,11 +1685,11 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
   }
 
   function versionCheck () {
-    if (OPRT.VERSION > (parseInt(w.localStorage.getItem(OPRT.PREFIX + OPRT.VERSION_CHECK)) || OPRT.VERSION - 1)) {
-      w.localStorage.setItem(OPRT.PREFIX + OPRT.VERSION_CHECK, OPRT.VERSION)
+    if (WFRT.VERSION > (parseInt(w.localStorage.getItem(WFRT.PREFIX + WFRT.VERSION_CHECK)) || WFRT.VERSION - 1)) {
+      w.localStorage.setItem(WFRT.PREFIX + WFRT.VERSION_CHECK, WFRT.VERSION)
 
       const changelogString = `
-        <h4><span class="glyphicon glyphicon-asterisk"></span> OPR-Tools was updated:</h4>
+        <h4><span class="glyphicon glyphicon-asterisk"></span> Wayfarer-Tools was updated:</h4>
         <div>${strings.changelog}</div>      
       `
       // show changelog
@@ -1700,17 +1702,17 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
 
   function addCustomPresetButtons () {
     // add customPreset UI
-    oprtCustomPresets = getCustomPresets(w)
+    wfrtCustomPresets = getCustomPresets(w)
     let customPresetOptions = ''
-    for (const customPreset of oprtCustomPresets) {
+    for (const customPreset of wfrtCustomPresets) {
       customPresetOptions += `<button class='button btn btn-default customPresetButton' id='${customPreset.uid}'>${customPreset.label}</button>`
     }
-    w.document.getElementById('oprt_custom_presets').innerHTML = customPresetOptions
+    w.document.getElementById('wfrt_custom_presets').innerHTML = customPresetOptions
   }
 
   function getCustomPresets (w) {
     // simply to scope the string we don't need after JSON.parse
-    let presetsJSON = w.localStorage.getItem(OPRT.PREFIX + OPRT.VAR.CUSTOM_PRESETS)
+    let presetsJSON = w.localStorage.getItem(WFRT.PREFIX + WFRT.VAR.CUSTOM_PRESETS)
     if (presetsJSON != null && presetsJSON !== '') {
       return JSON.parse(presetsJSON)
     }
@@ -1731,17 +1733,17 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
       location: ansController.formData.location,
       safety: ansController.formData.safety
     }
-    oprtCustomPresets.push(preset)
-    w.localStorage.setItem(OPRT.PREFIX + OPRT.VAR.CUSTOM_PRESETS, JSON.stringify(oprtCustomPresets))
+    wfrtCustomPresets.push(preset)
+    w.localStorage.setItem(WFRT.PREFIX + WFRT.VAR.CUSTOM_PRESETS, JSON.stringify(wfrtCustomPresets))
   }
 
   function deleteCustomPreset (preset) {
-    oprtCustomPresets = oprtCustomPresets.filter(item => item.uid !== preset.uid)
-    w.localStorage.setItem(OPRT.PREFIX + OPRT.VAR.CUSTOM_PRESETS, JSON.stringify(oprtCustomPresets))
+    wfrtCustomPresets = wfrtCustomPresets.filter(item => item.uid !== preset.uid)
+    w.localStorage.setItem(WFRT.PREFIX + WFRT.VAR.CUSTOM_PRESETS, JSON.stringify(wfrtCustomPresets))
   }
 
   function showHelp () {
-    let helpString = `<a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success'>OPR-Tools</span></a> Key shortcuts<br>
+    let helpString = `<a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success'>Wayfarer-Tools</span></a> Key shortcuts<br>
     <table class="table table-condensed ">
     <thead>
     <tr>
@@ -1820,29 +1822,22 @@ setTimeout(() => {
 
 const strings = {
   options: {
-    [OPRT.OPTIONS.COMMENT_TEMPLATES]: 'Comment templates',
-    [OPRT.OPTIONS.KEYBOARD_NAV]: 'Keyboard navigation',
-    [OPRT.OPTIONS.NORWAY_MAP_LAYER]: 'Norwegian map layer',
-    [OPRT.OPTIONS.PRESET_FEATURE]: 'Rating presets',
-    [OPRT.OPTIONS.REFRESH]: 'Periodically refresh opr if no analysis is available',
-    [OPRT.OPTIONS.REFRESH_NOTI_DESKTOP]: '↳ With desktop notification',
-    [OPRT.OPTIONS.SCANNER_OFFSET_FEATURE]: 'Scanner offset',
-    [OPRT.OPTIONS.SCANNER_OFFSET_UI]: '↳ Display offset input field',
-    [OPRT.OPTIONS.MAP_CIRCLE_20]: 'Show 20 meter circle around candidate location (minimum portal distance)',
-    [OPRT.OPTIONS.MAP_CIRCLE_40]: 'Show 40 meter circle around candidate location (capture range)'
+    [WFRT.OPTIONS.COMMENT_TEMPLATES]: 'Comment templates',
+    [WFRT.OPTIONS.KEYBOARD_NAV]: 'Keyboard navigation',
+    [WFRT.OPTIONS.NORWAY_MAP_LAYER]: 'Norwegian map layer',
+    [WFRT.OPTIONS.PRESET_FEATURE]: 'Rating presets',
+    [WFRT.OPTIONS.REFRESH]: 'Periodically refresh wayfarer if no analysis is available',
+    [WFRT.OPTIONS.REFRESH_NOTI_DESKTOP]: '↳ With desktop notification',
+    [WFRT.OPTIONS.SCANNER_OFFSET_FEATURE]: 'Scanner offset',
+    [WFRT.OPTIONS.SCANNER_OFFSET_UI]: '↳ Display offset input field',
+    [WFRT.OPTIONS.MAP_CIRCLE_20]: 'Show 20 meter circle around candidate location (minimum portal distance)',
+    [WFRT.OPTIONS.MAP_CIRCLE_40]: 'Show 40 meter circle around candidate location (capture range)'
   },
   changelog:
     `
-Version 1.1.0
-<br>* Added translate button to supporting text
-<br><br>
-Version 1.0.0
-<br>* New preferences menu
-<br>- Enable or disable some not so often needed features.
-<br>
-<br>* Refresh notification: removed sound option
-<br>* Added new 20m circle around candidate location, thanks to @aenariel
-<br>* Remembering selected layer type of duplicate map`
+Version 2.0.0
+<br>* Initial Wayfarer-Tools release
+`
 }
 
 const GLOBAL_CSS = `
@@ -2004,12 +1999,14 @@ kbd {
     box-shadow: inset 0 -1px 0 #c6cbd1;
 }
 
+.dropdown-menu {
+  margin: 0 !important;
+}
+
 .opr-yellow {
     color: #F3EADA;
 }
-.upgrades-icon:hover {
-  color: rgb(200, 200, 200) !important;
-}
+
 
 @media(min-width:768px) {
   div.modal-custom1 {
