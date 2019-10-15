@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name            Wayfarer-Tools
-// @version         2.0.0
-// @description     formerly known as OPR-Tools 
+// @version         2.0.1
+// @description     formerly known as OPR-Tools
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
 // @match           https://wayfarer.nianticlabs.com/review
@@ -188,17 +188,17 @@ class Preferences {
       })
 
       w.document.getElementById('export_all').addEventListener('click', () => {
-          if (navigator.clipboard !== undefined) {
-            navigator.clipboard.writeText(inout.exportAll()).then(() => {
-              alertify.success(`✔ Exported preferences to your clipboard!`)
-            }, () => {
-              // ugly alert as fallback
-              alertify.alert(inout.exportAll())
-            })
-          } else {
+        if (navigator.clipboard !== undefined) {
+          navigator.clipboard.writeText(inout.exportAll()).then(() => {
+            alertify.success(`✔ Exported preferences to your clipboard!`)
+          }, () => {
+            // ugly alert as fallback
             alertify.alert(inout.exportAll())
-          }
+          })
+        } else {
+          alertify.alert(inout.exportAll())
         }
+      }
       )
     }
   }
@@ -286,7 +286,7 @@ function init () {
     if (tryNumber === 0) {
       clearInterval(initWatcher)
       w.document.getElementById('NewSubmissionController')
-      .insertAdjacentHTML('afterBegin', `
+        .insertAdjacentHTML('afterBegin', `
 <div id="wfrt_init_failed" class='alert alert-danger'><strong><span class='glyphicon glyphicon-remove'></span> Wayfarer-Tools initialization failed, refresh page</strong></div>
 `)
       addRefreshContainer()
@@ -397,7 +397,7 @@ function init () {
             let i = 1
             // adds keyboard numbers to low quality sub-list
             mutationRecord.addedNodes[0].querySelectorAll('label.sub-group')
-            .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
+              .forEach(el2 => { el2.insertAdjacentHTML('beforeend', `<kbd class="pull-right ">${i++}</kbd>`) })
           }
           // skip "Your analysis has been recorded" dialog
           if (skipDialog) {
@@ -1107,8 +1107,9 @@ function init () {
           if (hasLocationEdit && currentSelectable === maxItems - 3 && numkey <= mapMarkers.length) {
             google.maps.event.trigger(angular.element(document.getElementById('NewSubmissionController')).scope().getAllLocationMarkers()[numkey - 1], 'click')
           } else {
-            if (hasLocationEdit)
+            if (hasLocationEdit) {
               numkey = 1
+            }
             starsAndSubmitButtons[currentSelectable].querySelectorAll('.titleEditBox, input[type="radio"]')[numkey - 1].click()
             currentSelectable++
           }
@@ -1516,6 +1517,11 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
   }
 
   function addOptionsButton () {
+    // Add preferences button only once
+    if (w.document.getElementById('wfrt_preferences_button') !== null) {
+      return
+    }
+
     // add wayfarer-tools preferences button
     let wfrtPreferencesButton = w.document.createElement('a')
     wfrtPreferencesButton.classList.add('brand', 'upgrades-icon', 'pull-right')
@@ -1525,6 +1531,7 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
     wfrtPreferencesButton.style.setProperty('color', 'rgb(157, 157, 157)')
     wfrtPreferencesButton.addEventListener('click', () => preferences.showPreferencesUI(w))
     wfrtPreferencesButton.title = 'Wayfarer-Tools Preferences'
+    wfrtPreferencesButton.setAttribute('id', 'wfrt_preferences_button')
 
     const prefCog = w.document.createElement('span')
     prefCog.classList.add('glyphicon', 'glyphicon-cog')
