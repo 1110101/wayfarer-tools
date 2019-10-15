@@ -46,7 +46,7 @@ SOFTWARE.
 
 const WFRT = {
 
-  VERSION: 20000,
+  VERSION: 20002,
 
   PREFERENCES: 'wfrt_prefs',
 
@@ -115,6 +115,7 @@ class Preferences {
     border-left: 2px gold inset;
     border-top: 2px gold inset;
     border-bottom: 2px gold inset;
+    color: white;
     position: absolute;
     right: 0;
     height: 90%;
@@ -401,7 +402,7 @@ function init () {
           }
           // skip "Your analysis has been recorded" dialog
           if (skipDialog) {
-            if (mutationRecord.addedNodes[0].querySelector('.modal-body a[href=\'/review\']') !== null) {
+            if (mutationRecord.addedNodes[0].querySelector('.modal-body button[ng-click="answerCtrl3.reloadPage()"]') !== null) {
               w.document.location.href = '/review'
               return
             }
@@ -411,7 +412,6 @@ function init () {
     })
     bodyObserver.observe(w.document.body, { childList: true })
 
-    // let newSubmitDiv = moveSubmitButton()
     let newSubmitDiv = w.document.querySelector('.answer-btn-container.bottom-btns')
     let { submitButton, submitAndNext } = quickSubmitButton(newSubmitDiv, ansController, bodyObserver)
 
@@ -424,7 +424,7 @@ function init () {
     height: auto;
     min-height: unset;
     margin-left: 15px;
-"><div class="card__body"><div>Presets&nbsp;<button class="button btn btn-default btn-xs" id="addPreset">+</button></div>
+"><div class="card__body"><div>Presets&nbsp;<button class="btn btn-default btn-xs" id="addPreset">+</button></div>
   <div class='btn-group' id="wfrt_custom_presets"></div></div></div>
 `
 
@@ -630,7 +630,7 @@ function init () {
     span.className = 'glyphicon glyphicon-book'
     span.innerHTML = ' '
     a.appendChild(span)
-    a.className = 'translate-title button btn btn-default pull-right'
+    a.className = 'translate-title btn btn-default pull-right'
     a.target = 'translate'
     a.style.setProperty('padding', '0px 4px')
     a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(content)}`
@@ -644,12 +644,11 @@ function init () {
       span.className = 'glyphicon glyphicon-book'
       span.innerHTML = ' '
       a.appendChild(span)
-      a.className = 'translate-description button btn btn-default pull-right'
+      a.className = 'translate-description btn btn-default pull-right'
       a.target = 'translate'
       a.style.setProperty('padding', '0px 4px')
-      a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(descContainer)}`
+      a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(descContainer.innerText.trim())}`
       a.id = 'wfrt_translate_desc'
-      // const br = w.document.querySelectorAll('#descriptionDiv br')
       descContainer.insertAdjacentElement('beforeend', a)
       descContainer.insertAdjacentHTML('beforebegin', '<hr>')
     }
@@ -661,7 +660,7 @@ function init () {
       span.className = 'glyphicon glyphicon-book'
       span.innerHTML = ' '
       a.appendChild(span)
-      a.className = 'translate-supporting button btn btn-default pull-right'
+      a.className = 'translate-supporting btn btn-default pull-right'
       a.target = 'translate'
       a.style.setProperty('padding', '0px 4px')
       a.href = `https://translate.google.com/#auto/${lang}/${encodeURIComponent(supportingStatement.innerText)}`
@@ -691,7 +690,7 @@ function init () {
 
         w.$injector.invoke(['$compile', ($compile) => {
           let target = w.document.querySelector('.modal-body button:last-child')
-          let compiledSubmit = $compile(`<button id="submitAndSkipLowQuality" class="button" ng-click="answerCtrl2.confirmLowQuality()" ng-disabled="!(answerCtrl2.readyToSubmitSpam())" disabled="disabled">
+          let compiledSubmit = $compile(`<button id="submitAndSkipLowQuality" class="button-primary" ng-click="answerCtrl2.confirmLowQuality()" ng-disabled="!(answerCtrl2.readyToSubmitSpam())" disabled="disabled">
                         <span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span></button>`)(w.$scope(target))
           target.insertAdjacentElement('beforebegin', compiledSubmit[0])
           w.document.getElementById('submitAndSkipLowQuality').addEventListener('click', () => {
@@ -708,7 +707,7 @@ function init () {
       setTimeout(() => {
         w.$injector.invoke(['$compile', ($compile) => {
           let target = w.document.querySelector('.modal-body button:last-child')
-          let compiledSubmit = $compile(`<button id="submitAndSkipDuplicate" class="button" ng-click="answerCtrl2.confirmDuplicate()">
+          let compiledSubmit = $compile(`<button id="submitAndSkipDuplicate" class="button-primary" ng-click="answerCtrl2.confirmDuplicate()">
                       <span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span></button>`)(w.$scope(target))
           target.insertAdjacentElement('beforebegin', compiledSubmit[0])
           w.document.getElementById('submitAndSkipDuplicate').addEventListener('click', () => {
@@ -743,13 +742,8 @@ function init () {
       }
 
       // a list of all 6 star button rows, and the two submit buttons
-      let starsAndSubmitButtons
-      // if (subController.hasSupportingImageOrStatement) {
-      //   starsAndSubmitButtons = w.document.querySelectorAll('.col-sm-6 .btn-group, .text-center.hidden-xs:not(.ng-hide) .btn-group, .big-submit-button')
-      // } else {
-      starsAndSubmitButtons = w.document.querySelectorAll('.five-stars, #submitFF')
+      let starsAndSubmitButtons = w.document.querySelectorAll('.five-stars, #submitFF')
 
-      // }
 
       function highlight () {
         starsAndSubmitButtons.forEach((element) => { element.style.setProperty('border', 'none') })
@@ -967,7 +961,7 @@ function init () {
       span.className = 'glyphicon glyphicon-book'
       span.innerHTML = ' '
       a.appendChild(span)
-      a.className = 'translate-title button btn btn-default'
+      a.className = 'translate-title btn btn-default'
       a.target = 'translate'
       a.style.setProperty('padding', '0px 4px')
       a.style.setProperty('margin-left', '14px')
@@ -984,7 +978,7 @@ function init () {
         span.className = 'glyphicon glyphicon-book'
         span.innerHTML = ' '
         a.appendChild(span)
-        a.className = 'translate-title button btn btn-default'
+        a.className = 'translate-title btn btn-default'
         a.target = 'translate'
         a.style.setProperty('padding', '0px 4px')
         a.style.setProperty('margin-left', '14px')
@@ -1110,7 +1104,8 @@ function init () {
             if (hasLocationEdit) {
               numkey = 1
             }
-            starsAndSubmitButtons[currentSelectable].querySelectorAll('.titleEditBox, input[type="radio"]')[numkey - 1].click()
+
+            angular.element(starsAndSubmitButtons[currentSelectable].querySelectorAll('.poi-edit-box')[numkey - 1]).trigger('click')
             currentSelectable++
           }
         }
@@ -1129,8 +1124,8 @@ function init () {
     const coordPuwg92 = proj4('+proj=longlat', '+proj=tmerc +lat_0=0 +lon_0=19 +k=0.9993 +x_0=500000 +y_0=-5300000 +ellps=GRS80 +units=m +no_defs', [newPortalData.lng, newPortalData.lat])
 
     const mapButtons = `
-<a class='button btn btn-default' target='intel' href='https://intel.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=17'>Intel</a>
-<a class='button btn btn-default' target='gmaps' href='https://www.google.com/maps/place/${newPortalData.lat},${newPortalData.lng}'>GMaps</a>
+<a class='btn btn-default' target='intel' href='https://intel.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=17'>Intel</a>
+<a class='btn btn-default' target='gmaps' href='https://www.google.com/maps/place/${newPortalData.lat},${newPortalData.lng}'>GMaps</a>
 `
     // more map buttons in a dropdown menu
     const mapDropdown = `
@@ -1161,7 +1156,7 @@ function init () {
 <li><a target='hitta' href='https://www.hitta.se/kartan!~${newPortalData.lat},${newPortalData.lng},18z/tileLayer!l=1'>SE - Hitta.se</a></li>
 <li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=17&l=nautical'>SE - Eniro Sjökort</a></li>
 `
-    targetElement.insertAdjacentHTML(where, `<div id="wfrt_map_button_group" class='btn-group dropup'>${mapButtons}<div class='button btn btn-default dropdown'><span class='caret'></span><ul id="wfrt_map_dropdown" class='dropdown-content dropdown-menu'>${mapDropdown}</div></div>`)
+    targetElement.insertAdjacentHTML(where, `<div id="wfrt_map_button_group" class='btn-group dropup'>${mapButtons}<div class='btn btn-default dropdown'><span class='caret'></span><ul id="wfrt_map_dropdown" class='dropdown-content dropdown-menu'>${mapDropdown}</div></div>`)
   }
 
   // add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
@@ -1193,8 +1188,8 @@ function init () {
   function commentTemplates () {
     // add text buttons
     const textButtons = `
-<button id='photo' class='button btn btn-default textButton' data-tooltip='Indicates a low quality photo'>Photo</button>
-<button id='private' class='button btn btn-default textButton' data-tooltip='Located on private residential property'>Private</button>`
+<button id='photo' class='btn btn-default textButton' data-tooltip='Indicates a low quality photo'>Photo</button>
+<button id='private' class='btn btn-default textButton' data-tooltip='Located on private residential property'>Private</button>`
     const textDropdown = `
 <li><a class='textButton' id='school' data-tooltip='Located on school property'>School</a></li>
 <li><a class='textButton' id='person' data-tooltip='Photo contains 1 or more people'>Person</a></li>
@@ -1209,8 +1204,8 @@ function init () {
 
     cardAdditionalText.insertAdjacentHTML('beforeend', `<div class="card__footer">
 <span id="wfrt_comment_button_group" class='btn-group dropup pull-left'>${textButtons}
-<span class='button btn btn-default dropdown'><span class='caret'></span><ul id="wfrt_comment_button_dropdown" class='dropdown-content dropdown-menu'>${textDropdown}</ul>
-</span></span><span class="hidden-xs pull-right"><button id='clear' class='button btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></span></div>
+<span class='btn btn-default dropdown'><span class='caret'></span><ul id="wfrt_comment_button_dropdown" class='dropdown-content dropdown-menu'>${textDropdown}</ul>
+</span></span><span class="hidden-xs pull-right"><button id='clear' class='btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></span></div>
 `)
 
     const buttons = w.document.getElementsByClassName('textButton')
@@ -1712,7 +1707,7 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
     wfrtCustomPresets = getCustomPresets(w)
     let customPresetOptions = ''
     for (const customPreset of wfrtCustomPresets) {
-      customPresetOptions += `<button class='button btn btn-default customPresetButton' id='${customPreset.uid}'>${customPreset.label}</button>`
+      customPresetOptions += `<button class='btn btn-default customPresetButton' id='${customPreset.uid}'>${customPreset.label}</button>`
     }
     w.document.getElementById('wfrt_custom_presets').innerHTML = customPresetOptions
   }
@@ -1859,26 +1854,24 @@ position: absolute;
 z-index: 1;
 margin: 0;
 }
-.dropdown-menu li a {
-color: #ddd !important;
-}
+
 .dropdown:hover .dropdown-content {
 display: block;
-background-color: #004746 !important;
-border: 1px solid #0ff !important;
-border-radius: 0px !important;
+}
 
+.dropdown-menu > li > a:focus, .dropdown-menu > li > a:hover {
+background-color: unset;
 }
-.dropdown-menu>li>a:focus, .dropdown-menu>li>a:hover {
-background-color: #008780;
+
+.dropdown .dropdown-menu {
+left: 0px;
+right: unset;
+width: unset;
 }
+
 .modal-sm {
 width: 350px !important;
 }
-
-/**
-* Ingress Panel Style
-*/
 
 .panel-ingress {
 background-color: #004746;
@@ -1888,27 +1881,20 @@ box-shadow: inset 0 0 6px rgba(255, 255, 255, 1);
 color: #0ff;
 }
 
-/**
-* Tooltip Styles
-*/
-
-/* Add this attribute to the element that needs a tooltip */
 [data-tooltip] {
 position: relative;
 cursor: pointer;
 }
 
-/* Hide the tooltip content by default */
 [data-tooltip]:before,
 [data-tooltip]:after {
 visibility: hidden;
 -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
-filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=0);
+filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
 opacity: 0;
 pointer-events: none;
 }
 
-/* Position tooltip above the element */
 [data-tooltip]:before {
 position: absolute;
 top: 150%;
@@ -1930,7 +1916,6 @@ line-height: 1.2;
 z-index: 100;
 }
 
-/* Triangle hack to make tooltip look like a speech bubble */
 [data-tooltip]:after {
 position: absolute;
 top: 132%;
@@ -1945,82 +1930,90 @@ font-size: 0;
 line-height: 0;
 }
 
-/* Show tooltip content on hover */
 [data-tooltip]:hover:before,
 [data-tooltip]:hover:after {
 visibility: visible;
 -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
-filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=100);
+filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
 opacity: 1;
 }
 
 .titleEditBox:hover {
-  box-shadow: inset 0 0 20px #ebbc4a;
+box-shadow: inset 0 0 20px #ebbc4a;
 }
 
 .titleEditBox:active {
-  box-shadow: inset 0 0 15px 2px white;
+box-shadow: inset 0 0 15px 2px white;
 }
 
 .group-list li label:hover, ul.sub-group-list a:hover, #root-label:hover {
-    box-shadow: inset 0 0 5px #ffffff !important;
+box-shadow: inset 0 0 5px #000000 !important;
 }
 
 .group-list li label:active, ul.sub-group-list a:active, #root-label:active {
-    box-shadow: inset 0 0 10px 2px #ffffff !important;
+box-shadow: inset 0 0 10px 2px #000000 !important;
 }
 
 .modal-body .button:focus, .modal-body textarea:focus {
-  outline: 2px dashed #ebbc4a;
+outline: 2px dashed #ebbc4a;
 }
 
 .modal-body .button:hover, .gm-style-iw button.button:hover {
-  filter: brightness(150%);
+filter: brightness(150%);
+}
+
+.alertify-logs {
+z-index: 100;
 }
 
 .alertify .dialog .msg {
 color: black;
 }
+
 .alertify-logs > .default {
-    background-image: url(/img/ingress-background-dark.png) !important;
+background-image: url(/img/ingress-background-dark.png) !important;
 }
 
 .btn-xs {
-  padding: 0px 7px 1px !important;
-  box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
-  -webkit-box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
-  -moz-box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
+margin-left: 8px;
+padding: 0px 7px 1px !important;
+box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
+-webkit-box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
+-moz-box-shadow: inset 0 0 4px rgba(255, 255, 255, 1);
 }
 
 kbd {
-    display: inline-block;
-    padding: 3px 5px;
-    font: 11px SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace;
-    line-height: 10px;
-    color: #444d56;
-    vertical-align: middle;
-    background-color: #fafbfc;
-    border: 1px solid #d1d5da;
-    border-bottom-color: #c6cbd1;
-    border-radius: 3px;
-    box-shadow: inset 0 -1px 0 #c6cbd1;
+display: inline-block;
+padding: 3px 5px;
+font: 11px SFMono-Regular, Consolas, Liberation Mono, Menlo, Courier, monospace;
+line-height: 10px;
+color: #444d56;
+vertical-align: middle;
+background-color: #fafbfc;
+border: 1px solid #d1d5da;
+border-bottom-color: #c6cbd1;
+border-radius: 3px;
+box-shadow: inset 0 -1px 0 #c6cbd1;
 }
 
 .dropdown-menu {
-  margin: 0 !important;
+margin: 0 !important;
 }
 
 .opr-yellow {
-    color: #F3EADA;
+color: #F3EADA;
 }
 
-
-@media(min-width:768px) {
-  div.modal-custom1 {
-    width: 500px
-  }
+#submitAndSkipLowQuality, #submitAndSkipDuplicate {
+margin-left: 32px;
+margin-right: 32px;
 }
 
+@media (min-width: 768px) {
+div.modal-custom1 {
+width: 500px
+}
+}
 `
 
 const PORTAL_MARKER = `data:image/png;base64,
