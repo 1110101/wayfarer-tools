@@ -1,23 +1,20 @@
-# OPR-Tools
+# Wayfarer-Tools
+(Formerly known as OPR-Tools)
 
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com) [![OPR-Tools Telegram Channel](https://img.shields.io/badge/OPR_Tools_Telegram_Channel--blue.svg?logo=telegram&style=social)](https://t.me/oprtools)
 
-Userscript for [Ingress - Operation Portal Recon](https://opr.ingress.com/recon)
+Userscript for [Niantic Wayfarer](http://wayfarer.nianticlabs.com/)
 
 ## Installation
 
-OPR-Tools is tested with Chrome and Firefox. You need a userscript manager like [Tampermonkey](https://tampermonkey.net/) (You already have one if you use IITC). OPR-Tools does not work with Greasemonkey for Firefox.
+Wayfarer-Tools is tested with Chrome and Firefox. You need a userscript manager like [Tampermonkey](https://tampermonkey.net/) (You already have one if you use IITC for Ingress). Wayfarer-Tools does not work with Greasemonkey for Firefox.
 
-> **Download:** https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
+####⚠🛠 We're working on Wayfarer compatibility. You can download a test-version [here](https://gitlab.com/1110101/opr-tools/raw/feature/wayfarerSupport/opr-tools.user.js?inline=false).
 
-
-![](./image/opr-tools-1.png)
-![](./image/opr-tools-3.png)
-![](./image/opr-tools-2.png)
 
 ## Features:
 - Additional links to map services like Intel, OpenStreetMap, bing and national ones
-- Create your own presets for frequent analyses. OPR-tools does not include any presets in order to remain neutral.
+- Create your own presets for frequent analyses. Wayfarer-tools does not include any presets in order to remain neutral.
 - Automatically opens the first listed possible duplicate and the "What is it?" filter text box
 - Buttons above the comments box to auto-type common 1-star rejection reasons
 - Percent of total reviewed candidates processed
