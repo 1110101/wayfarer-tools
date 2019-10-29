@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            Wayfarer-Tools
-// @version         2.0.3
+// @version         2.0.4
 // @description     formerly known as OPR-Tools
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -47,7 +47,7 @@ SOFTWARE.
 
 const WFRT = {
 
-  VERSION: 20003,
+  VERSION: 20004,
 
   PREFERENCES: 'wfrt_prefs',
 
@@ -67,6 +67,12 @@ const WFRT = {
 
   PREFIX: 'wfrt_',
   VAR_PREFIX: 'wfrt_var', // used in import/export **only**
+
+  // used for legacy oprt import
+  OPRT: 'oprt_',
+  OPRT_VAR_PREFIX: 'oprt_var',
+  OPRT_PREFERENCES: 'oprt_prefs',
+
   VAR: { // will be included in import/export
     SCANNER_OFFSET: 'scanner_offset',
     MAP_TYPE_1: 'map_type_1',
@@ -250,9 +256,8 @@ class InOut {
     return exportObject
   }
 
-  static importVars (string) {
-    let importObject = JSON.parse(string)
-    for (const item of importObject) {
+  static importVars (importObject) {
+    for (const item in importObject) {
       localStorage.setItem(WFRT.PREFIX + item, importObject[item])
     }
   }
@@ -262,8 +267,11 @@ class InOut {
       let json = JSON.parse(string)
 
       if (json.hasOwnProperty(WFRT.PREFERENCES)) { this.preferences.importPrefs(json[WFRT.PREFERENCES]) }
+      if (json.hasOwnProperty(WFRT.VAR_PREFIX)) { InOut.importVars(json[WFRT.VAR_PREFIX]) }
 
-      if (json.hasOwnProperty(WFRT.VAR)) { InOut.importVars(json[WFRT.VAR]) }
+      // legacy import for oprt stuff
+      if (json.hasOwnProperty(WFRT.OPRT_PREFERENCES)) { this.preferences.importPrefs(json[WFRT.OPRT_PREFERENCES]) }
+      if (json.hasOwnProperty(WFRT.OPRT_VAR_PREFIX)) { InOut.importVars(json[WFRT.OPRT_VAR_PREFIX]) }
     } catch (e) {
       throw new Error('Import failed')
     }
