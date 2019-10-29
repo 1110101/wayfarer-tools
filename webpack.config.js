@@ -32,19 +32,12 @@ module.exports = {
       renameExt: true,
       pretty: false,
       headers: {
-        name: 'OPR-Tools',
-        description: 'OPR enhancements',
+        name: 'Wayfarer-Tools',
+        description: 'formerly known as OPR-Tools',
         homepageURL: 'https://gitlab.com/1110101/opr-tools',
         author: '1110101, https://gitlab.com/1110101/opr-tools/graphs/master',
-        match: ['https://opr.ingress.com/',
-          'https://opr.ingress.com/',
-          'https://opr.ingress.com/?login=true',
-          'https://opr.ingress.com/recon',
-          'https://opr.ingress.com/help',
-          'https://opr.ingress.com/faq',
-          'https://opr.ingress.com/guide',
-          'https://opr.ingress.com/settings',
-          'https://opr.ingress.com/upgrades*'
+        match: ['https://wayfarer.nianticlabs.com/review',
+          'https://wayfarer.nianticlabs.com/profile'
         ],
         grant: [
           'unsafeWindow',

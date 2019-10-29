@@ -9,9 +9,10 @@
 // @grant           unsafeWindow
 // @grant           GM_notification
 // @grant           GM_addStyle
-// @downloadURL     https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
-// @updateURL       https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
+// @downloadURL     https://gitlab.com/1110101/opr-tools/raw/feature/wayfarerSupport/opr-tools.user.js
+// @updateURL       https://gitlab.com/1110101/opr-tools/raw/feature/wayfarerSupport/opr-tools.user.js
 // @supportURL      https://gitlab.com/1110101/opr-tools/issues
+
 
 // ==/UserScript==
 
@@ -142,7 +143,7 @@ class Preferences {
   <a id="wfrt_reload" class="btn btn-warning hide"><span class="glyphicon glyphicon-refresh"></span>
  Reload to apply changes</a>
 
- <div style="position: absolute; bottom: 0; left: 0; margin:20px;"><a href="https://t.me/oprtools">${TG_SVG} Wayfarer-Tools Telegram Channel</a></div>
+ <div style="position: absolute; bottom: 0; left: 0; margin:20px;"><a href="https://t.me/oprtools">${TG_SVG} Wayfarer-Tools Telegram Channel</a></div> 
 </section>`)
 
       let optionsContainer = w.document.getElementById('wfrt_options')
@@ -176,6 +177,8 @@ class Preferences {
       reloadButton.addEventListener('click', () => {
         window.location.reload()
       })
+
+
 
       w.document.getElementById('import_all').addEventListener('click', () => {
         import(/* webpackIgnore: true */alertifyUrl).then(module => {
@@ -243,6 +246,7 @@ class Preferences {
     }
   }
 }
+
 
 class InOut {
   constructor (preferences) {
@@ -469,6 +473,7 @@ function init () {
           )
         })
       })
+
 
       let clickListener = event => {
         const source = event.target || event.srcElement
@@ -1140,15 +1145,14 @@ function init () {
     }
   }
 
-  // add map buttons
-  function mapButtons (newPortalData, targetElement, where) {
+function mapButtons (newPortalData, targetElement, where) {
 
-    const mapButtons = `
+  const mapButtons = `
 <a class='btn btn-default' target='intel' href='https://intel.ingress.com/intel?ll=${newPortalData.lat},${newPortalData.lng}&z=17'>Intel</a>
 <a class='btn btn-default' target='gmaps' href='https://www.google.com/maps/place/${newPortalData.lat},${newPortalData.lng}'>GMaps</a>
 `
-    // more map buttons in a dropdown menu
-    const mapDropdown = `
+  // more map buttons in a dropdown menu
+  const mapDropdown = `
 <li><a target='osm' href='https://www.openstreetmap.org/?mlat=${newPortalData.lat}&mlon=${newPortalData.lng}&zoom=16'>OSM</a></li>
 <li><a target='bing' href='https://bing.com/maps/default.aspx?cp=${newPortalData.lat}~${newPortalData.lng}&lvl=16&style=a'>bing</a></li>
 <li><a target='heremaps' href='https://wego.here.com/?map=${newPortalData.lat},${newPortalData.lng},17,satellite'>HERE maps</a></li>
@@ -1179,7 +1183,7 @@ function init () {
 `
     targetElement.insertAdjacentHTML(where, `<div id="wfrt_map_button_group" class='btn-group dropup'>${mapButtons}<div class='btn btn-default dropdown'><span class='caret'></span><ul id="wfrt_map_dropdown" class='dropdown-content dropdown-menu'>${mapDropdown}</div></div>`)
 
-    w.document.getElementById('oprt_map_button_group').addEventListener('click', event => {
+    w.document.getElementById('wfrt_map_button_group').addEventListener('click', event => {
 
       if (event.target.target == 'maanmittauslaitos') {
         event.preventDefault()
@@ -1219,39 +1223,39 @@ function init () {
         })
       }
     })
-  }
+}
 
-  // add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
-  function quickSubmitButton (submitDiv, ansController, bodyObserver) {
+// add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
+function quickSubmitButton (submitDiv, ansController, bodyObserver) {
     let submitButton = submitDiv.querySelector('button.button-primary')
     // submitButton.classList.add('btn', 'btn-warning')
 
-    let submitAndNext = submitButton.cloneNode(false)
-    submitButton.addEventListener('click', () => {
-      bodyObserver.disconnect()
-    })
-    submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`
-    submitAndNext.title = 'Submit and go to next review'
-    submitAndNext.id = 'submitFF'
-    submitAndNext.addEventListener('click', () => {
-      ansController.openSubmissionCompleteModal = () => {
-        window.location.assign('/review')
-      }
-    })
+  let submitAndNext = submitButton.cloneNode(false)
+  submitButton.addEventListener('click', () => {
+    bodyObserver.disconnect()
+  })
+  submitAndNext.innerHTML = `<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;<span class="glyphicon glyphicon-forward"></span>`
+  submitAndNext.title = 'Submit and go to next review'
+  submitAndNext.id = 'submitFF'
+  submitAndNext.addEventListener('click', () => {
+    ansController.openSubmissionCompleteModal = () => {
+      window.location.assign('/review')
+    }
+  })
 
-    w.$injector.invoke(['$compile', ($compile) => {
-      let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv))
+  w.$injector.invoke(['$compile', ($compile) => {
+    let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv))
       document.getElementById('submit-bottom').children[0].insertAdjacentElement('beforeBegin', compiledSubmit[0])
-    }])
-    return { submitButton, submitAndNext }
-  }
+  }])
+  return { submitButton, submitAndNext }
+}
 
-  function commentTemplates () {
-    // add text buttons
-    const textButtons = `
+function commentTemplates () {
+  // add text buttons
+  const textButtons = `
 <button id='photo' class='btn btn-default textButton' data-tooltip='Indicates a low quality photo'>Photo</button>
 <button id='private' class='btn btn-default textButton' data-tooltip='Located on private residential property'>Private</button>`
-    const textDropdown = `
+  const textDropdown = `
 <li><a class='textButton' id='school' data-tooltip='Located on school property'>School</a></li>
 <li><a class='textButton' id='person' data-tooltip='Photo contains 1 or more people'>Person</a></li>
 <li><a class='textButton' id='perm' data-tooltip='Seasonal or temporary display or item'>Temporary</a></li>
@@ -1260,171 +1264,171 @@ function init () {
 <li><a class='textButton' id='emergencyway' data-tooltip='Obstructing emergency way'>Emergency Way</a></li>
 `
 
-    const cardAdditionalText = w.document.getElementById('additional-comments-card')
-    const cardTextBox = cardAdditionalText.querySelector('textarea')
+  const cardAdditionalText = w.document.getElementById('additional-comments-card')
+  const cardTextBox = cardAdditionalText.querySelector('textarea')
 
-    cardAdditionalText.insertAdjacentHTML('beforeend', `<div class="card__footer">
+  cardAdditionalText.insertAdjacentHTML('beforeend', `<div class="card__footer">
 <span id="wfrt_comment_button_group" class='btn-group dropup pull-left'>${textButtons}
 <span class='btn btn-default dropdown'><span class='caret'></span><ul id="wfrt_comment_button_dropdown" class='dropdown-content dropdown-menu'>${textDropdown}</ul>
 </span></span><span class="hidden-xs pull-right"><button id='clear' class='btn btn-default textButton' data-tooltip='clears the comment box'>Clear</button></span></div>
 `)
 
-    const buttons = w.document.getElementsByClassName('textButton')
-    for (let b in buttons) {
-      if (buttons.hasOwnProperty(b)) {
-        buttons[b].addEventListener('click', event => {
-          const source = event.target || event.srcElement
-          let text = cardTextBox.value
-          if (text.length > 0) {
-            text += ', '
-          }
-          switch (source.id) {
-            case 'photo':
-              text += 'Low quality photo'
-              break
-            case 'private':
-              text += 'Private residential property'
-              break
-            case 'duplicate':
-              text += 'Duplicate of previously reviewed portal candidate'
-              break
-            case 'school':
-              text += 'Located on primary or secondary school grounds'
-              break
-            case 'person':
-              text += 'Picture contains one or more people'
-              break
-            case 'perm':
-              text += 'Portal candidate is seasonal or temporary'
-              break
-            case 'location':
-              text += 'Portal candidate\'s location is not on object'
-              break
-            case 'emergencyway':
-              text += 'Portal candidate is obstructing the path of emergency vehicles'
-              break
-            case 'natural':
-              text += 'Portal candidate is a natural feature'
-              break
-            case 'clear':
-              text = ''
-              break
-          }
+  const buttons = w.document.getElementsByClassName('textButton')
+  for (let b in buttons) {
+    if (buttons.hasOwnProperty(b)) {
+      buttons[b].addEventListener('click', event => {
+        const source = event.target || event.srcElement
+        let text = cardTextBox.value
+        if (text.length > 0) {
+          text += ', '
+        }
+        switch (source.id) {
+          case 'photo':
+            text += 'Low quality photo'
+            break
+          case 'private':
+            text += 'Private residential property'
+            break
+          case 'duplicate':
+            text += 'Duplicate of previously reviewed portal candidate'
+            break
+          case 'school':
+            text += 'Located on primary or secondary school grounds'
+            break
+          case 'person':
+            text += 'Picture contains one or more people'
+            break
+          case 'perm':
+            text += 'Portal candidate is seasonal or temporary'
+            break
+          case 'location':
+            text += 'Portal candidate\'s location is not on object'
+            break
+          case 'emergencyway':
+            text += 'Portal candidate is obstructing the path of emergency vehicles'
+            break
+          case 'natural':
+            text += 'Portal candidate is a natural feature'
+            break
+          case 'clear':
+            text = ''
+            break
+        }
 
-          cardTextBox.value = text
-          cardTextBox.dispatchEvent(new Event('change')) // eslint-disable-line no-undef
+        cardTextBox.value = text
+        cardTextBox.dispatchEvent(new Event('change')) // eslint-disable-line no-undef
 
-          event.target.blur()
-        }, false)
-      }
+        event.target.blur()
+      }, false)
     }
   }
+}
 
-  // adding a 40m circle and a smaller 20m circle around the portal (capture range)
-  function mapOriginCircle (map) {
-    // noinspection JSUnusedLocalSymbols
-    if (preferences.get(WFRT.OPTIONS.MAP_CIRCLE_40)) {
-      const circle40 = new google.maps.Circle({ // eslint-disable-line no-unused-vars
-        map: map,
-        center: map.center,
-        radius: 40,
-        strokeColor: '#ebbc4a',
-        strokeOpacity: 0.8,
-        strokeWeight: 1.5,
-        fillOpacity: 0
-      })
-    }
-
-    if (preferences.get(WFRT.OPTIONS.MAP_CIRCLE_20)) {
-      const circle20 = new google.maps.Circle({ // eslint-disable-line no-unused-vars
-        map: map,
-        center: map.center,
-        radius: 20,
-        strokeColor: '#eddc4a',
-        strokeOpacity: 0.8,
-        strokeWeight: 1.5,
-        fillOpacity: 0
-      })
-    }
-  }
-
-  // replace map markers with a nice circle
-  function mapMarker (markers) {
-    for (let i = 0; i < markers.length; ++i) {
-      const marker = markers[i]
-      marker.setIcon(POI_MARKER)
-    }
-  }
-
-  // set available map types
-  function mapTypes (map, isMainMap) {
-    const PROVIDERS = {
-      GOOGLE: 'google',
-      KARTVERKET: 'kartverket'
-    }
-
-    const types = [
-      { provider: PROVIDERS.GOOGLE, id: 'roadmap' },
-      { provider: PROVIDERS.GOOGLE, id: 'terrain' },
-      { provider: PROVIDERS.GOOGLE, id: 'satellite' },
-      { provider: PROVIDERS.GOOGLE, id: 'hybrid' }]
-
-    if (preferences.get(WFRT.OPTIONS.NORWAY_MAP_LAYER)) {
-      types.push({ provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`, code: 'topo4', label: 'NO - Topo' },
-        { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster' },
-        { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart' }
-      )
-    }
-
-    const defaultMapType = 'hybrid'
-
-    const mapOptions = {
-      // re-enabling map scroll zoom and allow zoom with out holding ctrl
-      scrollwheel: true,
-      gestureHandling: 'greedy',
-      // map type selection
-      mapTypeControl: true,
-      mapTypeControlOptions: {
-        mapTypeIds: types.map(t => t.id),
-        style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
-      }
-    }
-    map.setOptions(mapOptions)
-
-    // register custom map types
-    types.forEach(t => {
-      switch (t.provider) {
-        case PROVIDERS.KARTVERKET:
-          map.mapTypes.set(t.id, new google.maps.ImageMapType({
-            layer: t.code,
-            name: t.label,
-            alt: t.label,
-            maxZoom: 19,
-            tileSize: new google.maps.Size(256, 256),
-            getTileUrl: function (coord, zoom) {
-              return `//opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=${this.layer}&zoom=${zoom}&x=${coord.x}&y=${coord.y}`
-            }
-          }))
-          break
-      }
+// adding a 40m circle and a smaller 20m circle around the portal (capture range)
+function mapOriginCircle (map) {
+  // noinspection JSUnusedLocalSymbols
+  if (preferences.get(WFRT.OPTIONS.MAP_CIRCLE_40)) {
+    const circle40 = new google.maps.Circle({ // eslint-disable-line no-unused-vars
+      map: map,
+      center: map.center,
+      radius: 40,
+      strokeColor: '#ebbc4a',
+      strokeOpacity: 0.8,
+      strokeWeight: 1.5,
+      fillOpacity: 0
     })
-
-    // track current selection for position map
-    let mapType
-    if (isMainMap) {
-      mapType = WFRT.PREFIX + WFRT.VAR.MAP_TYPE_1
-    } else {
-      mapType = WFRT.PREFIX + WFRT.VAR.MAP_TYPE_2
-    }
-
-    // save selection when changed
-    map.addListener('maptypeid_changed', function () {
-      w.localStorage.setItem(mapType, map.getMapTypeId())
-    })
-
-    // get map type saved from last use or fall back to default
-    map.setMapTypeId(w.localStorage.getItem(mapType) || defaultMapType)
   }
+
+  if (preferences.get(WFRT.OPTIONS.MAP_CIRCLE_20)) {
+    const circle20 = new google.maps.Circle({ // eslint-disable-line no-unused-vars
+      map: map,
+      center: map.center,
+      radius: 20,
+      strokeColor: '#eddc4a',
+      strokeOpacity: 0.8,
+      strokeWeight: 1.5,
+      fillOpacity: 0
+    })
+  }
+}
+
+// replace map markers with a nice circle
+function mapMarker (markers) {
+  for (let i = 0; i < markers.length; ++i) {
+    const marker = markers[i]
+    marker.setIcon(POI_MARKER)
+  }
+}
+
+// set available map types
+function mapTypes (map, isMainMap) {
+  const PROVIDERS = {
+    GOOGLE: 'google',
+    KARTVERKET: 'kartverket'
+  }
+
+  const types = [
+    { provider: PROVIDERS.GOOGLE, id: 'roadmap' },
+    { provider: PROVIDERS.GOOGLE, id: 'terrain' },
+    { provider: PROVIDERS.GOOGLE, id: 'satellite' },
+    { provider: PROVIDERS.GOOGLE, id: 'hybrid' }]
+
+  if (preferences.get(WFRT.OPTIONS.NORWAY_MAP_LAYER)) {
+    types.push({ provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_topo`, code: 'topo4', label: 'NO - Topo' },
+      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_raster`, code: 'toporaster3', label: 'NO - Raster' },
+      { provider: PROVIDERS.KARTVERKET, id: `${PROVIDERS.KARTVERKET}_sjo`, code: 'sjokartraster', label: 'NO - Sjøkart' }
+    )
+  }
+
+  const defaultMapType = 'hybrid'
+
+  const mapOptions = {
+    // re-enabling map scroll zoom and allow zoom with out holding ctrl
+    scrollwheel: true,
+    gestureHandling: 'greedy',
+    // map type selection
+    mapTypeControl: true,
+    mapTypeControlOptions: {
+      mapTypeIds: types.map(t => t.id),
+      style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+    }
+  }
+  map.setOptions(mapOptions)
+
+  // register custom map types
+  types.forEach(t => {
+    switch (t.provider) {
+      case PROVIDERS.KARTVERKET:
+        map.mapTypes.set(t.id, new google.maps.ImageMapType({
+          layer: t.code,
+          name: t.label,
+          alt: t.label,
+          maxZoom: 19,
+          tileSize: new google.maps.Size(256, 256),
+          getTileUrl: function (coord, zoom) {
+            return `//opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=${this.layer}&zoom=${zoom}&x=${coord.x}&y=${coord.y}`
+          }
+        }))
+        break
+    }
+  })
+
+  // track current selection for position map
+  let mapType
+  if (isMainMap) {
+    mapType = WFRT.PREFIX + WFRT.VAR.MAP_TYPE_1
+  } else {
+    mapType = WFRT.PREFIX + WFRT.VAR.MAP_TYPE_2
+  }
+
+  // save selection when changed
+  map.addListener('maptypeid_changed', function () {
+    w.localStorage.setItem(mapType, map.getMapTypeId())
+  })
+
+  // get map type saved from last use or fall back to default
+  map.setMapTypeId(w.localStorage.getItem(mapType) || defaultMapType)
+}
 
   // // move submit button to right side of classification-div. don't move on mobile devices / small width
   // function moveSubmitButton () {
@@ -1447,26 +1451,26 @@ function init () {
   //   }
   // }
 
-  // expand automatically the "What is it?" filter text box
-  function expandWhatIsItBox () {
-    try {
-      const whatController = w.$scope(w.document.getElementById('WhatIsItController')).whatCtrl
-      setTimeout(() => {
-        whatController.showWhat = true
-        w.$rootScope.$apply()
-      }, 50)
-    } catch (err) {}
+// expand automatically the "What is it?" filter text box
+function expandWhatIsItBox () {
+  try {
+    const whatController = w.$scope(w.document.getElementById('WhatIsItController')).whatCtrl
+    setTimeout(() => {
+      whatController.showWhat = true
+      w.$rootScope.$apply()
+    }, 50)
+  } catch (err) {}
+}
+
+function modifyProfile () {
+  // stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
+
+  let wfrtScannerOffset = 0
+  if (preferences.get(WFRT.OPTIONS.SCANNER_OFFSET_FEATURE)) {
+    // get scanner offset from localStorage
+    wfrtScannerOffset = parseInt(w.localStorage.getItem(WFRT.SCANNER_OFFSET)) || 0
   }
-
-  function modifyProfile () {
-    // stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
-
-    let wfrtScannerOffset = 0
-    if (preferences.get(WFRT.OPTIONS.SCANNER_OFFSET_FEATURE)) {
-      // get scanner offset from localStorage
-      wfrtScannerOffset = parseInt(w.localStorage.getItem(WFRT.SCANNER_OFFSET)) || 0
-    }
-    const stats = w.document.querySelector('#profile-stats:not(.visible-xs)')
+  const stats = w.document.querySelector('#profile-stats:not(.visible-xs)')
 
     const reviewed = parseInt(stats.children[0].children[0].children[1].innerText)
     const accepted = parseInt(stats.children[1].children[1].children[1].innerText)
@@ -1474,36 +1478,36 @@ function init () {
     const duplicated = parseInt(stats.children[1].children[3].children[1].innerText)
 
     const processed = accepted + rejected + duplicated - wfrtScannerOffset
-    const processedPercent = roundToPrecision(processed / reviewed * 100, 1)
+  const processedPercent = roundToPrecision(processed / reviewed * 100, 1)
 
-    const acceptedPercent = roundToPrecision(accepted / (reviewed) * 100, 1)
-    const rejectedPercent = roundToPrecision(rejected / (reviewed) * 100, 1)
+  const acceptedPercent = roundToPrecision(accepted / (reviewed) * 100, 1)
+  const rejectedPercent = roundToPrecision(rejected / (reviewed) * 100, 1)
     const duplicatedPercent = roundToPrecision(duplicated / (reviewed) * 100, 1)
 
-    const reconBadge = { 100: 'Bronze', 750: 'Silver', 2500: 'Gold', 5000: 'Platin', 10000: 'Black' }
-    let nextBadgeName, nextBadgeCount
+  const reconBadge = { 100: 'Bronze', 750: 'Silver', 2500: 'Gold', 5000: 'Platin', 10000: 'Black' }
+  let nextBadgeName, nextBadgeCount
 
-    for (const key in reconBadge) {
-      if (processed <= key) {
-        nextBadgeCount = key
-        nextBadgeName = reconBadge[key]
-        break
-      }
+  for (const key in reconBadge) {
+    if (processed <= key) {
+      nextBadgeCount = key
+      nextBadgeName = reconBadge[key]
+      break
     }
-    const nextBadgeProcess = processed / nextBadgeCount * 100
+  }
+  const nextBadgeProcess = processed / nextBadgeCount * 100
 
-    const numberSpans = stats.querySelectorAll('span.stats-right')
+  const numberSpans = stats.querySelectorAll('span.stats-right')
 
-    numberSpans[0].insertAdjacentHTML('beforeend', `, <span class=''>100%</span>`)
-    numberSpans[1].insertAdjacentHTML('beforeend', `, <span class=''>${acceptedPercent}%</span>`)
-    numberSpans[2].insertAdjacentHTML('beforeend', `, <span class=''>${rejectedPercent}%</span>`)
+  numberSpans[0].insertAdjacentHTML('beforeend', `, <span class=''>100%</span>`)
+  numberSpans[1].insertAdjacentHTML('beforeend', `, <span class=''>${acceptedPercent}%</span>`)
+  numberSpans[2].insertAdjacentHTML('beforeend', `, <span class=''>${rejectedPercent}%</span>`)
     numberSpans[3].insertAdjacentHTML('beforeend', `, <span class=''>${duplicatedPercent}%</span>`)
 
-    stats.querySelectorAll('h4')[2].insertAdjacentHTML('afterend', `<br>
+  stats.querySelectorAll('h4')[2].insertAdjacentHTML('afterend', `<br>
 <h4><span class="stats-left">Processed <u>and</u> accepted analyses:</span> <span class="stats-right">${processed}, <span class="ingress-gray">${processedPercent}%</span></span></h4>`)
 
-    if (processed < 10000) {
-      stats.insertAdjacentHTML('beforeEnd', `
+  if (processed < 10000) {
+    stats.insertAdjacentHTML('beforeEnd', `
 <br><div>Next Ingress Recon badge tier: <b>${nextBadgeName} (${nextBadgeCount})</b><br>
 <div class='progress'>
 <div class='progress-bar progress-bar-warning'
@@ -1516,268 +1520,268 @@ title='${nextBadgeCount - processed} to go'>
 ${Math.round(nextBadgeProcess)}%
 </div></div></div>
 `)
-    } else stats.insertAdjacentHTML('beforeEnd', `<hr>`)
-    stats.insertAdjacentHTML('beforeEnd', `<div><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 90%;" type="text"
+  } else stats.insertAdjacentHTML('beforeEnd', `<hr>`)
+  stats.insertAdjacentHTML('beforeEnd', `<div><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 90%;" type="text"
 value="Reviewed: ${reviewed} / Processed: ${accepted + rejected + duplicated} (Created: ${accepted}/ Rejected: ${rejected}/ Duplicated: ${duplicated}) / ${Math.round(processedPercent)}%"/></div>`)
 
-    // ** wayfarer-scanner offset
-    if (accepted < 10000 && preferences.get(WFRT.OPTIONS.SCANNER_OFFSET_UI)) {
-      stats.insertAdjacentHTML('beforeEnd', `
+  // ** wayfarer-scanner offset
+  if (accepted < 10000 && preferences.get(WFRT.OPTIONS.SCANNER_OFFSET_UI)) {
+    stats.insertAdjacentHTML('beforeEnd', `
 <div id='scannerOffsetContainer'>
 <span style="margin-left: 5px" class="ingress-mid-blue pull-left">Scanner offset:</span>
 <input id="scannerOffset" onFocus="this.select();" type="text" name="scannerOffset" size="8" class="pull-right" value="${wfrtScannerOffset}">
 </div>`)
 
-      // we have to inject the tooltip to angular
-      w.$injector.invoke(['$compile', ($compile) => {
-        let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="Use negative values, if scanner is ahead of Wayfarer"></span>`)(w.$scope(stats))
-        w.document.getElementById('scannerOffsetContainer').insertAdjacentElement('afterbegin', compiledSubmit[0])
-      }]);
+    // we have to inject the tooltip to angular
+    w.$injector.invoke(['$compile', ($compile) => {
+      let compiledSubmit = $compile(`<span class="glyphicon glyphicon-info-sign ingress-gray pull-left" uib-tooltip-trigger="outsideclick" uib-tooltip-placement="left" tooltip-class="goldBorder" uib-tooltip="Use negative values, if scanner is ahead of Wayfarer"></span>`)(w.$scope(stats))
+      w.document.getElementById('scannerOffsetContainer').insertAdjacentElement('afterbegin', compiledSubmit[0])
+    }]);
 
-      ['change', 'keyup', 'cut', 'paste', 'input'].forEach(e => {
-        w.document.getElementById('scannerOffset').addEventListener(e, (event) => {
-          w.localStorage.setItem(WFRT.SCANNER_OFFSET, event.target.value)
-        })
+    ['change', 'keyup', 'cut', 'paste', 'input'].forEach(e => {
+      w.document.getElementById('scannerOffset').addEventListener(e, (event) => {
+        w.localStorage.setItem(WFRT.SCANNER_OFFSET, event.target.value)
       })
-      // **
-    }
-
-    modifyProfile = () => {} // eslint-disable-line
-  }
-
-  function addOptionsButton () {
-    // Add preferences button only once
-    if (w.document.getElementById('wfrt_preferences_button') !== null) {
-      return
-    }
-
-    // add wayfarer-tools preferences button
-    let wfrtPreferencesButton = w.document.createElement('a')
-    wfrtPreferencesButton.classList.add('brand', 'upgrades-icon', 'pull-right')
-    wfrtPreferencesButton.addEventListener('click', () => preferences.showPreferencesUI(w))
-    wfrtPreferencesButton.title = 'Wayfarer-Tools Preferences'
-    wfrtPreferencesButton.setAttribute('id', 'wfrt_preferences_button')
-
-    const prefCog = w.document.createElement('span')
-    prefCog.classList.add('glyphicon', 'glyphicon-cog')
-    wfrtPreferencesButton.appendChild(prefCog)
-
-    w.document.querySelector('.header .inner-container:last-of-type').insertAdjacentElement('afterbegin', wfrtPreferencesButton)
-  }
-
-  function addRefreshContainer () {
-    let cbxRefresh = w.document.createElement('input')
-    let cbxRefreshDesktop = w.document.createElement('input')
-
-    cbxRefresh.id = WFRT.OPTIONS.REFRESH
-    cbxRefresh.type = 'checkbox'
-    cbxRefresh.checked = preferences.get(WFRT.OPTIONS.REFRESH) === 'true'
-
-    cbxRefreshDesktop.id = WFRT.OPTIONS.REFRESH_NOTI_DESKTOP
-    cbxRefreshDesktop.type = 'checkbox'
-    cbxRefreshDesktop.checked = preferences.get(WFRT.OPTIONS.REFRESH_NOTI_DESKTOP) === 'true'
-
-    let refreshPanel = w.document.createElement('div')
-    refreshPanel.className = 'panel panel-ingress'
-
-    refreshPanel.addEventListener('change', (event) => {
-      preferences.set(event.target.id, event.target.checked)
-      if (event.target.checked) {
-        startRefresh()
-      } else {
-        stopRefresh()
-      }
     })
+    // **
+  }
 
-    refreshPanel.innerHTML = `
+  modifyProfile = () => {} // eslint-disable-line
+}
+
+function addOptionsButton () {
+  // Add preferences button only once
+  if (w.document.getElementById('wfrt_preferences_button') !== null) {
+    return
+  }
+
+  // add wayfarer-tools preferences button
+  let wfrtPreferencesButton = w.document.createElement('a')
+  wfrtPreferencesButton.classList.add('brand', 'upgrades-icon', 'pull-right')
+  wfrtPreferencesButton.addEventListener('click', () => preferences.showPreferencesUI(w))
+  wfrtPreferencesButton.title = 'Wayfarer-Tools Preferences'
+  wfrtPreferencesButton.setAttribute('id', 'wfrt_preferences_button')
+
+  const prefCog = w.document.createElement('span')
+  prefCog.classList.add('glyphicon', 'glyphicon-cog')
+  wfrtPreferencesButton.appendChild(prefCog)
+
+  w.document.querySelector('.header .inner-container:last-of-type').insertAdjacentElement('afterbegin', wfrtPreferencesButton)
+}
+
+function addRefreshContainer () {
+  let cbxRefresh = w.document.createElement('input')
+  let cbxRefreshDesktop = w.document.createElement('input')
+
+  cbxRefresh.id = WFRT.OPTIONS.REFRESH
+  cbxRefresh.type = 'checkbox'
+  cbxRefresh.checked = preferences.get(WFRT.OPTIONS.REFRESH) === 'true'
+
+  cbxRefreshDesktop.id = WFRT.OPTIONS.REFRESH_NOTI_DESKTOP
+  cbxRefreshDesktop.type = 'checkbox'
+  cbxRefreshDesktop.checked = preferences.get(WFRT.OPTIONS.REFRESH_NOTI_DESKTOP) === 'true'
+
+  let refreshPanel = w.document.createElement('div')
+  refreshPanel.className = 'panel panel-ingress'
+
+  refreshPanel.addEventListener('change', (event) => {
+    preferences.set(event.target.id, event.target.checked)
+    if (event.target.checked) {
+      startRefresh()
+    } else {
+      stopRefresh()
+    }
+  })
+
+  refreshPanel.innerHTML = `
 <div class='panel-heading'><span class='glyphicon glyphicon-refresh'></span> Refresh <sup>beta</sup> <a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success pull-right'>Wayfarer-Tools</span></a></div>
 <div id='cbxDiv' class='panel-body bg-primary' style='background:black;'></div>`
 
-    refreshPanel.querySelector('#cbxDiv').insertAdjacentElement('afterbegin', appendCheckbox(cbxRefreshDesktop, 'Desktop notification'))
-    refreshPanel.querySelector('#cbxDiv').insertAdjacentElement('afterbegin', appendCheckbox(cbxRefresh, 'Refresh every 5-10 minutes'))
+  refreshPanel.querySelector('#cbxDiv').insertAdjacentElement('afterbegin', appendCheckbox(cbxRefreshDesktop, 'Desktop notification'))
+  refreshPanel.querySelector('#cbxDiv').insertAdjacentElement('afterbegin', appendCheckbox(cbxRefresh, 'Refresh every 5-10 minutes'))
 
-    let colDiv = w.document.createElement('div')
-    colDiv.className = 'col-md-4 col-md-offset-4'
-    colDiv.appendChild(refreshPanel)
+  let colDiv = w.document.createElement('div')
+  colDiv.className = 'col-md-4 col-md-offset-4'
+  colDiv.appendChild(refreshPanel)
 
-    let rowDiv = w.document.createElement('div')
-    rowDiv.className = 'row'
-    rowDiv.appendChild(colDiv)
+  let rowDiv = w.document.createElement('div')
+  rowDiv.className = 'row'
+  rowDiv.appendChild(colDiv)
 
-    w.document.getElementById('NewSubmissionController').insertAdjacentElement('beforeend', rowDiv)
+  w.document.getElementById('NewSubmissionController').insertAdjacentElement('beforeend', rowDiv)
 
-    cbxRefresh.checked === true ? startRefresh() : stopRefresh()
+  cbxRefresh.checked === true ? startRefresh() : stopRefresh()
 
-    function appendCheckbox (checkbox, text) {
-      let label = w.document.createElement('label')
-      let div = w.document.createElement('div')
-      div.className = 'checkbox'
-      label.appendChild(checkbox)
-      label.appendChild(w.document.createTextNode(text))
-      div.appendChild(label)
-      return div
-    }
-
-    addRefreshContainer = () => {} // eslint-disable-line
+  function appendCheckbox (checkbox, text) {
+    let label = w.document.createElement('label')
+    let div = w.document.createElement('div')
+    div.className = 'checkbox'
+    label.appendChild(checkbox)
+    label.appendChild(w.document.createTextNode(text))
+    div.appendChild(label)
+    return div
   }
 
-  let refreshIntervalID
+  addRefreshContainer = () => {} // eslint-disable-line
+}
 
-  function startRefresh () {
-    let time = getRandomIntInclusive(5, 10) * 60000
+let refreshIntervalID
 
-    refreshIntervalID = setInterval(() => {
-      reloadWayfarer()
-    }, time)
+function startRefresh () {
+  let time = getRandomIntInclusive(5, 10) * 60000
 
-    function reloadWayfarer () {
-      clearInterval(refreshIntervalID)
-      w.sessionStorage.setItem(WFRT.FROM_REFRESH, 'true')
-      w.document.location.reload()
-    }
+  refreshIntervalID = setInterval(() => {
+    reloadWayfarer()
+  }, time)
 
-    // source https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
-    function getRandomIntInclusive (min, max) {
-      min = Math.ceil(min)
-      max = Math.floor(max)
-      return Math.floor(Math.random() * (max - min + 1)) + min
-    }
-  }
-
-  function stopRefresh () {
+  function reloadWayfarer () {
     clearInterval(refreshIntervalID)
+    w.sessionStorage.setItem(WFRT.FROM_REFRESH, 'true')
+    w.document.location.reload()
   }
 
-  function checkIfAutorefresh () {
-    if (w.sessionStorage.getItem(WFRT.FROM_REFRESH)) {
-      // reset flag
-      w.sessionStorage.removeItem(WFRT.FROM_REFRESH)
+  // source https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+  function getRandomIntInclusive (min, max) {
+    min = Math.ceil(min)
+    max = Math.floor(max)
+    return Math.floor(Math.random() * (max - min + 1)) + min
+  }
+}
 
-      if (w.document.hidden) { // if tab in background: flash favicon
-        let flag = true
+function stopRefresh () {
+  clearInterval(refreshIntervalID)
+}
 
-        if (preferences.get(WFRT.OPTIONS.REFRESH_NOTI_DESKTOP) === 'true') {
-          GM_notification({
-            'title': 'Wayfarer - New Wayspot Analysis Available',
-            'text': 'by Wayfarer-Tools',
-            'image': 'https://gitlab.com/uploads/-/system/project/avatar/3311015/opr-tools.png'
-          })
-        }
+function checkIfAutorefresh () {
+  if (w.sessionStorage.getItem(WFRT.FROM_REFRESH)) {
+    // reset flag
+    w.sessionStorage.removeItem(WFRT.FROM_REFRESH)
 
-        let flashId = setInterval(() => {
-          flag = !flag
-          changeFavicon(`${flag ? POI_MARKER : '/imgpub/favicon.ico'}`)
-        }, 1000)
+    if (w.document.hidden) { // if tab in background: flash favicon
+      let flag = true
 
-        // stop flashing if tab in foreground
-        addEventListener('visibilitychange', () => {
-          if (!w.document.hidden) {
-            changeFavicon('/imgpub/favicon.ico')
-            clearInterval(flashId)
-          }
+      if (preferences.get(WFRT.OPTIONS.REFRESH_NOTI_DESKTOP) === 'true') {
+        GM_notification({
+          'title': 'Wayfarer - New Wayspot Analysis Available',
+          'text': 'by Wayfarer-Tools',
+          'image': 'https://gitlab.com/uploads/-/system/project/avatar/3311015/opr-tools.png'
         })
       }
-    }
-  }
 
-  function changeFavicon (src) {
-    let link = w.document.querySelector('link[rel="shortcut icon"]')
-    link.href = src
-  }
+      let flashId = setInterval(() => {
+        flag = !flag
+        changeFavicon(`${flag ? POI_MARKER : '/imgpub/favicon.ico'}`)
+      }, 1000)
 
-  function startExpirationTimer (subController) {
-    w.document.querySelector('.header .inner-container:last-of-type').insertAdjacentHTML('afterbegin', '<span id="countdownDisplay"></span>')
-
-    let countdownEnd = subController.pageData.expires
-    let countdownDisplay = document.getElementById('countdownDisplay')
-    countdownDisplay.style.setProperty('color', 'black')
-
-    // Update the count down every 1 second
-    let counterInterval = setInterval(function () {
-      // Get todays date and time
-      let now = new Date().getTime()
-      // Find the distance between now an the count down date
-      let distance = countdownEnd - now
-      // Time calculations for minutes and seconds
-      let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
-      let seconds = Math.floor((distance % (1000 * 60)) / 1000)
-
-      // Display the result in the element
-      countdownDisplay.innerText = `${minutes}m ${seconds}s `
-
-      if (distance < 0) {
-        // If the count down is finished, write some text
-        clearInterval(counterInterval)
-        countdownDisplay.innerText = 'EXPIRED'
-        countdownDisplay.style.setProperty('color', 'red')
-      } else if (distance < 90000) {
-        countdownDisplay.style.setProperty('color', 'red')
-      }
-    }, 1000)
-  }
-
-  function versionCheck () {
-    if (WFRT.VERSION > (parseInt(w.localStorage.getItem(WFRT.PREFIX + WFRT.VERSION_CHECK)) || WFRT.VERSION - 1)) {
-      w.localStorage.setItem(WFRT.PREFIX + WFRT.VERSION_CHECK, WFRT.VERSION)
-
-      const changelogString = `
-        <h4><span class="glyphicon glyphicon-asterisk"></span> Wayfarer-Tools was updated:</h4>
-        <div>${strings.changelog}</div>
-      `
-      // show changelog
-      import(/* webpackIgnore: true */alertifyUrl).then(module => {
-        module[alertifyName].closeLogOnClick(false).logPosition('bottom right').delay(0).log(changelogString, (ev) => {
-          ev.preventDefault()
-          ev.target.closest('div.default.show').remove()
-        }).reset()
+      // stop flashing if tab in foreground
+      addEventListener('visibilitychange', () => {
+        if (!w.document.hidden) {
+          changeFavicon('/imgpub/favicon.ico')
+          clearInterval(flashId)
+        }
       })
     }
   }
+}
 
-  function addCustomPresetButtons () {
-    // add customPreset UI
-    wfrtCustomPresets = getCustomPresets(w)
-    let customPresetOptions = ''
-    for (const customPreset of wfrtCustomPresets) {
-      customPresetOptions += `<button class='btn btn-default customPresetButton' id='${customPreset.uid}'>${customPreset.label}</button>`
+function changeFavicon (src) {
+  let link = w.document.querySelector('link[rel="shortcut icon"]')
+  link.href = src
+}
+
+function startExpirationTimer (subController) {
+  w.document.querySelector('.header .inner-container:last-of-type').insertAdjacentHTML('afterbegin', '<span id="countdownDisplay"></span>')
+
+    let countdownEnd = subController.pageData.expires
+  let countdownDisplay = document.getElementById('countdownDisplay')
+  countdownDisplay.style.setProperty('color', 'black')
+
+  // Update the count down every 1 second
+  let counterInterval = setInterval(function () {
+    // Get todays date and time
+    let now = new Date().getTime()
+    // Find the distance between now an the count down date
+    let distance = countdownEnd - now
+    // Time calculations for minutes and seconds
+    let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+    let seconds = Math.floor((distance % (1000 * 60)) / 1000)
+
+    // Display the result in the element
+    countdownDisplay.innerText = `${minutes}m ${seconds}s `
+
+    if (distance < 0) {
+      // If the count down is finished, write some text
+      clearInterval(counterInterval)
+      countdownDisplay.innerText = 'EXPIRED'
+      countdownDisplay.style.setProperty('color', 'red')
+    } else if (distance < 90000) {
+      countdownDisplay.style.setProperty('color', 'red')
     }
-    w.document.getElementById('wfrt_custom_presets').innerHTML = customPresetOptions
-  }
+  }, 1000)
+}
 
-  function getCustomPresets (w) {
-    // simply to scope the string we don't need after JSON.parse
-    let presetsJSON = w.localStorage.getItem(WFRT.PREFIX + WFRT.VAR.CUSTOM_PRESETS)
-    if (presetsJSON != null && presetsJSON !== '') {
-      return JSON.parse(presetsJSON)
-    }
-    return []
-  }
+function versionCheck () {
+  if (WFRT.VERSION > (parseInt(w.localStorage.getItem(WFRT.PREFIX + WFRT.VERSION_CHECK)) || WFRT.VERSION - 1)) {
+    w.localStorage.setItem(WFRT.PREFIX + WFRT.VERSION_CHECK, WFRT.VERSION)
 
-  function saveCustomPreset (label, ansController, whatController) {
-    // uid snippet from https://stackoverflow.com/a/47496558/6447397
-    let preset = {
-      uid: [...Array(5)].map(() => Math.random().toString(36)[3]).join(''),
-      label: label,
-      nodeName: whatController.whatNode.name,
-      nodeId: whatController.whatNode.id,
-      quality: ansController.formData.quality,
-      description: ansController.formData.description,
-      cultural: ansController.formData.cultural,
-      uniqueness: ansController.formData.uniqueness,
-      location: ansController.formData.location,
-      safety: ansController.formData.safety
-    }
-    wfrtCustomPresets.push(preset)
-    w.localStorage.setItem(WFRT.PREFIX + WFRT.VAR.CUSTOM_PRESETS, JSON.stringify(wfrtCustomPresets))
+    const changelogString = `
+        <h4><span class="glyphicon glyphicon-asterisk"></span> Wayfarer-Tools was updated:</h4>
+        <div>${strings.changelog}</div>
+      `
+    // show changelog
+      import(/* webpackIgnore: true */alertifyUrl).then(module => {
+        module[alertifyName].closeLogOnClick(false).logPosition('bottom right').delay(0).log(changelogString, (ev) => {
+      ev.preventDefault()
+      ev.target.closest('div.default.show').remove()
+    }).reset()
+      })
   }
+}
 
-  function deleteCustomPreset (preset) {
-    wfrtCustomPresets = wfrtCustomPresets.filter(item => item.uid !== preset.uid)
-    w.localStorage.setItem(WFRT.PREFIX + WFRT.VAR.CUSTOM_PRESETS, JSON.stringify(wfrtCustomPresets))
+function addCustomPresetButtons () {
+  // add customPreset UI
+  wfrtCustomPresets = getCustomPresets(w)
+  let customPresetOptions = ''
+  for (const customPreset of wfrtCustomPresets) {
+    customPresetOptions += `<button class='btn btn-default customPresetButton' id='${customPreset.uid}'>${customPreset.label}</button>`
   }
+  w.document.getElementById('wfrt_custom_presets').innerHTML = customPresetOptions
+}
 
-  function showHelp () {
-    let helpString = `<a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success'>Wayfarer-Tools</span></a> Key shortcuts<br>
+function getCustomPresets (w) {
+  // simply to scope the string we don't need after JSON.parse
+  let presetsJSON = w.localStorage.getItem(WFRT.PREFIX + WFRT.VAR.CUSTOM_PRESETS)
+  if (presetsJSON != null && presetsJSON !== '') {
+    return JSON.parse(presetsJSON)
+  }
+  return []
+}
+
+function saveCustomPreset (label, ansController, whatController) {
+  // uid snippet from https://stackoverflow.com/a/47496558/6447397
+  let preset = {
+    uid: [...Array(5)].map(() => Math.random().toString(36)[3]).join(''),
+    label: label,
+    nodeName: whatController.whatNode.name,
+    nodeId: whatController.whatNode.id,
+    quality: ansController.formData.quality,
+    description: ansController.formData.description,
+    cultural: ansController.formData.cultural,
+    uniqueness: ansController.formData.uniqueness,
+    location: ansController.formData.location,
+    safety: ansController.formData.safety
+  }
+  wfrtCustomPresets.push(preset)
+  w.localStorage.setItem(WFRT.PREFIX + WFRT.VAR.CUSTOM_PRESETS, JSON.stringify(wfrtCustomPresets))
+}
+
+function deleteCustomPreset (preset) {
+  wfrtCustomPresets = wfrtCustomPresets.filter(item => item.uid !== preset.uid)
+  w.localStorage.setItem(WFRT.PREFIX + WFRT.VAR.CUSTOM_PRESETS, JSON.stringify(wfrtCustomPresets))
+}
+
+function showHelp () {
+  let helpString = `<a href='https://gitlab.com/1110101/opr-tools'><span class='label label-success'>Wayfarer-Tools</span></a> Key shortcuts<br>
     <table class="table table-condensed ">
     <thead>
     <tr>
@@ -1839,19 +1843,19 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected + duplicated} (C
 
     import(/* webpackIgnore: true */alertifyUrl).then(module => {
       module[alertifyName].closeLogOnClick(false).logPosition('bottom right').delay(0).log(helpString, (ev) => {
-        ev.preventDefault()
-        ev.target.closest('div.default.show').remove()
-      }).reset()
+    ev.preventDefault()
+    ev.target.closest('div.default.show').remove()
+  }).reset()
     })
-  }
+}
 
-  function roundToPrecision (num, precision) {
-    let shifter
-    precision = Number(precision || 0)
-    if (precision % 1 !== 0) throw new RangeError('precision must be an integer')
-    shifter = Math.pow(10, precision)
-    return Math.round(num * shifter) / shifter
-  }
+function roundToPrecision (num, precision) {
+  let shifter
+  precision = Number(precision || 0)
+  if (precision % 1 !== 0) throw new RangeError('precision must be an integer')
+  shifter = Math.pow(10, precision)
+  return Math.round(num * shifter) / shifter
+}
 }
 
 function addGlobalStyle (css) {

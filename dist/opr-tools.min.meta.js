@@ -1,18 +1,11 @@
 // ==UserScript==
-// @name OPR-Tools
+// @name Wayfarer-Tools
 // @version 1.1.0
 // @author 1110101, https://gitlab.com/1110101/opr-tools/graphs/master
-// @description OPR enhancements
+// @description formerly known as OPR-Tools
 // @supportURL https://gitlab.com/1110101/opr-tools/issues
-// @match https://opr.ingress.com/
-// @match https://opr.ingress.com/
-// @match https://opr.ingress.com/?login=true
-// @match https://opr.ingress.com/recon
-// @match https://opr.ingress.com/help
-// @match https://opr.ingress.com/faq
-// @match https://opr.ingress.com/guide
-// @match https://opr.ingress.com/settings
-// @match https://opr.ingress.com/upgrades*
+// @match https://wayfarer.nianticlabs.com/review
+// @match https://wayfarer.nianticlabs.com/profile
 // @homepageURL https://gitlab.com/1110101/opr-tools
 // @grant unsafeWindow
 // @grant GM_notification
