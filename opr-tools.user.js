@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            Wayfarer-Tools
-// @version         2.0.4-beta
+// @version         2.0.5-beta
 // @description     formerly known as OPR-Tools
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -1627,7 +1627,7 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${acc
   function startExpirationTimer (subController) {
     w.document.querySelector('.header .inner-container:last-of-type').insertAdjacentHTML('afterbegin', '<span id="countdownDisplay"></span>')
 
-    let countdownEnd = subController.countdownDate
+    let countdownEnd = subController.pageData.expires
     let countdownDisplay = document.getElementById('countdownDisplay')
     countdownDisplay.style.setProperty('color', 'black')
 
