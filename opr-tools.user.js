@@ -658,7 +658,7 @@ function init () {
       descContainer.insertAdjacentHTML('beforebegin', '<hr>')
     }
 
-    const supportingStatement = w.document.querySelector('p[ng-click="subCtrl.showSupportingStatementModal()"]')
+    const supportingStatement = w.document.querySelector('.supporting-statement-central-field p')
     if (supportingStatement != null && supportingStatement.innerText !== '') {
       a = w.document.createElement('a')
       span = w.document.createElement('span')
@@ -813,19 +813,27 @@ function init () {
           event.preventDefault()
         } else if (event.keyCode === 84) {
           // click on translate title link (key T)
-          const link = w.document.querySelector('#descriptionDiv > .translate-title')
+          const link = w.document.querySelector('#wfrt_translate_title')
           if (link) {
             link.click()
             event.preventDefault()
           }
         } else if (event.keyCode === 89) {
           // click on translate description link (key Y)
-          const link = w.document.querySelector('#descriptionDiv > .translate-description')
+          const link = w.document.querySelector('#wfrt_translate_desc')
           if (link) {
             link.click()
             event.preventDefault()
           }
-        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
+        } else if (event.keyCode === 85) {
+          // click on translate extra info link (key U)
+          const link = w.document.querySelector('#wfrt_translate_support')
+          if (link) {
+            link.click()
+            event.preventDefault()
+          }
+        }
+        else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
           // submit duplicate
           w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]').click()
           currentSelectable = 0
@@ -1750,6 +1758,10 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected + duplicated} (C
     <tr>
       <td><kbd>Y</kbd></td>
       <td>Open description translation</td>
+    </tr>
+    <tr>
+      <td><kbd>U</kbd></td>
+      <td>Open supporting statement translation</td>
     </tr>
     <tr>
       <td><kbd>Space</kbd> / <kbd>Enter</kbd> / <kbd>Numpad Enter</kbd></td>
