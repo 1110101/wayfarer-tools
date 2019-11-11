@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            Wayfarer-Tools
-// @version         2.0.4-beta
+// @version         2.0.5-beta
 // @description     formerly known as OPR-Tools
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -1410,15 +1410,17 @@ function init () {
     }
     const stats = w.document.querySelector('#profile-stats:not(.visible-xs)')
 
-    const reviewed = parseInt(stats.children[0].children[1].innerText)
-    const accepted = parseInt(stats.children[1].children[1].innerText)
-    const rejected = parseInt(stats.children[2].children[1].innerText)
-
-    const processed = accepted + rejected - wfrtScannerOffset
+    const reviewed = parseInt(stats.children[0].children[0].children[1].innerText)
+    const accepted = parseInt(stats.children[1].children[1].children[1].innerText)
+    const rejected = parseInt(stats.children[1].children[2].children[1].innerText)
+    const duplicated = parseInt(stats.children[1].children[3].children[1].innerText)
+    
+    const processed = accepted + rejected +duplicated - wfrtScannerOffset
     const processedPercent = roundToPrecision(processed / reviewed * 100, 1)
 
     const acceptedPercent = roundToPrecision(accepted / (reviewed) * 100, 1)
     const rejectedPercent = roundToPrecision(rejected / (reviewed) * 100, 1)
+    const duplicatedPercent = roundToPrecision(duplicated / (reviewed) * 100, 1)
 
     const reconBadge = { 100: 'Bronze', 750: 'Silver', 2500: 'Gold', 5000: 'Platin', 10000: 'Black' }
     let nextBadgeName, nextBadgeCount
@@ -1437,6 +1439,7 @@ function init () {
     numberSpans[0].insertAdjacentHTML('beforeend', `, <span class=''>100%</span>`)
     numberSpans[1].insertAdjacentHTML('beforeend', `, <span class=''>${acceptedPercent}%</span>`)
     numberSpans[2].insertAdjacentHTML('beforeend', `, <span class=''>${rejectedPercent}%</span>`)
+    numberSpans[3].insertAdjacentHTML('beforeend', `, <span class=''>${duplicatedPercent}%</span>`)
 
     stats.querySelectorAll('h4')[2].insertAdjacentHTML('afterend', `<br>
 <h4><span class="stats-left">Processed <u>and</u> accepted analyses:</span> <span class="stats-right">${processed}, <span class="ingress-gray">${processedPercent}%</span></span></h4>`)
@@ -1457,7 +1460,7 @@ ${Math.round(nextBadgeProcess)}%
 `)
     } else stats.insertAdjacentHTML('beforeEnd', `<hr>`)
     stats.insertAdjacentHTML('beforeEnd', `<div><i class="glyphicon glyphicon-share"></i> <input readonly onFocus="this.select();" style="width: 90%;" type="text"
-value="Reviewed: ${reviewed} / Processed: ${accepted + rejected} (Created: ${accepted}/ Rejected: ${rejected}) / ${Math.round(processedPercent)}%"/></div>`)
+value="Reviewed: ${reviewed} / Processed: ${accepted + rejected + duplicated} (Created: ${accepted}/ Rejected: ${rejected}/ Duplicated: ${duplicated}) / ${Math.round(processedPercent)}%"/></div>`)
 
     // ** wayfarer-scanner offset
     if (accepted < 10000 && preferences.get(WFRT.OPTIONS.SCANNER_OFFSET_UI)) {
