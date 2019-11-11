@@ -47,7 +47,7 @@ SOFTWARE.
 
 const WFRT = {
 
-  VERSION: 20004,
+  VERSION: 20005,
 
   PREFERENCES: 'wfrt_prefs',
 
@@ -1809,8 +1809,8 @@ const strings = {
   },
   changelog:
     `
-Version 2.0.0
-<br>* Initial Wayfarer-Tools release
+Version 2.0.5
+<br>* Fixed countdown timer and percentage breakdowns (thanks to @fotofreund0815)
 `
 }
 
