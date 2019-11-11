@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            Wayfarer-Tools
-// @version         2.0.5-beta
+// @version         2.0.6-beta
 // @description     formerly known as OPR-Tools
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -47,7 +47,7 @@ SOFTWARE.
 
 const WFRT = {
 
-  VERSION: 20005,
+  VERSION: 20006,
 
   PREFERENCES: 'wfrt_prefs',
 
@@ -1822,7 +1822,8 @@ const strings = {
   },
   changelog:
     `
-Version 2.0.5
+Version 2.0.6
+<br>* Added shortcut key U to open supporting statement translation
 <br>* Fixed countdown timer and percentage breakdowns (thanks to @fotofreund0815)
 `
 }
