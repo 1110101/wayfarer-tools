@@ -1630,7 +1630,7 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected + duplicated} (C
   function startExpirationTimer (subController) {
     w.document.querySelector('.header .inner-container:last-of-type').insertAdjacentHTML('afterbegin', '<span id="countdownDisplay"></span>')
 
-    let countdownEnd = subController.countdownDate
+    let countdownEnd = subController.pageData.expires
     let countdownDisplay = document.getElementById('countdownDisplay')
     countdownDisplay.style.setProperty('color', 'black')
 
