@@ -128,7 +128,7 @@ class Preferences {
     height: 90%;
     padding: 0 20px;
     z-index: 10;
-    width: 400px;    
+    width: 400px;
     ">
   <div class="row">
     <div class="col-lg-12">
@@ -144,8 +144,8 @@ class Preferences {
   <div id="wfrt_options"></div>
   <a id="wfrt_reload" class="btn btn-warning hide"><span class="glyphicon glyphicon-refresh"></span>
  Reload to apply changes</a>
- 
- <div style="position: absolute; bottom: 0; left: 0; margin:20px;"><a href="https://t.me/oprtools">${TG_SVG} Wayfarer-Tools Telegram Channel</a></div> 
+
+ <div style="position: absolute; bottom: 0; left: 0; margin:20px;"><a href="https://t.me/oprtools">${TG_SVG} Wayfarer-Tools Telegram Channel</a></div>
 </section>`)
 
       let optionsContainer = w.document.getElementById('wfrt_options')
@@ -355,7 +355,14 @@ function init () {
       const subController = w.$scope(subMissionDiv).subCtrl
       const newPortalData = subController.pageData
 
-      const whatController = w.$scope(w.document.getElementById('WhatIsItController')).whatCtrl
+      var cardId;
+      if (subController.reviewType == "EDIT"){
+        cardId = "what-is-it-card-edit"
+      }else{
+        cardId = "what-is-it-card-review"
+      }
+
+      const whatController = w.$scope(w.document.getElementById(cardId).children[0]).whatCtrl
 
       const answerDiv = w.document.getElementById('AnswersController')
       const ansController = w.$scope(answerDiv).answerCtrl
@@ -1192,7 +1199,7 @@ function init () {
 
     w.$injector.invoke(['$compile', ($compile) => {
       let compiledSubmit = $compile(submitAndNext)(w.$scope(submitDiv))
-      submitDiv.querySelector('#submitDiv button').insertAdjacentElement('beforeBegin', compiledSubmit[0])
+      document.getElementById('submit-bottom').children[0].insertAdjacentElement('beforeBegin', compiledSubmit[0])
     }])
     return { submitButton, submitAndNext }
   }
@@ -1423,7 +1430,7 @@ function init () {
     const accepted = parseInt(stats.children[1].children[1].children[1].innerText)
     const rejected = parseInt(stats.children[1].children[2].children[1].innerText)
     const duplicated = parseInt(stats.children[1].children[3].children[1].innerText)
-    
+
     const processed = accepted + rejected +duplicated - wfrtScannerOffset
     const processedPercent = roundToPrecision(processed / reviewed * 100, 1)
 
@@ -1673,7 +1680,7 @@ value="Reviewed: ${reviewed} / Processed: ${accepted + rejected + duplicated} (C
 
       const changelogString = `
         <h4><span class="glyphicon glyphicon-asterisk"></span> Wayfarer-Tools was updated:</h4>
-        <div>${strings.changelog}</div>      
+        <div>${strings.changelog}</div>
       `
       // show changelog
       alertify.closeLogOnClick(false).logPosition('bottom right').delay(0).log(changelogString, (ev) => {
