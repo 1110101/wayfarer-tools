@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            Wayfarer-Tools
-// @version         2.0.6-beta
+// @version         2.0.7-beta
 // @description     formerly known as OPR-Tools
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -47,7 +47,7 @@ SOFTWARE.
 
 const WFRT = {
 
-  VERSION: 20006,
+  VERSION: 20007,
 
   PREFERENCES: 'wfrt_prefs',
 
@@ -355,11 +355,11 @@ function init () {
       const subController = w.$scope(subMissionDiv).subCtrl
       const newPortalData = subController.pageData
 
-      var cardId;
-      if (subController.reviewType == "EDIT"){
-        cardId = "what-is-it-card-edit"
-      }else{
-        cardId = "what-is-it-card-review"
+      var cardId
+      if (subController.reviewType == 'EDIT') {
+        cardId = 'what-is-it-card-edit'
+      } else {
+        cardId = 'what-is-it-card-review'
       }
 
       const whatController = w.$scope(w.document.getElementById(cardId).children[0]).whatCtrl
@@ -839,8 +839,7 @@ function init () {
             link.click()
             event.preventDefault()
           }
-        }
-        else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
+        } else if ((event.keyCode === 13 || event.keyCode === 32) && w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]')) {
           // submit duplicate
           w.document.querySelector('[ng-click="answerCtrl2.confirmDuplicate()"]').click()
           currentSelectable = 0
@@ -1431,7 +1430,7 @@ function init () {
     const rejected = parseInt(stats.children[1].children[2].children[1].innerText)
     const duplicated = parseInt(stats.children[1].children[3].children[1].innerText)
 
-    const processed = accepted + rejected +duplicated - wfrtScannerOffset
+    const processed = accepted + rejected + duplicated - wfrtScannerOffset
     const processedPercent = roundToPrecision(processed / reviewed * 100, 1)
 
     const acceptedPercent = roundToPrecision(accepted / (reviewed) * 100, 1)
@@ -1829,6 +1828,9 @@ const strings = {
   },
   changelog:
     `
+Version 2.0.7
+<br>* Adopted new Wayfarer changes. Thanks to @MrJPGames, check out Wayfarer+!</a>
+<br>
 Version 2.0.6
 <br>* Added shortcut key U to open supporting statement translation
 <br>* Fixed countdown timer and percentage breakdowns (thanks to @fotofreund0815)
