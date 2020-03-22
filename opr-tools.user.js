@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            Wayfarer-Tools
-// @version         2.0.7-beta
+// @version         2.0.8
 // @description     formerly known as OPR-Tools
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -9,8 +9,8 @@
 // @grant           unsafeWindow
 // @grant           GM_notification
 // @grant           GM_addStyle
-// @downloadURL     https://gitlab.com/1110101/opr-tools/raw/feature/wayfarerSupport/opr-tools.user.js
-// @updateURL       https://gitlab.com/1110101/opr-tools/raw/feature/wayfarerSupport/opr-tools.user.js
+// @downloadURL     https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
+// @updateURL       https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 // @supportURL      https://gitlab.com/1110101/opr-tools/issues
 // @require         https://cdnjs.cloudflare.com/ajax/libs/alertifyjs-alertify.js/1.0.11/js/alertify.js
 // @require         https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.4/proj4.js
@@ -47,7 +47,7 @@ SOFTWARE.
 
 const WFRT = {
 
-  VERSION: 20007,
+  VERSION: 20008,
 
   PREFERENCES: 'wfrt_prefs',
 
