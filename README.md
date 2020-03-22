@@ -9,7 +9,7 @@ Userscript for [Niantic Wayfarer](http://wayfarer.nianticlabs.com/)
 
 Wayfarer-Tools is tested with Chrome and Firefox. You need a userscript manager like [Tampermonkey](https://tampermonkey.net/) (You already have one if you use IITC for Ingress). Wayfarer-Tools does not work with Greasemonkey for Firefox.
 
-##### ⚠🛠 We're working on Wayfarer compatibility. You can download a test-version [here](https://gitlab.com/1110101/opr-tools/raw/feature/wayfarerSupport/opr-tools.user.js?inline=false).
+> **Download:** https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js
 
 
 ## Features:
