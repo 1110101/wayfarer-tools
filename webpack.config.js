@@ -4,10 +4,10 @@ const TerserPlugin = require('terser-webpack-plugin')
 
 module.exports = {
   mode: 'production',
-  entry: './opr-tools.user.js',
+  entry: './wayfarer-tools.user.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'opr-tools.min.user.js'
+    filename: 'wayfarer.min.user.js'
   },
   optimization: {
     minimizer: [
@@ -44,8 +44,8 @@ module.exports = {
           'GM_notification',
           'GM_addStyle'
         ],
-        downloadURL: 'https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js',
-        updateURL: 'https://gitlab.com/1110101/opr-tools/raw/master/opr-tools.user.js',
+        downloadURL: 'https://gitlab.com/1110101/opr-tools/raw/master/dist/wayfarer-tools.user.js',
+        updateURL: 'https://gitlab.com/1110101/opr-tools/raw/master/dist/wayfarer-tools.meta.js',
         supportURL: 'https://gitlab.com/1110101/opr-tools/issues',
       }
     })

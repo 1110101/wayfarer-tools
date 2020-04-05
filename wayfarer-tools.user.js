@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            Wayfarer-Tools
-// @version         2.0.8
+// @version         2.0.10
 // @description     formerly known as OPR-Tools
 // @homepageURL     https://gitlab.com/1110101/opr-tools
 // @author          1110101, https://gitlab.com/1110101/opr-tools/graphs/master
@@ -51,7 +51,7 @@ const proj4Name = 'proj4250_module'
 
 const WFRT = {
 
-  VERSION: 20008,
+  VERSION: 20010,
 
   PREFERENCES: 'wfrt_prefs',
 
