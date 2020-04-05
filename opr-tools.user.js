@@ -46,11 +46,8 @@ SOFTWARE.
 /* globals screen, MutationObserver, addEventListener, localStorage, MutationObserver, GM_addStyle, GM_notification, unsafeWindow, angular, google, alertify, proj4 */
 
 const WFRT = {
-
-  VERSION: 20008,
-
+  VERSION: 20010,
   PREFERENCES: 'wfrt_prefs',
-
   OPTIONS: {
     KEYBOARD_NAV: 'keyboard_nav',
     NORWAY_MAP_LAYER: 'norway_map_layer',
@@ -60,28 +57,22 @@ const WFRT = {
     COMMENT_TEMPLATES: 'comment_templates',
     MAP_CIRCLE_20: 'map_circle_20',
     MAP_CIRCLE_40: 'map_circle_40',
-
     REFRESH: 'refresh',
     REFRESH_NOTI_DESKTOP: 'refresh_noti_desktop'
   },
-
   PREFIX: 'wfrt_',
   VAR_PREFIX: 'wfrt_var', // used in import/export **only**
-
   // used for legacy oprt import
   OPRT: 'oprt_',
   OPRT_VAR_PREFIX: 'oprt_var',
   OPRT_PREFERENCES: 'oprt_prefs',
-
   VAR: { // will be included in import/export
     SCANNER_OFFSET: 'scanner_offset',
     MAP_TYPE_1: 'map_type_1',
     MAP_TYPE_2: 'map_type_2',
     CUSTOM_PRESETS: 'custom_presets'
   },
-
   VERSION_CHECK: 'version_check', // outside var, because it should not get exported
-
   FROM_REFRESH: 'from_refresh' // sessionStorage
 }
 
@@ -110,7 +101,7 @@ class Preferences {
   }
 
   showPreferencesUI (w) {
-    let inout = new InOut(this)
+    let inout = new PreferenceImport(this)
     let pageContainer = w.document.querySelector('#content-container')
     let wfrtPreferences = w.document.querySelector('#wfrt_sidepanel_container')
 
@@ -243,7 +234,7 @@ class Preferences {
   }
 }
 
-class InOut {
+class PreferenceImport {
   constructor (preferences) {
     this.preferences = preferences
   }
@@ -267,29 +258,26 @@ class InOut {
       let json = JSON.parse(string)
 
       if (json.hasOwnProperty(WFRT.PREFERENCES)) { this.preferences.importPrefs(json[WFRT.PREFERENCES]) }
-      if (json.hasOwnProperty(WFRT.VAR_PREFIX)) { InOut.importVars(json[WFRT.VAR_PREFIX]) }
+      if (json.hasOwnProperty(WFRT.VAR_PREFIX)) { PreferenceImport.importVars(json[WFRT.VAR_PREFIX]) }
 
       // legacy import for oprt stuff
       if (json.hasOwnProperty(WFRT.OPRT_PREFERENCES)) { this.preferences.importPrefs(json[WFRT.OPRT_PREFERENCES]) }
-      if (json.hasOwnProperty(WFRT.OPRT_VAR_PREFIX)) { InOut.importVars(json[WFRT.OPRT_VAR_PREFIX]) }
+      if (json.hasOwnProperty(WFRT.OPRT_VAR_PREFIX)) { PreferenceImport.importVars(json[WFRT.OPRT_VAR_PREFIX]) }
     } catch (e) {
       throw new Error('Import failed')
     }
   }
 
   exportAll () {
-    return JSON.stringify(Object.assign({}, { [WFRT.PREFERENCES]: this.preferences.exportPrefs() }, { [WFRT.VAR_PREFIX]: InOut.exportVars() }))
+    return JSON.stringify(Object.assign({}, { [WFRT.PREFERENCES]: this.preferences.exportPrefs() }, { [WFRT.VAR_PREFIX]: PreferenceImport.exportVars() }))
   }
 }
 
 function init () {
   const w = typeof unsafeWindow === 'undefined' ? window : unsafeWindow
   let tryNumber = 15
-
   let wfrtCustomPresets
-
   let browserLocale = window.navigator.languages[0] || window.navigator.language || 'en'
-
   let preferences = new Preferences()
 
   const initWatcher = setInterval(() => {
@@ -345,23 +333,14 @@ function init () {
   function initScript () {
     // adding CSS
     addGlobalStyle(GLOBAL_CSS)
-
     addOptionsButton()
-
     const subMissionDiv = w.document.getElementById('NewSubmissionController')
 
     // check if subCtrl exists (should exists if we're on /review)
     if (subMissionDiv !== null && w.$scope(subMissionDiv).subCtrl !== null) {
       const subController = w.$scope(subMissionDiv).subCtrl
       const newPortalData = subController.pageData
-
-      var cardId
-      if (subController.reviewType == 'EDIT') {
-        cardId = 'what-is-it-card-edit'
-      } else {
-        cardId = 'what-is-it-card-review'
-      }
-
+      const cardId = subController.reviewType === 'EDIT' ? 'what-is-it-card-edit' : 'what-is-it-card-review'
       const whatController = w.$scope(w.document.getElementById(cardId).children[0]).whatCtrl
 
       const answerDiv = w.document.getElementById('AnswersController')
@@ -385,14 +364,11 @@ function init () {
       }
 
       checkIfAutorefresh()
-
       startExpirationTimer(subController)
-
       versionCheck()
     } else if (w.location.pathname.includes('profile')) {
       modifyProfile()
     }
-
   }
 
   function modifyNewPage (ansController, subController, whatController, newPortalData) {
@@ -451,7 +427,7 @@ function init () {
       }])
 
       // click listener for +preset button
-      w.document.getElementById('addPreset').addEventListener('click', event => {
+      w.document.getElementById('addPreset').addEventListener('click', () => {
         alertify.okBtn('Save').prompt('New preset name:',
           (value, event) => {
             event.preventDefault()
@@ -467,7 +443,7 @@ function init () {
         )
       })
 
-      let clickListener = event => {
+      let customPresetClickListener = event => {
         const source = event.target || event.srcElement
         let value = source.id
         if (value === '' || event.target.nodeName !== 'BUTTON') {
@@ -490,6 +466,11 @@ function init () {
         ansController.formData.location = preset.location
         ansController.formData.safety = preset.safety
 
+        // close suggestions if open
+        if (!w.document.getElementById('suggestions').classList.contains('ng-hide')) {
+          w.document.querySelector('#suggestions > button').click()
+        }
+
         // the controller's set by ID function doesn't work
         // and autocomplete breaks if there are any spaces
         // so set the field to the first word from name and match autocomplete by ID
@@ -511,7 +492,7 @@ function init () {
         alertify.success(`✔ Applied <i>${preset.label}</i>`)
       }
 
-      w.document.getElementById('wfrt_custom_presets').addEventListener('click', clickListener, false)
+      w.document.getElementById('wfrt_custom_presets').addEventListener('click', customPresetClickListener, false)
     }
     /* endregion presets end */
 
@@ -600,20 +581,6 @@ function init () {
                 ${preferences.get(WFRT.OPTIONS.MAP_CIRCLE_20) ? '<span style="color:#effc4a">inner circle:</span> 20m' : ''}
             </small>`)
     }
-
-    // // move portal rating to the right side. don't move on mobile devices / small width
-    // if (screen.availWidth > 768) {
-    //   let nodeToMove = w.document.querySelector('div[class="btn-group"]').parentElement
-    //   if (subController.hasSupportingImageOrStatement) {
-    //     const descDiv = w.document.getElementById('descriptionDiv')
-    //     const scorePanel = descDiv.querySelector('div.text-center.hidden-xs')
-    //     scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
-    //   } else {
-    //     const scorePanel = w.document.querySelector('div[class~="pull-right"]')
-    //     scorePanel.insertBefore(nodeToMove, scorePanel.firstChild)
-    //   }
-    // }
-
     // bind click-event to Dup-Images-Filmstrip. result: a click to the detail-image the large version is loaded in another tab
     const imgDups = w.document.querySelectorAll('#map-filmstrip > ul > li > img')
     const openFullImage = function () {
@@ -689,8 +656,6 @@ function init () {
         }, 500)
       }
     } catch (err) {}
-
-    expandWhatIsItBox()
 
     // Fix rejectComment width
     let _showLowQualityModal = ansController.showLowQualityModal
@@ -903,7 +868,7 @@ function init () {
           event.preventDefault()
         } else if (numkey === null || currentSelectable > maxItems - 2) {
           return
-        } else if (numkey !== null && event.shiftKey) {
+        } else if (event.shiftKey) {
           try {
             w.document.getElementsByClassName('customPresetButton')[numkey - 1].click()
             if (!document.getElementById('submitFF').disabled) {
@@ -1005,8 +970,6 @@ function init () {
       }
     }
 
-    expandWhatIsItBox()
-
     // fix locationEditsMap if only one location edit exists
     if (newPortalData.locationEdits.length <= 1 || subController.locationEditsMap.getZoom() > 19) {
       subController.locationEditsMap.setZoom(19)
@@ -1024,10 +987,7 @@ function init () {
       let hasLocationEdit = (newPortalData.locationEdits.length > 1)
       // counting *true*, please don't shoot me
       let maxItems = (newPortalData.descriptionEdits.length > 1) + (newPortalData.titleEdits.length > 1) + (hasLocationEdit) + 2
-
-      let mapMarkers
-      if (hasLocationEdit) mapMarkers = subController.allLocationMarkers
-      else mapMarkers = []
+      let mapMarkers = hasLocationEdit ? subController.allLocationMarkers : []
 
       // a list of all 6 star button rows, and the two submit buttons
       let starsAndSubmitButtons = w.document.querySelectorAll(
@@ -1147,11 +1107,6 @@ function init () {
 `
     // more map buttons in a dropdown menu
     const mapDropdown = `
-<li><a target='osm' href='https://www.openstreetmap.org/?mlat=${newPortalData.lat}&mlon=${newPortalData.lng}&zoom=16'>OSM</a></li>
-<li><a target='bing' href='https://bing.com/maps/default.aspx?cp=${newPortalData.lat}~${newPortalData.lng}&lvl=16&style=a'>bing</a></li>
-<li><a target='heremaps' href='https://wego.here.com/?map=${newPortalData.lat},${newPortalData.lng},17,satellite'>HERE maps</a></li>
-<li><a targeT='zoomearth' href='https://zoom.earth/#${newPortalData.lat},${newPortalData.lng},18z,sat'>Zoom Earth</a></li>
-<li role='separator' class='divider'></li>
 <li><a target='swissgeo' href='http://map.geo.admin.ch/?swisssearch=${newPortalData.lat},${newPortalData.lng}'>CH - Swiss Geo Map</a></li>
 <li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (ortofoto)</a></li>
 <li><a target='mapycz' href='https://mapy.cz/zakladni?x=${newPortalData.lng}&y=${newPortalData.lat}&z=17&base=ophoto&m3d=1&height=180&yaw=-279.39&pitch=-40.7&source=coor&id=${newPortalData.lng}%2C${newPortalData.lat}&q=${newPortalData.lng}%20${newPortalData.lat}'>CZ-mapy.cz (orto+3D)</a></li>
@@ -1174,6 +1129,12 @@ function init () {
 <li><a target='lantmateriet' href='https://kso.etjanster.lantmateriet.se/?e=${Math.round(coordUtm33[0])}&n=${Math.round(coordUtm33[1])}&z=13'>SE - Läntmateriet</a></li>
 <li><a target='hitta' href='https://www.hitta.se/kartan!~${newPortalData.lat},${newPortalData.lng},18z/tileLayer!l=1'>SE - Hitta.se</a></li>
 <li><a target='eniro' href='https://kartor.eniro.se/?c=${newPortalData.lat},${newPortalData.lng}&z=17&l=nautical'>SE - Eniro Sjökort</a></li>
+
+<li role='separator' class='divider'></li>
+<li><a target='osm' href='https://www.openstreetmap.org/?mlat=${newPortalData.lat}&mlon=${newPortalData.lng}&zoom=16'>OSM</a></li>
+<li><a target='bing' href='https://bing.com/maps/default.aspx?cp=${newPortalData.lat}~${newPortalData.lng}&lvl=16&style=a'>bing</a></li>
+<li><a target='heremaps' href='https://wego.here.com/?map=${newPortalData.lat},${newPortalData.lng},17,satellite'>HERE maps</a></li>
+<li><a targeT='zoomearth' href='https://zoom.earth/#${newPortalData.lat},${newPortalData.lng},18z,sat'>Zoom Earth</a></li>
 `
     targetElement.insertAdjacentHTML(where, `<div id="wfrt_map_button_group" class='btn-group dropup'>${mapButtons}<div class='btn btn-default dropdown'><span class='caret'></span><ul id="wfrt_map_dropdown" class='dropdown-content dropdown-menu'>${mapDropdown}</div></div>`)
   }
@@ -1181,9 +1142,8 @@ function init () {
   // add new button "Submit and reload", skipping "Your analysis has been recorded." dialog
   function quickSubmitButton (submitDiv, ansController, bodyObserver) {
     let submitButton = submitDiv.querySelector('button.button-primary')
-    // submitButton.classList.add('btn', 'btn-warning')
-
     let submitAndNext = submitButton.cloneNode(false)
+
     submitButton.addEventListener('click', () => {
       bodyObserver.disconnect()
     })
@@ -1367,12 +1327,7 @@ function init () {
     })
 
     // track current selection for position map
-    let mapType
-    if (isMainMap) {
-      mapType = WFRT.PREFIX + WFRT.VAR.MAP_TYPE_1
-    } else {
-      mapType = WFRT.PREFIX + WFRT.VAR.MAP_TYPE_2
-    }
+    let mapType = isMainMap ? WFRT.PREFIX + WFRT.VAR.MAP_TYPE_1 : WFRT.PREFIX + WFRT.VAR.MAP_TYPE_2
 
     // save selection when changed
     map.addListener('maptypeid_changed', function () {
@@ -1383,62 +1338,25 @@ function init () {
     map.setMapTypeId(w.localStorage.getItem(mapType) || defaultMapType)
   }
 
-  // // move submit button to right side of classification-div. don't move on mobile devices / small width
-  // function moveSubmitButton () {
-  //   const submitDiv = w.document.querySelectorAll('#submitDiv, #submitDiv + .text-center')
-  //
-  //   if (screen.availWidth > 768) {
-  //     let newSubmitDiv = w.document.createElement('div')
-  //     const classificationRow = w.document.querySelector('.classification-row')
-  //     newSubmitDiv.className = 'col-xs-12 col-sm-6'
-  //     submitDiv[0].style.setProperty('margin-top', '16px')
-  //     newSubmitDiv.appendChild(submitDiv[0])
-  //     newSubmitDiv.appendChild(submitDiv[1])
-  //     classificationRow.insertAdjacentElement('afterend', newSubmitDiv)
-  //
-  //     // edit-page - remove .col-sm-offset-3 from .classification-row (why did you add this, niantic?
-  //     classificationRow.classList.remove('col-sm-offset-3')
-  //     return newSubmitDiv
-  //   } else {
-  //     return submitDiv[0]
-  //   }
-  // }
-
-  // expand automatically the "What is it?" filter text box
-  function expandWhatIsItBox () {
-    try {
-      const whatController = w.$scope(w.document.getElementById('WhatIsItController')).whatCtrl
-      setTimeout(() => {
-        whatController.showWhat = true
-        w.$rootScope.$apply()
-      }, 50)
-    } catch (err) {}
-  }
-
   function modifyProfile () {
     // stats enhancements: add processed by nia, percent processed, progress to next recon badge numbers
+    const stats = w.document.querySelector('#profile-stats:not(.visible-xs)'),
+      reviewed = parseInt(stats.children[0].children[0].children[1].innerText),
+      accepted = parseInt(stats.children[1].children[1].children[1].innerText),
+      rejected = parseInt(stats.children[1].children[2].children[1].innerText),
+      duplicated = parseInt(stats.children[1].children[3].children[1].innerText),
 
-    let wfrtScannerOffset = 0
-    if (preferences.get(WFRT.OPTIONS.SCANNER_OFFSET_FEATURE)) {
       // get scanner offset from localStorage
-      wfrtScannerOffset = parseInt(w.localStorage.getItem(WFRT.SCANNER_OFFSET)) || 0
-    }
-    const stats = w.document.querySelector('#profile-stats:not(.visible-xs)')
+      wfrtScannerOffset = preferences.get(WFRT.OPTIONS.SCANNER_OFFSET_FEATURE) ? parseInt(w.localStorage.getItem(WFRT.SCANNER_OFFSET)) || 0 : 0,
+      processed = accepted + rejected + duplicated - wfrtScannerOffset,
+      processedPercent = roundToPrecision(processed / reviewed * 100, 1),
+      acceptedPercent = roundToPrecision(accepted / (reviewed) * 100, 1),
+      rejectedPercent = roundToPrecision(rejected / (reviewed) * 100, 1),
+      duplicatedPercent = roundToPrecision(duplicated / (reviewed) * 100, 1),
+      reconBadge = { 100: 'Bronze', 750: 'Silver', 2500: 'Gold', 5000: 'Platin', 10000: 'Black' }
 
-    const reviewed = parseInt(stats.children[0].children[0].children[1].innerText)
-    const accepted = parseInt(stats.children[1].children[1].children[1].innerText)
-    const rejected = parseInt(stats.children[1].children[2].children[1].innerText)
-    const duplicated = parseInt(stats.children[1].children[3].children[1].innerText)
-
-    const processed = accepted + rejected + duplicated - wfrtScannerOffset
-    const processedPercent = roundToPrecision(processed / reviewed * 100, 1)
-
-    const acceptedPercent = roundToPrecision(accepted / (reviewed) * 100, 1)
-    const rejectedPercent = roundToPrecision(rejected / (reviewed) * 100, 1)
-    const duplicatedPercent = roundToPrecision(duplicated / (reviewed) * 100, 1)
-
-    const reconBadge = { 100: 'Bronze', 750: 'Silver', 2500: 'Gold', 5000: 'Platin', 10000: 'Black' }
-    let nextBadgeName, nextBadgeCount
+    let nextBadgeName,
+      nextBadgeCount
 
     for (const key in reconBadge) {
       if (processed <= key) {
@@ -1448,7 +1366,6 @@ function init () {
       }
     }
     const nextBadgeProcess = processed / nextBadgeCount * 100
-
     const numberSpans = stats.querySelectorAll('span.stats-right')
 
     numberSpans[0].insertAdjacentHTML('beforeend', `, <span class=''>100%</span>`)
@@ -1828,7 +1745,12 @@ const strings = {
   },
   changelog:
     `
-Version 2.0.7
+Version 2.0.10
+<br>* Fixed presets not getting applied if suggestions are open 
+<br>* Removed auto expand of what-is-it box, no longer required
+<br>* Moved most used maps to bottom of the maplist
+<br>
+Version 2.0.8
 <br>* Adopted new Wayfarer changes. Thanks to @MrJPGames, check out Wayfarer+!</a>
 <br>
 Version 2.0.6
